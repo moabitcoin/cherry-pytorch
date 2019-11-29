@@ -184,7 +184,7 @@ def solve_taxi(n_train_episodes, max_steps, n_test_episodes=1,
 if __name__ == '__main__':
 
   parser = argparse.ArgumentParser('Taxi-V3 OpenAI GYM')
-  parser.add_argument('-n', dest='n_episodes', type=int,
+  parser.add_argument('-n', dest='n_train_episodes', type=int,
                       help='Number of episodes', default=50000)
   parser.add_argument('-s', dest='max_steps', type=int,
                       help='Max steps per episode', default=99)
@@ -197,6 +197,6 @@ if __name__ == '__main__':
 
   args = parser.parse_args()
 
-  solve_taxi(args.n_episodes, args.max_steps,
+  solve_taxi(args.n_train_episodes, args.max_steps,
              n_test_episodes=args.n_test_episodes,
              show=args.show, play=args.play)

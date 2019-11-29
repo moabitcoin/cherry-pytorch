@@ -1,5 +1,8 @@
 import sys
 import logging
+from pathlib import Path
+
+import yaml
 
 CLI_LOGGING_FORMAT = '[%(filename)s][%(funcName)s:%(lineno)d]' + \
     '[%(levelname)s] %(message)s'
@@ -19,3 +22,24 @@ def get_logger(logger_name):
   logger.propagate = False
 
   return logger
+
+
+logger = get_logger(__file__)
+
+
+def read_yaml(config_file):
+
+  config_file = Path(config_file)
+
+  if not config_file.is_file():
+    logger.error('Not a file, {}'.format(config_file))
+    return
+
+  try:
+
+    with config_file.open('r') as pfile:
+      d = yaml.load(pfile)
+
+    return d
+  except Exception as err:
+    logger.error('Error reading {}, {}'.format(config_file, err))

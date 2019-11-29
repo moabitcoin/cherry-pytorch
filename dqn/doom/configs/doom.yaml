@@ -1,0 +1,41 @@
+# Environment config
+env:
+  game_config : 'dqn/doom/assets/basic.cfg'
+  scenario_config : 'dqn/doom/assets/basic.wad'
+
+# Agent config
+agent:
+  # Learning rate for the agent
+  learning_rate : 0.0002
+  # Bellman equation reward discount
+  gamma : 0.95
+  # maximum exploration likelihood
+  max_eps : 1.0
+  # minimum exploration likelihood
+  min_eps : 0.01
+  # exploration likelihood decay
+  eps_decay: 0.0001
+  # crop shape
+  crop_shape: []
+  # frame shape
+  input_shape : [84, 84]
+  # state size input_shape + [state_size] tensor as enviroment representation
+  state_size : 4
+  # state size input_shape + [state_size] tensor as enviroment representation
+  action_size : 3
+  # batch size
+  batch_size: 64
+  # memory replay size
+  replay_size : 10000
+
+train:
+  # Number of training episodes
+  n_train_episodes : 500
+  # Max steps in each episode
+  max_steps : 100
+
+test:
+  # Number of testing episodes
+  n_test_episodes : 100
+  # Max steps in each episode
+  max_steps : 100
