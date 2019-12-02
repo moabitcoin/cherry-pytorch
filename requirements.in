@@ -1,3 +1,5 @@
 gym
 tqdm
 pip-tools
+pyyaml
+argparse

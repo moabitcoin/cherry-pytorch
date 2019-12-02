@@ -1,3 +1,5 @@
+import argparse
+
 import tqdm
 import torch
 
@@ -24,6 +26,7 @@ def train_agent_of_doom(config_file, show=False, play=False, device='gpu'):
   env = DoomEnvironment(cfgs['env'])
   agent = AgentOfDoom(cfgs['agent'], device=device)
   train_cfgs = cfgs['train_cfgs']
+  batch_size = train_cfgs['batch_size']
 
   assert env.action_size == agent.action_size, \
       "Environment and state action size should match"
@@ -35,27 +38,34 @@ def train_agent_of_doom(config_file, show=False, play=False, device='gpu'):
     env.game.new_episode()
     agent.restart()
 
-    state = env.game.get_state().screen_buffer
-    state = agent.set_history(state, new_episode=True)
+    frame = env.game.get_state().screen_buffer
+    agent.set_history(frame, new_episode=True)
 
     for step in range(cfgs['max_steps']):
 
+      agent.set_eps(step)
+
+      state = agent.get_history()
       action = agent.get_action(state)
       reward = env.game.make_action(action)
+
       done = game.is_episode_finished()
 
-      next_state = None if done else state = env.game.get_state().screen_buffer
+      next_frame = None if done \
+          else env.game.get_state().screen_buffer
+
+      agent.set_history(next_frame)
+      next_state = agent.get_history()
       agent.push_to_memory([state, action, next_state, reward])
 
-      state = next_state
-      agent.update()
+      agent.update(batch_size=batch_size)
 
 
 if __name__ == '__main__':
 
-  parser = argparse.ArgumentParser('Taxi-V3 OpenAI GYM')
+  parser = argparse.ArgumentParser('Train Agent of Doom with RL')
   parser.add_argument('-x', dest='config_file', type=str,
-                      help='Config file for the env/agent', required=True)
+                      help='Config file for the Doom env/agent', required=True)
   parser.add_argument('-n', dest='n_train_episodes', type=int,
                       help='Number of episodes', default=50000)
   parser.add_argument('-s', dest='max_steps', type=int,

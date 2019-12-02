@@ -16,23 +16,23 @@ agent:
   # exploration likelihood decay
   eps_decay: 0.0001
   # crop shape
-  crop_shape: []
+  crop_shape: [128, 128]
   # frame shape
   input_shape : [84, 84]
   # state size input_shape + [state_size] tensor as enviroment representation
   state_size : 4
-  # state size input_shape + [state_size] tensor as enviroment representation
+  # action size
   action_size : 3
-  # batch size
-  batch_size: 64
   # memory replay size
-  replay_size : 10000
+  replay_size : 3200
 
 train:
   # Number of training episodes
   n_train_episodes : 500
   # Max steps in each episode
   max_steps : 100
+  # batch size
+  batch_size: 32
 
 test:
   # Number of testing episodes

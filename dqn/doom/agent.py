@@ -86,6 +86,9 @@ class AgentOfDoom():
     self.device = device
     self.history = None
 
+    self.end_state = np.zeros([1] + self.input_shape, np.float32)
+    self.end_state = np.ascontiguousarray(self.end_state)
+
     assert self.device is not None, "Device has to be CPU/GPU"
 
     self.transform = Compose([Grayscale(), CenterCrop(self.crop_shape),
@@ -102,8 +105,7 @@ class AgentOfDoom():
 
   def restart(self):
 
-    no_history = [np.zeros(self.input_shape, dtype=np.int)
-                  for i in range(self.state_size)]
+    no_history = [self.end_state for i in range(self.state_size)]
     self.history = deque(no_history, maxlen=self.state_size)
 
   def get_action(self, state):
@@ -122,23 +124,58 @@ class AgentOfDoom():
 
   def set_history(self, state, new_episode=False):
 
-    state = self.transform(state)
+    if not state:
+      state = self.end_state
+    else:
+      # HWC -> CHW
+      state = self.transform(state).transpose((2, 0, 1))
+      state = np.ascontiguousarray(state, dtype=np.float32) / 255
 
     if new_episode:
       _ = [self.history.append(frame) for _ in range(self.state_size)]
     else:
       self.history.append(frame)
 
-    return stacked_state
-
   def get_history(self):
-    return np.stack(self.history, axis=2)
+
+    return np.stack(self.history, axis=0)
 
   def push_to_memory(self, state, action, next_state, reward):
 
-    self.memory.push([state, action, next_state, reward])
+    self.replay.push([state, action, next_state, reward])
 
-  def update(self, batch_size):
+  def update(self, batch_size=32):
 
-    if len(self.memory) < batch_size:
+    if len(self.replay) < batch_size:
       return
+
+    transitions = self.replay.sample(batch_size)
+    # [(a, b), (c, d), (e, f)] -> [(a, c, e), (b, d, f)]
+    batch = Transition(*zip(*transitions))
+
+    non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
+                                            batch.next_state)),
+                                  device=self.device, dtype=torch.uint8)
+
+    non_final_states = torch.cat([s for s in batch.next_state
+                                  if s is not None])
+    state_batch = torch.cat(batch.state).to(self.device)
+    action_batch = torch.cat(batch.action).to(self.device)
+    reward_batch = torch.cat(batch.reward).to(self.device)
+
+    q_values = self.policy(state_batch).gather(1, action_batch)
+
+    q_values_next = torch.zeros(batch_size, device=self.device)
+    q_values_next[non_final_mask] = self.target(non_final_states).max(1)[0].detach()
+    # Compute the expected Q values (target)
+    q_values_target = (q_values_next * self.gamma) + reward_batch
+
+    # Compute Huber loss
+    loss = F.smooth_l1_loss(q_values, q_values_target.unsqueeze(1))
+
+    # Optimize the model
+    self.optimizer.zero_grad()
+    loss.backward()
+    for param in self.policy.parameters():
+      param.grad.data.clamp_(-1, 1)
+    self.optimizer.step()
