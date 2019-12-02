@@ -13,6 +13,11 @@ import torch.nn.functional as F
 from torchvision.transforms import Compose, CenterCrop, \
     Grayscale, Resize, ToPILImage, ToTensor
 
+
+from utils.helpers import get_logger
+
+logger = get_logger(__file__)
+
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward'))
 
@@ -78,9 +83,12 @@ class AgentOfDoom():
 
   def __init__(self, cfgs, device=None):
 
+    self.history = None
+    self.losses = None
+    self.rewards = None
     self.crop_shape = cfgs['crop_shape']
     self.input_shape = cfgs['input_shape']
-    self.learning_rate = cfgs['learning_rate']
+    self.lr = cfgs['lr']
     self.gamma = cfgs['gamma']
     self.max_eps = cfgs['max_eps']
     self.min_eps = cfgs['min_eps']
@@ -89,7 +97,6 @@ class AgentOfDoom():
     self.action_size = cfgs['action_size']
     self.state_size = cfgs['state_size']
     self.device = device
-    self.history = None
 
     end_state = np.zeros([1] + self.input_shape, np.float32)
     end_state = np.ascontiguousarray(end_state)
@@ -97,25 +104,31 @@ class AgentOfDoom():
 
     assert self.device is not None, "Device has to be CPU/GPU"
 
-    self.transform = Compose([ToPILImage(), Grayscale(),
-                              CenterCrop(self.crop_shape),
+    self.transform = Compose([ToPILImage(), CenterCrop(self.crop_shape),
                               Resize(self.input_shape), ToTensor()])
 
     self.policy = DoomNet(self.input_shape, self.state_size,
-                          self.action_size, self.learning_rate).to(self.device)
+                          self.action_size, self.lr).to(self.device)
     self.target = DoomNet(self.input_shape, self.state_size,
-                          self.action_size, self.learning_rate).to(self.device)
+                          self.action_size, self.lr).to(self.device)
 
     self.target.load_state_dict(self.policy.state_dict())
     self.target.eval()
 
-    self.optimizer = optim.RMSprop(self.policy.parameters())
+    self.optimizer = optim.RMSprop(self.policy.parameters(), lr=self.lr)
     self.replay = ReplayBuffer(self.replay_size)
 
   def restart(self):
 
     no_history = [self.end_state for i in range(self.state_size)]
     self.history = deque(no_history, maxlen=self.state_size)
+
+  def reset(self):
+
+    self.losses = []
+    self.scores = [0.0]
+
+    self.restart()
 
   def get_action(self, state):
 
@@ -135,8 +148,7 @@ class AgentOfDoom():
     if frame is None:
       state = self.end_state
     else:
-      # HWC -> CHW
-      state = self.transform(frame)
+      state = self.transform(frame).to(self.device)
 
     history_update = [state for _ in range(self.state_size)] \
         if new_episode else [state]
@@ -154,6 +166,10 @@ class AgentOfDoom():
 
     reward = torch.tensor([reward], device=self.device)
     self.replay.push(state, action, next_state, reward)
+
+  def update_scores(self, score):
+
+    self.scores.append(score)
 
   def update(self, batch_size=32):
 
@@ -178,7 +194,9 @@ class AgentOfDoom():
     q_values = self.policy(state_batch).gather(1, action_batch)
 
     q_values_next = torch.zeros(batch_size, device=self.device)
-    q_values_next[non_final_mask] = self.target(non_final_states).max(1)[0].detach()
+    target_q_values = self.target(non_final_states).max(1)[0].detach()
+    q_values_next[non_final_mask] = target_q_values
+
     # Compute the expected Q values (target)
     q_values_target = (q_values_next * self.gamma) + reward_batch
 
@@ -191,3 +209,17 @@ class AgentOfDoom():
     for param in self.policy.parameters():
       param.grad.data.clamp_(-1, 1)
     self.optimizer.step()
+
+    self.losses.append(loss.item())
+
+  def update_target(self, ep):
+
+    logger.info('Updating agent at {}'.format(ep))
+    self.target.load_state_dict(self.policy.state_dict())
+
+  def save_model(self, ep, dest):
+
+    model_savefile = '{0}/doom-agent-{1:06d}.pth'.format(dest, ep)
+    logger.info("Saving Doom Agent to {}".format(model_savefile))
+
+    torch.save(self.target.state_dict(), model_savefile)

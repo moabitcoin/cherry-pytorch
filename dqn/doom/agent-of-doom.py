@@ -2,6 +2,7 @@ import argparse
 
 import tqdm
 import torch
+import numpy as np
 
 from dqn.doom.environment import DoomEnvironment
 from dqn.doom.agent import AgentOfDoom
@@ -29,7 +30,11 @@ def train_agent_of_doom(config_file, show=False, play=False, device='gpu'):
   agent = AgentOfDoom(cfgs['agent'], device=device)
 
   train_cfgs = cfgs['train']
+
   batch_size = train_cfgs['batch_size']
+  update_target = train_cfgs['update_target']
+  save_model = train_cfgs['save_model']
+  model_dest = train_cfgs['model_dest']
 
   assert env.action_size == agent.action_size, \
       "Environment and state action size should match"
@@ -38,15 +43,15 @@ def train_agent_of_doom(config_file, show=False, play=False, device='gpu'):
 
   for ep in train_ep:
 
+    agent.reset()
     env.game.new_episode()
-    agent.restart()
 
     frame = env.game.get_state().screen_buffer
     agent.set_history(frame, new_episode=True)
 
     for step in range(train_cfgs['max_steps']):
 
-      agent.set_eps(step)
+      agent.set_eps(ep * step)
 
       state = agent.get_history()
       action = agent.get_action(state)
@@ -62,6 +67,21 @@ def train_agent_of_doom(config_file, show=False, play=False, device='gpu'):
       agent.push_to_memory(state, action, next_state, reward)
 
       agent.update(batch_size=batch_size)
+
+      if done:
+        agent.restart()
+        agent.update_scores(env.game.get_total_reward())
+        env.game.new_episode()
+
+    train_ep.set_description('Reward : {1:.3f} Loss : {2:.4f} eps'
+                             ' : {3:.4f}'.format(ep, np.mean(agent.scores),
+                                                 np.mean(agent.losses),
+                                                 agent.eps))
+    if ep % update_target == 0:
+      agent.update_target(ep)
+
+    if ep % save_model == 0:
+      agent.save_model(ep, model_dest)
 
 
 if __name__ == '__main__':

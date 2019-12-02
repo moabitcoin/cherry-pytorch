@@ -1,20 +1,20 @@
 # Environment config
 env:
-  game_config : 'dqn/doom/assets/basic.cfg'
-  scenario_config : 'dqn/doom/assets/basic.wad'
+  game_config : 'dqn/doom/assets/simpler_basic.cfg'
+  scenario_config : 'dqn/doom/assets/simpler_basic.wad'
 
 # Agent config
 agent:
   # Learning rate for the agent
-  learning_rate : 0.0002
+  lr : 0.0002
   # Bellman equation reward discount
-  gamma : 0.95
+  gamma : 0.999
   # maximum exploration likelihood
-  max_eps : 1.0
+  max_eps : 0.9
   # minimum exploration likelihood
-  min_eps : 0.01
+  min_eps : 0.05
   # exploration likelihood decay
-  eps_decay: 0.0001
+  eps_decay: 1000
   # crop shape
   crop_shape: [224, 224]
   # frame shape
@@ -24,7 +24,7 @@ agent:
   # action size
   action_size : 3
   # memory replay size
-  replay_size : 3200
+  replay_size : 10000
 
 train:
   # Number of training episodes
@@ -32,7 +32,14 @@ train:
   # Max steps in each episode
   max_steps : 100
   # batch size
-  batch_size: 32
+  batch_size: 64
+  # model location
+  model_dest: /data/experiments/agent-of-doom/02-12-2019
+  # update_target
+  update_target: 10
+  # save model
+  save_model: 100
+
 
 test:
   # Number of testing episodes
