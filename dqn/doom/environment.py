@@ -4,7 +4,7 @@ from pathlib import Path
 from collections import namedtuple
 
 import numpy as np
-from vizdoom import DoomGame, ScreenResolution
+from vizdoom import DoomGame, ScreenResolution, ScreenFormat
 
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward'))
@@ -27,6 +27,7 @@ class DoomEnvironment():
     # self.game.load_config(config_file.as_posix())
     self.game.set_doom_scenario_path(scenario_file.as_posix())
     self.game.set_screen_resolution(ScreenResolution.RES_320X240)
+    self.game.set_screen_format(ScreenFormat.BGR24)
     self.game.init()
 
     # Here our possible actions

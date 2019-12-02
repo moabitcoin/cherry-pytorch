@@ -11,7 +11,7 @@ from torch import nn
 import torch.optim as optim
 import torch.nn.functional as F
 from torchvision.transforms import Compose, CenterCrop, \
-    Grayscale, Resize, ToPILImage
+    Grayscale, Resize, ToPILImage, ToTensor
 
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward'))
@@ -91,14 +91,15 @@ class AgentOfDoom():
     self.device = device
     self.history = None
 
-    self.end_state = np.zeros([1] + self.input_shape, np.float32)
-    self.end_state = np.ascontiguousarray(self.end_state)
+    end_state = np.zeros([1] + self.input_shape, np.float32)
+    end_state = np.ascontiguousarray(end_state)
+    self.end_state = torch.tensor(end_state, device=self.device)
 
     assert self.device is not None, "Device has to be CPU/GPU"
 
     self.transform = Compose([ToPILImage(), Grayscale(),
                               CenterCrop(self.crop_shape),
-                              Resize(self.input_shape)])
+                              Resize(self.input_shape), ToTensor()])
 
     self.policy = DoomNet(self.input_shape, self.state_size,
                           self.action_size, self.learning_rate).to(self.device)
@@ -129,26 +130,25 @@ class AgentOfDoom():
     self.eps = self.min_eps + (self.max_eps - self.min_eps) * \
             math.exp(-1. * step / self.eps_decay)
 
-  def set_history(self, state, new_episode=False):
+  def set_history(self, frame, new_episode=False):
 
-    if state is None:
+    if frame is None:
       state = self.end_state
     else:
       # HWC -> CHW
-      state = self.transform(state)
-      state = np.array(state)
-      state = np.ascontiguousarray(state, dtype=np.float32) / 255
-    if new_episode:
-      self.history += [state for _ in range(self.state_size)]
-    else:
-      self.history.append(state)
+      state = self.transform(frame)
+
+    history_update = [state for _ in range(self.state_size)] \
+        if new_episode else [state]
+
+    self.history += history_update
 
   def get_history(self):
 
-    history = np.stack(self.history, axis=0)
-    history = np.expand_dims(history, 0)
+    history = [h for h in self.history]
+    history = torch.cat(history).unsqueeze(0).to(self.device)
 
-    return torch.from_numpy(history).to(self.device)
+    return history
 
   def push_to_memory(self, state, action, next_state, reward):
 
@@ -171,9 +171,9 @@ class AgentOfDoom():
     non_final_states = torch.cat([s for s in batch.next_state
                                   if s is not None])
 
-    state_batch = torch.cat(batch.state).to(self.device)
-    action_batch = torch.cat(batch.action).to(self.device)
-    reward_batch = torch.cat(batch.reward).to(self.device)
+    state_batch = torch.cat(batch.state)
+    action_batch = torch.cat(batch.action)
+    reward_batch = torch.cat(batch.reward)
 
     q_values = self.policy(state_batch).gather(1, action_batch)
 
