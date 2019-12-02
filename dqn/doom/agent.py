@@ -5,10 +5,13 @@ import math
 from collections import deque, namedtuple
 
 import torch
+import random
+import numpy as np
 from torch import nn
 import torch.optim as optim
 import torch.nn.functional as F
-from torchvision.transforms import Compose, CenterCrop, Grayscale, Resize
+from torchvision.transforms import Compose, CenterCrop, \
+    Grayscale, Resize, ToPILImage
 
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward'))
@@ -38,6 +41,8 @@ class ReplayBuffer(object):
 class DoomNet(torch.nn.Module):
 
   def __init__(self, input_shape, state_size, action_size, lr):
+
+    super(DoomNet, self).__init__()
 
     self.input_shape = input_shape
     self.state_size = state_size
@@ -91,16 +96,19 @@ class AgentOfDoom():
 
     assert self.device is not None, "Device has to be CPU/GPU"
 
-    self.transform = Compose([Grayscale(), CenterCrop(self.crop_shape),
+    self.transform = Compose([ToPILImage(), Grayscale(),
+                              CenterCrop(self.crop_shape),
                               Resize(self.input_shape)])
 
-    self.policy = DoomNet(self.input_shape, self.state_size, self.action_size)
-    self.target = DoomNet(self.input_shape, self.state_size, self.action_size)
+    self.policy = DoomNet(self.input_shape, self.state_size,
+                          self.action_size, self.learning_rate).to(self.device)
+    self.target = DoomNet(self.input_shape, self.state_size,
+                          self.action_size, self.learning_rate).to(self.device)
 
     self.target.load_state_dict(self.policy.state_dict())
     self.target.eval()
 
-    self.optimizer = optim.RMSprop(policy_net.parameters())
+    self.optimizer = optim.RMSprop(self.policy.parameters())
     self.replay = ReplayBuffer(self.replay_size)
 
   def restart(self):
@@ -111,9 +119,8 @@ class AgentOfDoom():
   def get_action(self, state):
 
     if random.random() > self.eps:
-      state = torch.from_numpy(state)
       with torch.no_grad():
-        return self.policy_net(state).max(1)[1].view(1, 1)
+        return self.policy(state).max(1)[1].view(1, 1)
     else:
         return torch.tensor([[random.randrange(self.action_size)]],
                             device=self.device, dtype=torch.long)
@@ -124,25 +131,29 @@ class AgentOfDoom():
 
   def set_history(self, state, new_episode=False):
 
-    if not state:
+    if state is None:
       state = self.end_state
     else:
       # HWC -> CHW
-      state = self.transform(state).transpose((2, 0, 1))
+      state = self.transform(state)
+      state = np.array(state)
       state = np.ascontiguousarray(state, dtype=np.float32) / 255
-
     if new_episode:
-      _ = [self.history.append(frame) for _ in range(self.state_size)]
+      self.history += [state for _ in range(self.state_size)]
     else:
-      self.history.append(frame)
+      self.history.append(state)
 
   def get_history(self):
 
-    return np.stack(self.history, axis=0)
+    history = np.stack(self.history, axis=0)
+    history = np.expand_dims(history, 0)
+
+    return torch.from_numpy(history).to(self.device)
 
   def push_to_memory(self, state, action, next_state, reward):
 
-    self.replay.push([state, action, next_state, reward])
+    reward = torch.tensor([reward], device=self.device)
+    self.replay.push(state, action, next_state, reward)
 
   def update(self, batch_size=32):
 
@@ -155,10 +166,11 @@ class AgentOfDoom():
 
     non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
                                             batch.next_state)),
-                                  device=self.device, dtype=torch.uint8)
+                                  device=self.device, dtype=torch.bool)
 
     non_final_states = torch.cat([s for s in batch.next_state
                                   if s is not None])
+
     state_batch = torch.cat(batch.state).to(self.device)
     action_batch = torch.cat(batch.action).to(self.device)
     reward_batch = torch.cat(batch.reward).to(self.device)

@@ -15,5 +15,6 @@ pip install -e .
 ## ViZDoom
 Install dependencies as outlined [here](https://github.com/mwydmuch/ViZDoom/blob/master/doc/Building.md#linux_deps)
 ```
+sudo apt-get install libcanberra-gtk-module
 pip install vizdoom
 ```

@@ -38,7 +38,7 @@ def read_yaml(config_file):
   try:
 
     with config_file.open('r') as pfile:
-      d = yaml.load(pfile)
+      d = yaml.load(pfile, yaml.FullLoader)
 
     return d
   except Exception as err:

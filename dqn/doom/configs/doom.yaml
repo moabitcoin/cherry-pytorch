@@ -16,7 +16,7 @@ agent:
   # exploration likelihood decay
   eps_decay: 0.0001
   # crop shape
-  crop_shape: [128, 128]
+  crop_shape: [224, 224]
   # frame shape
   input_shape : [84, 84]
   # state size input_shape + [state_size] tensor as enviroment representation
