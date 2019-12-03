@@ -126,7 +126,7 @@ class AgentOfDoom():
   def reset(self):
 
     self.losses = []
-    self.scores = [0.0]
+    self.scores = []
 
     self.restart()
 
@@ -219,7 +219,7 @@ class AgentOfDoom():
 
   def save_model(self, ep, dest):
 
-    model_savefile = '{0}/doom-agent-{1:06d}.pth'.format(dest, ep)
+    model_savefile = '{0}/doom-agent-{1}.pth'.format(dest, ep)
     logger.info("Saving Doom Agent to {}".format(model_savefile))
 
     torch.save(self.target.state_dict(), model_savefile)

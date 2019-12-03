@@ -17,4 +17,6 @@ Install dependencies as outlined [here](https://github.com/mwydmuch/ViZDoom/blob
 ```
 sudo apt-get install libcanberra-gtk-module
 pip install vizdoom
+# If on a headless machine
+export DISPLAY=:0
 ```

@@ -73,15 +73,19 @@ def train_agent_of_doom(config_file, show=False, play=False, device='gpu'):
         agent.update_scores(env.game.get_total_reward())
         env.game.new_episode()
 
+    mean_score = np.mean(agent.scores) if agent.scores == [] else 0.0
+    mean_loss = np.mean(agent.losses)
+
     train_ep.set_description('Reward : {1:.3f} Loss : {2:.4f} eps'
-                             ' : {3:.4f}'.format(ep, np.mean(agent.scores),
-                                                 np.mean(agent.losses),
+                             ' : {3:.4f}'.format(ep, mean_score, mean_loss,
                                                  agent.eps))
     if ep % update_target == 0:
       agent.update_target(ep)
 
     if ep % save_model == 0:
-      agent.save_model(ep, model_dest)
+      agent.save_model('{0:06d}'.format(ep), model_dest)
+
+  agent.save_model('final', model_dest)
 
 
 if __name__ == '__main__':
