@@ -128,7 +128,7 @@ class AgentOfDoom():
 
   def restart(self):
 
-    no_history = [self.end_state for i in range(self.state_size)]
+    no_history = [self.end_state for _ in range(self.state_size)]
     self.history = deque(no_history, maxlen=self.state_size)
 
   def reset(self):

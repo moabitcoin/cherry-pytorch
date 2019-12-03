@@ -82,10 +82,7 @@ def train_agent_of_doom(config_file, device='gpu'):
         agent.update_scores(env.game.get_total_reward())
 
         env.game.new_episode()
-        frame = env.game.get_state().screen_buffer
-
         agent.restart()
-        agent.set_history(frame, new_episode=True)
 
     mean_score = 0.0 if agent.scores == [] else np.mean(agent.scores)
     mean_loss = np.mean(agent.losses)

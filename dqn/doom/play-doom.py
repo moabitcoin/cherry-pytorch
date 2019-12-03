@@ -88,10 +88,7 @@ def play_doom(config_file, model_file=None, device='gpu'):
         agent.update_scores(env.game.get_total_reward())
 
         env.game.new_episode()
-        frame = env.game.get_state().screen_buffer
-
         agent.restart()
-        agent.set_history(frame, new_episode=True)
 
     writer.close()
 
