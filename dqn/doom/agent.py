@@ -81,7 +81,7 @@ class DoomNet(torch.nn.Module):
 
 class AgentOfDoom():
 
-  def __init__(self, cfgs, device=None):
+  def __init__(self, cfgs, device=None, model_file=None):
 
     self.history = None
     self.losses = None
@@ -118,6 +118,9 @@ class AgentOfDoom():
     self.optimizer = optim.RMSprop(self.policy.parameters(), lr=self.lr)
     self.replay = ReplayBuffer(self.replay_size)
 
+    if model_file:
+      self.load_model(model_file)
+
   def restart(self):
 
     no_history = [self.end_state for i in range(self.state_size)]
@@ -129,6 +132,13 @@ class AgentOfDoom():
     self.scores = []
 
     self.restart()
+
+  def load_model(self, model_file):
+
+    logger.info('Loading agent weigts from {}'.format(model_file))
+
+    self.policy.load_state_dict(torch.load(model_file))
+    self.policy.eval()
 
   def get_action(self, state):
 

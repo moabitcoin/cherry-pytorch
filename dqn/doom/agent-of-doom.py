@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import argparse
 
 import tqdm
@@ -12,7 +15,7 @@ from utils.helpers import read_yaml, get_logger
 logger = get_logger(__file__)
 
 
-def train_agent_of_doom(config_file, show=False, play=False, device='gpu'):
+def train_agent_of_doom(config_file, device='gpu'):
 
   cuda_available = torch.cuda.is_available()
   cuda_and_device = cuda_available and device == 'gpu'
@@ -93,11 +96,9 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser('Train Agent of Doom with RL')
   parser.add_argument('-x', dest='config_file', type=str,
                       help='Config file for the Doom env/agent', required=True)
-  parser.add_argument('-p', dest='play', action='store_true', default=False,
-                      help='Play with the trained agent')
   parser.add_argument('-d', dest='device', choices=['gpu', 'cpu'],
                       help='Device to run the train/test', default='gpu')
 
   args = parser.parse_args()
 
-  train_agent_of_doom(args.config_file, play=args.play, device=args.device)
+  train_agent_of_doom(args.config_file, device=args.device)

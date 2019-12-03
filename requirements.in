@@ -3,3 +3,5 @@ tqdm
 pip-tools
 pyyaml
 argparse
+scikit-video
+ipython
