@@ -81,7 +81,7 @@ class DoomEnvironment():
     self.game.set_sound_enabled(True)
 
     # Sets the livin reward (for each move) to -1
-    self.game.set_living_reward(0)
+    self.game.set_living_reward(-1)
 
     # Sets ViZDoom mode (PLAYER, ASYNC_PLAYER, SPECTATOR, ASYNC_SPECTATOR,
     # PLAYER mode is default)
