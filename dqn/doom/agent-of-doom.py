@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import os
+import shutil
 import argparse
 
 import tqdm
@@ -30,7 +32,8 @@ def train_agent_of_doom(config_file, device='gpu'):
   cfgs = read_yaml(config_file)
 
   env = DoomEnvironment(cfgs['env'])
-  agent = AgentOfDoom(cfgs['agent'], device=device)
+  agent = AgentOfDoom(cfgs['agent'], action_size=env.action_size,
+                      device=device)
 
   train_cfgs = cfgs['train']
 
@@ -38,11 +41,15 @@ def train_agent_of_doom(config_file, device='gpu'):
   update_target = train_cfgs['update_target']
   save_model = train_cfgs['save_model']
   model_dest = train_cfgs['model_dest']
+  train_eps = train_cfgs['n_train_episodes']
+
+  os.makedirs(model_dest, exist_ok=True)
+  shutil.copy(config_file, model_dest)
 
   assert env.action_size == agent.action_size, \
       "Environment and state action size should match"
 
-  train_ep = tqdm.tqdm(range(train_cfgs['n_train_episodes']))
+  train_ep = tqdm.tqdm(range(train_eps), ascii=True, unit='episode')
 
   for ep in train_ep:
 
@@ -72,11 +79,15 @@ def train_agent_of_doom(config_file, device='gpu'):
       agent.update(batch_size=batch_size)
 
       if done:
-        agent.restart()
         agent.update_scores(env.game.get_total_reward())
-        env.game.new_episode()
 
-    mean_score = np.mean(agent.scores) if agent.scores == [] else 0.0
+        env.game.new_episode()
+        frame = env.game.get_state().screen_buffer
+
+        agent.restart()
+        agent.set_history(frame, new_episode=True)
+
+    mean_score = 0.0 if agent.scores == [] else np.mean(agent.scores)
     mean_loss = np.mean(agent.losses)
 
     train_ep.set_description('Reward : {1:.3f} Loss : {2:.4f} eps'

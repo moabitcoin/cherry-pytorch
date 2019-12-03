@@ -38,12 +38,14 @@ def play_doom(config_file, model_file=None, device='gpu'):
   cfgs = read_yaml(config_file)
 
   env = DoomEnvironment(cfgs['env'])
-  agent = AgentOfDoom(cfgs['agent'], device=device, model_file=model_file)
+  agent = AgentOfDoom(cfgs['agent'], action_size=env.action_size,
+                      device=device, model_file=model_file)
 
   test_cfgs = cfgs['test']
   state_dest = test_cfgs['state_dest']
+  test_episodes = test_cfgs['n_test_episodes']
 
-  test_ep = tqdm.tqdm(range(test_cfgs['n_test_episodes']))
+  test_ep = tqdm.tqdm(range(test_episodes), ascii=True, unit='episode')
 
   if not Path(state_dest).is_dir():
     os.makedirs(state_dest)
@@ -84,10 +86,11 @@ def play_doom(config_file, model_file=None, device='gpu'):
 
       if done:
         agent.update_scores(env.game.get_total_reward())
-        agent.restart()
 
         env.game.new_episode()
         frame = env.game.get_state().screen_buffer
+
+        agent.restart()
         agent.set_history(frame, new_episode=True)
 
     writer.close()

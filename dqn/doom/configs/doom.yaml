@@ -1,7 +1,7 @@
 # Environment config
 env:
-  game_config : 'dqn/doom/assets/simpler_basic.cfg'
-  scenario_config : 'dqn/doom/assets/simpler_basic.wad'
+  game_config : 'dqn/doom/assets/basic.cfg'
+  scenario_config : 'dqn/doom/assets/basic.wad'
 
 # Agent config
 agent:
@@ -15,14 +15,12 @@ agent:
   min_eps : 0.05
   # exploration likelihood decay
   eps_decay: 1000
-  # crop shape
+  # crop shape leave empty for no center cropping
   crop_shape: [224, 224]
-  # frame shape
+  # frame shape full resolution frame would be resized to this size
   input_shape : [84, 84]
   # state size input_shape + [state_size] tensor as enviroment representation
   state_size : 4
-  # action size
-  action_size : 3
   # memory replay size
   replay_size : 10000
 
@@ -34,7 +32,7 @@ train:
   # batch size
   batch_size: 64
   # model location
-  model_dest: /data/experiments/agent-of-doom/02-12-2019
+  model_dest: /data/experiments/agent-of-doom/03-12-2019-320x240
   # update_target
   update_target: 10
   # save model
@@ -47,4 +45,4 @@ test:
   # Max steps in each episode
   max_steps : 1000
   # path where to save played video
-  state_dest: /data/experiments/agent-of-doom/02-12-2019/states
+  state_dest: /data/experiments/agent-of-doom/03-12-2019-320x240/states

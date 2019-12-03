@@ -1,5 +1,6 @@
 import time
 import random
+import itertools as it
 from pathlib import Path
 from collections import namedtuple
 
@@ -7,6 +8,9 @@ import numpy as np
 from vizdoom import DoomGame, ScreenResolution, \
     ScreenFormat, GameVariable, Mode, Button
 
+from utils.helpers import get_logger
+
+logger = get_logger(__file__)
 Transition = namedtuple('Transition',
                         ('state', 'action', 'next_state', 'reward'))
 
@@ -19,6 +23,9 @@ class DoomEnvironment():
 
     config_file = Path(cfgs['game_config'])
     scenario_file = Path(cfgs['scenario_config'])
+
+    logger.info('Loading game config from {}'.format(config_file))
+    logger.info('Loading scenario config from {}'.format(scenario_file))
 
     assert config_file.is_file(), \
         "{} no such file".format(config_file)
@@ -82,10 +89,10 @@ class DoomEnvironment():
 
     self.game.init()
 
-    # Here our possible actions
-    left = [1, 0, 0]
-    right = [0, 1, 0]
-    shoot = [0, 0, 1]
-    self.actions = [left, right, shoot]
+    n_buttons = self.game.get_available_buttons_size()
+    self.actions = [list(a) for a in it.product([0, 1], repeat=n_buttons)]
 
     self.action_size = len(self.actions)
+    logger.debug('Action space size {}'.format(self.action_size))
+
+    logger.info('Environment setup')

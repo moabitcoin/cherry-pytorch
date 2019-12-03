@@ -81,7 +81,7 @@ class DoomNet(torch.nn.Module):
 
 class AgentOfDoom():
 
-  def __init__(self, cfgs, device=None, model_file=None):
+  def __init__(self, cfgs, action_size=None, device=None, model_file=None):
 
     self.history = None
     self.losses = None
@@ -94,8 +94,8 @@ class AgentOfDoom():
     self.min_eps = cfgs['min_eps']
     self.eps_decay = cfgs['eps_decay']
     self.replay_size = cfgs['replay_size']
-    self.action_size = cfgs['action_size']
     self.state_size = cfgs['state_size']
+    self.action_size = action_size
     self.device = device
 
     end_state = np.zeros([1] + self.input_shape, np.float32)
@@ -104,8 +104,13 @@ class AgentOfDoom():
 
     assert self.device is not None, "Device has to be CPU/GPU"
 
-    self.transform = Compose([ToPILImage(), CenterCrop(self.crop_shape),
-                              Resize(self.input_shape), ToTensor()])
+    transforms = [ToPILImage()]
+    if self.crop_shape:
+      transforms.append(CenterCrop(self.crop_shape))
+    transforms.append(Resize(self.input_shape))
+    transforms.append(ToTensor())
+
+    self.transform = Compose(transforms)
 
     self.policy = DoomNet(self.input_shape, self.state_size,
                           self.action_size, self.lr).to(self.device)
@@ -135,7 +140,7 @@ class AgentOfDoom():
 
   def load_model(self, model_file):
 
-    logger.info('Loading agent weigts from {}'.format(model_file))
+    logger.info('Loading agent weights from {}'.format(model_file))
 
     self.policy.load_state_dict(torch.load(model_file))
     self.policy.eval()
@@ -224,12 +229,12 @@ class AgentOfDoom():
 
   def update_target(self, ep):
 
-    logger.info('Updating agent at {}'.format(ep))
+    logger.debug('Updating agent at {}'.format(ep))
     self.target.load_state_dict(self.policy.state_dict())
 
   def save_model(self, ep, dest):
 
     model_savefile = '{0}/doom-agent-{1}.pth'.format(dest, ep)
-    logger.info("Saving Doom Agent to {}".format(model_savefile))
+    logger.debug("Saving Doom Agent to {}".format(model_savefile))
 
     torch.save(self.target.state_dict(), model_savefile)
