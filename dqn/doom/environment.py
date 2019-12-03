@@ -5,6 +5,7 @@ from pathlib import Path
 from collections import namedtuple
 
 import numpy as np
+import torch.nn.functional as F
 from vizdoom import DoomGame, ScreenResolution, \
     ScreenFormat, GameVariable, Mode, Button
 
@@ -89,10 +90,9 @@ class DoomEnvironment():
 
     self.game.init()
 
-    n_buttons = self.game.get_available_buttons_size()
-    self.actions = [list(a) for a in it.product([0, 1], repeat=n_buttons)]
+    self.action_size = self.game.get_available_buttons_size()
+    self.actions = [a.tolist() for a in np.eye(self.action_size, dtype=bool)]
 
-    self.action_size = len(self.actions)
     logger.debug('Action space size {}'.format(self.action_size))
 
     logger.info('Environment setup')

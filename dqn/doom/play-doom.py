@@ -72,7 +72,7 @@ def play_doom(config_file, model_file=None, device='gpu'):
 
       state = agent.get_history()
       action = agent.get_action(state)
-      reward = env.game.make_action(env.actions[action])
+      reward = env.game.make_action(env.actions[action[0].item()])
 
       done = env.game.is_episode_finished()
 
@@ -87,8 +87,11 @@ def play_doom(config_file, model_file=None, device='gpu'):
       if done:
         agent.update_scores(env.game.get_total_reward())
 
-        env.game.new_episode()
         agent.restart()
+        env.game.new_episode()
+
+        frame = env.game.get_state().screen_buffer
+        agent.set_history(frame, new_episode=True)
 
     writer.close()
 

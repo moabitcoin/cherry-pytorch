@@ -6,7 +6,7 @@ env:
 # Agent config
 agent:
   # Learning rate for the agent
-  lr : 0.002
+  lr : 0.00025
   # Bellman equation reward discount
   gamma : 0.999
   # maximum exploration likelihood
@@ -30,7 +30,7 @@ train:
   # Max steps in each episode
   max_steps : 100
   # batch size
-  batch_size: 256
+  batch_size: 64
   # model location
   model_dest: /data/experiments/agent-of-doom/03-12-2019-320x240-simpler
   # update_target
