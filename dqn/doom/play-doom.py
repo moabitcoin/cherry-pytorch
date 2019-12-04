@@ -54,7 +54,7 @@ def play_doom(config_file, model_file=None, device='gpu'):
 
     vid_file = '{0}/states-ep-{1:06d}.mp4'.format(state_dest, ep)
 
-    writer = vid_writer(vid_file, outputdict={'-vcodec': 'libx264',
+    writer = vid_writer(vid_file, outputdict={'-vcodec': 'h264',
                                               '-b': '300000000'})
 
     agent.reset()
@@ -72,7 +72,7 @@ def play_doom(config_file, model_file=None, device='gpu'):
 
       state = agent.get_history()
       action = agent.get_action(state)
-      reward = env.game.make_action(env.actions[action[0].item()])
+      reward = env.game.make_action(env.actions[action])
 
       done = env.game.is_episode_finished()
 
