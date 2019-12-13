@@ -43,11 +43,11 @@ class ReplayBuffer(object):
     return len(self.memory)
 
 
-class DoomNet(torch.nn.Module):
+class AtariNet(torch.nn.Module):
 
   def __init__(self, input_shape, state_size, action_size, lr):
 
-    super(DoomNet, self).__init__()
+    super(AtariNet, self).__init__()
 
     self.input_shape = input_shape
     self.state_size = state_size
@@ -79,13 +79,14 @@ class DoomNet(torch.nn.Module):
     return self.head(x.view(x.size(0), -1))
 
 
-class AgentOfDoom():
+class AgentOfAtari():
 
   def __init__(self, cfgs, action_size=None, device=None, model_file=None):
 
     self.history = None
     self.losses = None
     self.rewards = None
+    self.top_scr = 0.0
     self.crop_shape = cfgs['crop_shape']
     self.input_shape = cfgs['input_shape']
     self.lr = cfgs['lr']
@@ -101,10 +102,11 @@ class AgentOfDoom():
     end_state = np.zeros([1] + self.input_shape, np.float32)
     end_state = np.ascontiguousarray(end_state)
     self.end_state = torch.tensor(end_state, device=self.device)
+    self.eps = self.max_eps
 
     assert self.device is not None, "Device has to be CPU/GPU"
 
-    transforms = [ToPILImage()]
+    transforms = [ToPILImage(), Grayscale()]
     if self.crop_shape:
       transforms.append(CenterCrop(self.crop_shape))
     transforms.append(Resize(self.input_shape))
@@ -112,8 +114,13 @@ class AgentOfDoom():
 
     self.transform = Compose(transforms)
 
-    self.policy = DoomNet(self.input_shape, self.state_size,
-                          self.action_size, self.lr).to(self.device)
+    self.policy = AtariNet(self.input_shape, self.state_size,
+                           self.action_size, self.lr).to(self.device)
+    self.target = AtariNet(self.input_shape, self.state_size,
+                           self.action_size, self.lr).to(self.device)
+
+    self.target.load_state_dict(self.policy.state_dict())
+    self.target.eval()
 
     self.optimizer = optim.RMSprop(self.policy.parameters(), lr=self.lr)
     self.replay = ReplayBuffer(self.replay_size)
@@ -130,6 +137,7 @@ class AgentOfDoom():
 
     self.losses = []
     self.scores = []
+    self.top_scr = 0.0
 
     self.restart()
 
@@ -150,8 +158,8 @@ class AgentOfDoom():
                             device=self.device, dtype=torch.long)
 
   def set_eps(self, step):
-    self.eps = self.min_eps + (self.max_eps - self.min_eps) * \
-            math.exp(-1. * step / self.eps_decay)
+    self.eps -= (self.max_eps - self.min_eps) / self.eps_decay
+    self.eps = max(self.eps, self.min_eps)
 
   def set_history(self, frame, new_episode=False):
 
@@ -204,7 +212,7 @@ class AgentOfDoom():
     q_values = self.policy(state_batch).gather(1, action_batch)
 
     q_values_next = torch.zeros(batch_size, device=self.device)
-    target_q_values = self.policy(non_final_states).max(1)[0].detach()
+    target_q_values = self.target(non_final_states).max(1)[0].detach()
     q_values_next[non_final_mask] = target_q_values
 
     # Compute the expected Q values (target)
@@ -222,9 +230,27 @@ class AgentOfDoom():
 
     self.losses.append(loss.item())
 
+  def update_target(self, ep):
+
+    logger.debug('Updating agent at {}'.format(ep))
+    self.target.load_state_dict(self.policy.state_dict())
+
   def save_model(self, ep, dest):
 
-    model_savefile = '{0}/doom-agent-{1}.pth'.format(dest, ep)
-    logger.debug("Saving Doom Agent to {}".format(model_savefile))
+    model_savefile = '{0}/atari-agent-{1}.pth'.format(dest, ep)
+    logger.debug("Saving Atari Agent to {}".format(model_savefile))
 
-    torch.save(self.policy.state_dict(), model_savefile)
+    torch.save(self.target.state_dict(), model_savefile)
+
+  def show_score(self, pbar):
+
+    mean_score = 0.0 if self.scores == [] else np.mean(self.scores)
+    mean_loss = 0.0 if self.losses == [] else np.mean(self.losses)
+
+    pbar.set_description('Reward : {0:.3f} Loss : {1:.4f} eps'
+                         ' : {2:.4f}, Buffer {3}'.format(mean_score,
+                                                         mean_loss,
+                                                         self.eps,
+                                                         len(self.replay)))
+
+    self.top_scr = mean_score if self.top_scr < mean_score else self.top_scr

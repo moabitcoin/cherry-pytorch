@@ -1,22 +1,21 @@
 # Environment config
 env:
-  game_config : 'dqn/doom/assets/basic.cfg'
-  scenario_config : 'dqn/doom/assets/basic.wad'
+  env_name : 'Breakout-v0'
 
 # Agent config
 agent:
   # Learning rate for the agent
-  lr : 0.00025
+  lr : 0.002
   # Bellman equation reward discount
   gamma : 0.999
   # maximum exploration likelihood
   max_eps : 0.9
   # minimum exploration likelihood
-  min_eps : 0.05
+  min_eps : 0.1
   # exploration likelihood decay
-  eps_decay: 1000
+  eps_decay: 850000
   # crop shape leave empty for no center cropping
-  crop_shape: [224, 224]
+  crop_shape:
   # frame shape full resolution frame would be resized to this size
   input_shape : [84, 84]
   # state size input_shape + [state_size] tensor as enviroment representation
@@ -26,15 +25,17 @@ agent:
 
 train:
   # Number of training episodes
-  n_train_episodes : 1000
+  n_train_episodes : 500
   # Max steps in each episode
-  max_steps : 100
+  max_steps : 10000
   # batch size
-  batch_size: 64
+  batch_size: 128
   # model location
-  model_dest: /data/experiments/agent-of-doom/13-12-2019-320x240-basic
+  model_dest: /data/experiments/agent-of-atari/13-12-2019-Breakout-v0
+  # update_target
+  update_target: 5000
   # save model
-  save_model: 100
+  save_model: 10000
 
 
 test:
@@ -43,4 +44,4 @@ test:
   # Max steps in each episode
   max_steps : 1000
   # path where to save played video
-  state_dest: /data/experiments/agent-of-doom/13-12-2019-320x240-basic/states
+  state_dest: /data/experiments/agent-of-atari/13-12-2019-Breakout-v0/states

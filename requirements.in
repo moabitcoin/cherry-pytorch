@@ -5,3 +5,4 @@ pyyaml
 argparse
 scikit-video
 ipython
+pyglet

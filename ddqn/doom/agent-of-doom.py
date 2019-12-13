@@ -9,8 +9,8 @@ import tqdm
 import torch
 import numpy as np
 
-from dqn.doom.environment import DoomEnvironment
-from dqn.doom.agent import AgentOfDoom
+from ddqn.doom.environment import DoomEnvironment
+from ddqn.doom.agent import AgentOfDoom
 from utils.helpers import read_yaml, get_logger
 
 
@@ -38,6 +38,7 @@ def train_agent_of_doom(config_file, device='gpu'):
   train_cfgs = cfgs['train']
 
   batch_size = train_cfgs['batch_size']
+  update_target = train_cfgs['update_target']
   save_model = train_cfgs['save_model']
   model_dest = train_cfgs['model_dest']
   train_eps = train_cfgs['n_train_episodes']
@@ -92,6 +93,8 @@ def train_agent_of_doom(config_file, device='gpu'):
     train_ep.set_description('Reward : {1:.3f} Loss : {2:.4f} eps'
                              ' : {3:.4f}'.format(ep, mean_score, mean_loss,
                                                  agent.eps))
+    if ep % update_target == 0:
+      agent.update_target(ep)
 
     if ep % save_model == 0:
       agent.save_model('{0:06d}'.format(ep), model_dest)

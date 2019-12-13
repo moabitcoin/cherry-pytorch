@@ -20,3 +20,14 @@ pip install vizdoom
 # If on a headless machine
 export DISPLAY=:0
 ```
+
+## Arcade Learning Environment (ALE)
+```
+https://github.com/openai/gym/blob/master/docs/environments.md#atari
+```
+
+
+## Remote Render
+```
+https://github.com/openai/gym/tree/0.15.4#rendering-on-a-server
+```
