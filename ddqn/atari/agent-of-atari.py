@@ -80,11 +80,12 @@ def train_agent_of_atari(config_file, device='gpu'):
 
       if done:
 
-        agent.restart()
         frame = env.game.reset()
 
         agent.set_history(frame, new_episode=True)
         agent.show_score(train_step)
+
+        agent.restart()
 
     train_ep.set_description('Best Reward : {0:.3f}'
                              ' : {1:.4f}'.format(agent.top_scr,

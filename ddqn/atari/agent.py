@@ -130,13 +130,14 @@ class AgentOfAtari():
 
   def restart(self):
 
+    self.losses = []
+    self.scores = []
+
     no_history = [self.end_state for _ in range(self.state_size)]
     self.history = deque(no_history, maxlen=self.state_size)
 
   def reset(self):
 
-    self.losses = []
-    self.scores = []
     self.top_scr = 0.0
 
     self.restart()
