@@ -33,9 +33,9 @@ train:
   batch_size: 64
   # model location
   model_dest: /data/experiments/agent-of-doom/13-12-2019-320x240-basic-dqn
-  # update_target
+  # update target every update_target episodes
   update_target: 10
-  # save model
+  # save model every save_model episodes
   save_model: 100
 
 

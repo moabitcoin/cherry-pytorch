@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import random
 import argparse
 from pathlib import Path
 
@@ -58,12 +59,11 @@ def play_atari(config_file, model_file=None, device='gpu'):
                                               '-b': '300000000'})
 
     agent.reset()
-    env.game.new_episode()
-
     # no exploration
-    agent.eps = 0.0
+    agent.eps = 0.1
 
-    frame = env.game.get_state().screen_buffer
+    frame = env.game.reset()
+
     agent.set_history(frame, new_episode=True)
 
     writer.writeFrame(frame)
@@ -72,40 +72,29 @@ def play_atari(config_file, model_file=None, device='gpu'):
 
       state = agent.get_history()
       action = agent.get_action(state)
-      reward = env.game.make_action(env.actions[action])
+      next_state, reward, done, info = env.game.step(env.actions[action])
+      agent.update_scores(reward)
 
-      done = env.game.is_episode_finished()
-
-      next_frame = None if done \
-          else env.game.get_state().screen_buffer
-
-      if next_frame is not None:
-        writer.writeFrame(next_frame)
-
-      agent.set_history(next_frame)
+      writer.writeFrame(next_state)
+      agent.set_history(next_state)
 
       if done:
-        agent.update_scores(env.game.get_total_reward())
+        best_score = np.sum(agent.scores)
 
-        agent.restart()
-        env.game.new_episode()
-
-        frame = env.game.get_state().screen_buffer
+        agent.reset()
+        frame = env.game.reset()
         agent.set_history(frame, new_episode=True)
 
+        test_ep.set_description('At {}, score {:.3f}'.format(step, best_score))
+
     writer.close()
-
-    mean_score = 0.0 if agent.scores == [] else np.mean(agent.scores)
-
-    test_ep.set_description('Episode {0} Reward : {1:.3f}'.format(ep,
-                                                                  mean_score))
 
 
 if __name__ == '__main__':
 
   parser = argparse.ArgumentParser('Test Agent of Atari(DQN)')
   parser.add_argument('-x', dest='config_file', type=str,
-                      help='Config file for the Atari env/agent', required=True)
+                      help='Config file for the Atari agent', required=True)
   parser.add_argument('-d', dest='device', choices=['gpu', 'cpu'],
                       help='Device to run the train/test', default='gpu')
   parser.add_argument('-m', dest='model_file', required=True,

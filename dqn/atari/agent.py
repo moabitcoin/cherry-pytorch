@@ -107,9 +107,6 @@ class AgentOfAtari():
     assert self.device is not None, "Device has to be CPU/GPU"
 
     transforms = [ToPILImage(), Grayscale()]
-    if self.crop_shape:
-      transforms.append(CenterCrop(self.crop_shape))
-    transforms.append(Resize(self.input_shape))
     transforms.append(ToTensor())
 
     self.transform = Compose(transforms)

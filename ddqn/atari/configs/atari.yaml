@@ -32,9 +32,9 @@ train:
   batch_size: 128
   # model location
   model_dest: /data/experiments/agent-of-atari/13-12-2019-Breakout-v0-ddqn
-  # update_target
+  # update target every update_target steps
   update_target: 5000
-  # save model
+  # save model every save_model steps
   save_model: 10000
 
 

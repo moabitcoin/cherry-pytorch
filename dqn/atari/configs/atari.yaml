@@ -1,6 +1,6 @@
 # Environment config
 env:
-  env_name : 'Breakout-v0'
+  env_name : 'BreakoutNoFrameskip-v4'
 
 # Agent config
 agent:
@@ -32,15 +32,15 @@ train:
   batch_size: 128
   # model location
   model_dest: /data/experiments/agent-of-atari/13-12-2019-Breakout-v0-dqn
-  # update_target
+  # update target every update_target steps
   update_target: 5000
-  # save model
+  # save model every save_model steps
   save_model: 10000
 
 
 test:
   # Number of testing episodes
-  n_test_episodes : 10
+  n_test_episodes : 1
   # Max steps in each episode
   max_steps : 1000
   # path where to save played video
