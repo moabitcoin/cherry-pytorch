@@ -104,7 +104,7 @@ def train_agent_of_doom(config_file, device='gpu'):
 
 if __name__ == '__main__':
 
-  parser = argparse.ArgumentParser('Train Agent of Doom with RL')
+  parser = argparse.ArgumentParser('Train Agent of Doom with RL (DDQN)')
   parser.add_argument('-x', dest='config_file', type=str,
                       help='Config file for the Doom env/agent', required=True)
   parser.add_argument('-d', dest='device', choices=['gpu', 'cpu'],
