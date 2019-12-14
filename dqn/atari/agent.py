@@ -231,14 +231,14 @@ class AgentOfAtari():
 
     self.losses.append(loss.item())
 
-  def update_target(self, ep):
+  def update_target(self, step):
 
-    logger.debug('Updating agent at {}'.format(ep))
+    logger.debug('Updating agent at {}'.format(step))
     self.target.load_state_dict(self.policy.state_dict())
 
-  def save_model(self, ep, dest):
+  def save_model(self, step, dest):
 
-    model_savefile = '{0}/atari-agent-{1}.pth'.format(dest, ep)
+    model_savefile = '{0}/atari-agent-{1}.pth'.format(dest, step)
     logger.debug("Saving Atari Agent to {}".format(model_savefile))
 
     torch.save(self.target.state_dict(), model_savefile)
