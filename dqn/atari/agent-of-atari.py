@@ -9,8 +9,8 @@ import tqdm
 import torch
 import numpy as np
 
-from ddqn.atari.environment import AtariEnvironment
-from ddqn.atari.agent import AgentOfAtari
+from dqn.atari.environment import AtariEnvironment
+from dqn.atari.agent import AgentOfAtari
 from utils.helpers import read_yaml, get_logger
 
 

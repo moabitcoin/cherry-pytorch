@@ -206,10 +206,15 @@ class AgentOfDoom():
     action_batch = torch.cat(batch.action)
     reward_batch = torch.cat(batch.reward)
 
+    # DDQN
+    # q values online
     q_values = self.policy(state_batch).gather(1, action_batch)
-
     q_values_next = torch.zeros(batch_size, device=self.device)
-    target_q_values = self.target(non_final_states).max(1)[0].detach()
+
+    # best action of online model on next states
+    target_action = self.policy(non_final_states).max(1)[1].view(-1, 1)
+    # best target q values from best actions by online model
+    target_q_values = self.target(non_final_states).gather(1, target_action).view(-1)
     q_values_next[non_final_mask] = target_q_values
 
     # Compute the expected Q values (target)

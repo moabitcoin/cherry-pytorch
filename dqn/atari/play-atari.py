@@ -2,12 +2,15 @@
 # -*- coding: utf-8 -*-
 
 import os
-import shutil
 import argparse
+from pathlib import Path
 
 import tqdm
 import torch
 import numpy as np
+import skvideo
+import skvideo.io
+from skvideo.io import FFmpegWriter as vid_writer
 
 from dqn.doom.environment import DoomEnvironment
 from dqn.doom.agent import AgentOfDoom
@@ -17,7 +20,10 @@ from utils.helpers import read_yaml, get_logger
 logger = get_logger(__file__)
 
 
-def train_agent_of_doom(config_file, device='gpu'):
+def play_doom(config_file, model_file=None, device='gpu'):
+
+  assert Path(model_file).is_file(), \
+      'Model file {} does not exists'.format(model_file)
 
   cuda_available = torch.cuda.is_available()
   cuda_and_device = cuda_available and device == 'gpu'
@@ -33,35 +39,36 @@ def train_agent_of_doom(config_file, device='gpu'):
 
   env = DoomEnvironment(cfgs['env'])
   agent = AgentOfDoom(cfgs['agent'], action_size=env.action_size,
-                      device=device)
+                      device=device, model_file=model_file)
 
-  train_cfgs = cfgs['train']
+  test_cfgs = cfgs['test']
+  state_dest = test_cfgs['state_dest']
+  test_episodes = test_cfgs['n_test_episodes']
 
-  batch_size = train_cfgs['batch_size']
-  update_target = train_cfgs['update_target']
-  save_model = train_cfgs['save_model']
-  model_dest = train_cfgs['model_dest']
-  train_eps = train_cfgs['n_train_episodes']
+  test_ep = tqdm.tqdm(range(test_episodes), ascii=True, unit='episode')
 
-  os.makedirs(model_dest, exist_ok=True)
-  shutil.copy(config_file, model_dest)
+  if not Path(state_dest).is_dir():
+    os.makedirs(state_dest)
 
-  assert env.action_size == agent.action_size, \
-      "Environment and state action size should match"
+  for ep in test_ep:
 
-  train_ep = tqdm.tqdm(range(train_eps), ascii=True, unit='episode')
+    vid_file = '{0}/states-ep-{1:06d}.mp4'.format(state_dest, ep)
 
-  for ep in train_ep:
+    writer = vid_writer(vid_file, outputdict={'-vcodec': 'h264',
+                                              '-b': '300000000'})
 
     agent.reset()
     env.game.new_episode()
 
+    # no exploration
+    agent.eps = 0.0
+
     frame = env.game.get_state().screen_buffer
     agent.set_history(frame, new_episode=True)
 
-    for step in range(train_cfgs['max_steps']):
+    writer.writeFrame(frame)
 
-      agent.set_eps(ep * step)
+    for step in range(test_cfgs['max_steps']):
 
       state = agent.get_history()
       action = agent.get_action(state)
@@ -72,11 +79,10 @@ def train_agent_of_doom(config_file, device='gpu'):
       next_frame = None if done \
           else env.game.get_state().screen_buffer
 
-      agent.set_history(next_frame)
-      next_state = agent.get_history()
-      agent.push_to_memory(state, action, next_state, reward)
+      if next_frame is not None:
+        writer.writeFrame(next_frame)
 
-      agent.update(batch_size=batch_size)
+      agent.set_history(next_frame)
 
       if done:
         agent.update_scores(env.game.get_total_reward())
@@ -87,29 +93,24 @@ def train_agent_of_doom(config_file, device='gpu'):
         frame = env.game.get_state().screen_buffer
         agent.set_history(frame, new_episode=True)
 
+    writer.close()
+
     mean_score = 0.0 if agent.scores == [] else np.mean(agent.scores)
-    mean_loss = 0.0 if agent.losses == [] else np.mean(agent.losses)
 
-    train_ep.set_description('Reward : {1:.3f} Loss : {2:.4f} eps'
-                             ' : {3:.4f}'.format(ep, mean_score, mean_loss,
-                                                 agent.eps))
-    if ep % update_target == 0:
-      agent.update_target(ep)
-
-    if ep % save_model == 0:
-      agent.save_model('{0:06d}'.format(ep), model_dest)
-
-  agent.save_model('final', model_dest)
+    test_ep.set_description('Episode {0} Reward : {1:.3f}'.format(ep,
+                                                                  mean_score))
 
 
 if __name__ == '__main__':
 
-  parser = argparse.ArgumentParser('Train Agent of Doom with RL')
+  parser = argparse.ArgumentParser('Test Agent of Doom')
   parser.add_argument('-x', dest='config_file', type=str,
                       help='Config file for the Doom env/agent', required=True)
   parser.add_argument('-d', dest='device', choices=['gpu', 'cpu'],
                       help='Device to run the train/test', default='gpu')
+  parser.add_argument('-m', dest='model_file', required=True,
+                      help='Model to test with')
 
   args = parser.parse_args()
 
-  train_agent_of_doom(args.config_file, device=args.device)
+  play_doom(args.config_file, model_file=args.model_file, device=args.device)

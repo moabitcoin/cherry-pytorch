@@ -210,10 +210,15 @@ class AgentOfAtari():
     action_batch = torch.cat(batch.action)
     reward_batch = torch.cat(batch.reward)
 
+    # DDQN
+    # q values online
     q_values = self.policy(state_batch).gather(1, action_batch)
-
     q_values_next = torch.zeros(batch_size, device=self.device)
-    target_q_values = self.target(non_final_states).max(1)[0].detach()
+
+    # best action of online model on next states
+    target_action = self.policy(non_final_states).max(1)[1].view(-1, 1)
+    # best target q values from best actions by online model
+    target_q_values = self.target(non_final_states).gather(1, target_action).view(-1)
     q_values_next[non_final_mask] = target_q_values
 
     # Compute the expected Q values (target)
@@ -245,13 +250,13 @@ class AgentOfAtari():
 
   def show_score(self, pbar):
 
-    mean_score = 0.0 if self.scores == [] else np.mean(self.scores)
+    total_score = 0.0 if self.scores == [] else np.sum(self.scores)
     mean_loss = 0.0 if self.losses == [] else np.mean(self.losses)
 
-    pbar.set_description('Reward : {0:.3f} Loss : {1:.4f} eps'
-                         ' : {2:.4f}, Buffer {3}'.format(mean_score,
-                                                         mean_loss,
-                                                         self.eps,
-                                                         len(self.replay)))
+    pbar.set_description('Reward : {0:.3f}, Loss : {1:.4f}, Eps'
+                         ' : {2:.4f}, Buffer : {3}'.format(total_score,
+                                                           mean_loss,
+                                                           self.eps,
+                                                           len(self.replay)))
 
-    self.top_scr = mean_score if self.top_scr < mean_score else self.top_scr
+    self.top_scr = total_score if self.top_scr < total_score else self.top_scr
