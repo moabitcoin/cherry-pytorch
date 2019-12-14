@@ -12,15 +12,15 @@ import skvideo
 import skvideo.io
 from skvideo.io import FFmpegWriter as vid_writer
 
-from dqn.doom.environment import DoomEnvironment
-from dqn.doom.agent import AgentOfDoom
+from dqn.atari.environment import AtariEnvironment
+from dqn.atari.agent import AgentOfAtari
 from utils.helpers import read_yaml, get_logger
 
 
 logger = get_logger(__file__)
 
 
-def play_doom(config_file, model_file=None, device='gpu'):
+def play_atari(config_file, model_file=None, device='gpu'):
 
   assert Path(model_file).is_file(), \
       'Model file {} does not exists'.format(model_file)
@@ -37,9 +37,9 @@ def play_doom(config_file, model_file=None, device='gpu'):
 
   cfgs = read_yaml(config_file)
 
-  env = DoomEnvironment(cfgs['env'])
-  agent = AgentOfDoom(cfgs['agent'], action_size=env.action_size,
-                      device=device, model_file=model_file)
+  env = AtariEnvironment(cfgs['env'])
+  agent = AgentOfAtari(cfgs['agent'], action_size=env.action_size,
+                       device=device, model_file=model_file)
 
   test_cfgs = cfgs['test']
   state_dest = test_cfgs['state_dest']
@@ -103,9 +103,9 @@ def play_doom(config_file, model_file=None, device='gpu'):
 
 if __name__ == '__main__':
 
-  parser = argparse.ArgumentParser('Test Agent of Doom')
+  parser = argparse.ArgumentParser('Test Agent of Atari(DQN)')
   parser.add_argument('-x', dest='config_file', type=str,
-                      help='Config file for the Doom env/agent', required=True)
+                      help='Config file for the Atari env/agent', required=True)
   parser.add_argument('-d', dest='device', choices=['gpu', 'cpu'],
                       help='Device to run the train/test', default='gpu')
   parser.add_argument('-m', dest='model_file', required=True,
@@ -113,4 +113,4 @@ if __name__ == '__main__':
 
   args = parser.parse_args()
 
-  play_doom(args.config_file, model_file=args.model_file, device=args.device)
+  play_atari(args.config_file, model_file=args.model_file, device=args.device)
