@@ -72,8 +72,8 @@ def train_agent_of_atari(config_file, device='gpu'):
       state = agent.get_history()
       action = agent.get_action(state)
       next_state, reward, done, info = env.game.step(env.actions[action])
-      agent.set_history(next_state)
 
+      agent.set_history(next_state)
       next_state = agent.get_history(done=done)
       agent.push_to_memory(state, action, next_state, reward)
 
@@ -83,11 +83,10 @@ def train_agent_of_atari(config_file, device='gpu'):
       if done:
 
         frame = env.game.reset()
-
-        agent.set_history(frame, new_episode=True)
-        agent.show_score(train_step)
+        agent.show_score(train_step, global_step)
 
         agent.restart()
+        agent.set_history(frame, new_episode=True)
 
       if global_step % update_target == 0:
         agent.update_target(global_step)
@@ -95,8 +94,8 @@ def train_agent_of_atari(config_file, device='gpu'):
       if global_step % save_model == 0:
         agent.save_model('{0:06d}'.format(global_step), model_dest)
 
-    train_ep.set_description('Best Reward : {0:.3f}'
-                             'Eps : {1:.4f}'.format(agent.top_scr,
+    train_ep.set_description('Ep : {0}, Best Reward : {1:.3f}, '
+                             'Eps : {2:.4f}'.format(ep, agent.top_scr,
                                                     agent.eps))
 
   agent.save_model('final', model_dest)

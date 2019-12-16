@@ -86,6 +86,7 @@ class AgentOfAtari():
     self.history = None
     self.losses = None
     self.rewards = None
+    self.null_state = None
     self.top_scr = 0.0
     self.crop_shape = cfgs['crop_shape']
     self.input_shape = cfgs['input_shape']
@@ -98,10 +99,6 @@ class AgentOfAtari():
     self.state_size = cfgs['state_size']
     self.action_size = action_size
     self.device = device
-
-    null_state = np.zeros([1] + self.input_shape, np.float32)
-    null_state = np.ascontiguousarray(null_state)
-    self.null_state = torch.tensor(null_state, device=self.device)
     self.eps = self.max_eps
 
     assert self.device is not None, "Device has to be CPU/GPU"
@@ -170,12 +167,14 @@ class AgentOfAtari():
 
   def get_history(self, done=False):
 
-    return None if done else torch.cat([h for h in self.history]).unsqueeze(0)
+    return self.null_state if done else \
+      torch.cat([h for h in self.history]).unsqueeze(0)
 
   def push_to_memory(self, state, action, next_state, reward):
 
     mem = [state, action, next_state]
-    mem = [m.cpu().detach().numpy() if m is not None else None for m in mem]
+    mem = [m.cpu().detach().numpy()
+           if m is not self.null_state else self.null_state for m in mem]
     (state, action, next_state) = mem
 
     reward = np.array([reward], dtype=np.float32)
@@ -249,13 +248,14 @@ class AgentOfAtari():
 
     torch.save(self.target.state_dict(), model_savefile)
 
-  def show_score(self, pbar):
+  def show_score(self, pbar, step):
 
     total_score = 0.0 if self.scores == [] else np.sum(self.scores)
     mean_loss = 0.0 if self.losses == [] else np.mean(self.losses)
 
-    pbar.set_description('Reward : {0:.3f}, Loss : {1:.4f}, Eps'
-                         ' : {2:.4f}, Buffer : {3}'.format(total_score,
+    pbar.set_description('Step : {0} Reward : {1:.3f}, Loss : {2:.4f}, Eps'
+                         ' : {3:.4f}, Buffer : {4}'.format(step,
+                                                           total_score,
                                                            mean_loss,
                                                            self.eps,
                                                            len(self.replay)))

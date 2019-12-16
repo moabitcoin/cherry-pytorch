@@ -61,9 +61,13 @@ def play_atari(config_file, model_file=None, device='gpu'):
     agent.reset()
     # no exploration
     agent.eps = 0.0
+    max_fires = 100
 
     frame = env.game.reset()
 
+    for _ in range(max_fires):
+      env.game.step(1)
+    frame = env.game.step(1)[0]
     agent.set_history(frame, new_episode=True)
 
     writer.writeFrame(frame)
@@ -83,6 +87,10 @@ def play_atari(config_file, model_file=None, device='gpu'):
 
         agent.reset()
         frame = env.game.reset()
+
+        for _ in range(max_fires):
+          env.game.step(1)
+        frame = env.game.step(1)[0]
         agent.set_history(frame, new_episode=True)
 
         test_ep.set_description('At {}, score {:.3f}'.format(step, best_score))

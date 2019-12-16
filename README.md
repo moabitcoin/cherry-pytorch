@@ -30,4 +30,5 @@ https://github.com/openai/gym/blob/master/docs/environments.md#atari
 ## Remote Render
 ```
 https://github.com/openai/gym/tree/0.15.4#rendering-on-a-server
+xvfb-run -s "-screen 0 1400x900x24" bash
 ```
