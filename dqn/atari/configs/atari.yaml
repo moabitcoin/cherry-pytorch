@@ -1,41 +1,42 @@
 # Environment config
 env:
+  # AtariPreprocessing has default frame_skip=4
   env_name : 'BreakoutNoFrameskip-v4'
 
 # Agent config
 agent:
   # Learning rate for the agent
-  lr : 0.002
+  lr : 0.00025
   # Bellman equation reward discount
-  gamma : 0.999
+  gamma : 0.9
   # maximum exploration likelihood
   max_eps : 0.9
   # minimum exploration likelihood
-  min_eps : 0.1
+  min_eps : 0.01
   # exploration likelihood decay
-  eps_decay: 850000
+  eps_decay : 850000
   # crop shape leave empty for no center cropping
-  crop_shape:
+  crop_shape :
   # frame shape full resolution frame would be resized to this size
   input_shape : [84, 84]
   # state size input_shape + [state_size] tensor as enviroment representation
   state_size : 4
   # memory replay size
-  replay_size : 10000
+  replay_size : 200000
 
 train:
   # Number of training episodes
-  n_train_episodes : 500
+  n_train_episodes : 50
   # Max steps in each episode
-  max_steps : 10000
+  max_steps : 50000
   # batch size
-  batch_size: 128
+  batch_size: 64
   # model location
-  model_dest: /data/experiments/agent-of-atari/13-12-2019-Breakout-v0-dqn
+  model_dest: /data/experiments/agent-of-atari/16-12-2019-Breakout-v0-dqn
   # update target every update_target steps
   update_target: 5000
   # save model every save_model steps
-  save_model: 10000
+  save_model: 50000
 
 
 test:
@@ -44,4 +45,4 @@ test:
   # Max steps in each episode
   max_steps : 1000
   # path where to save played video
-  state_dest: /data/experiments/agent-of-atari/13-12-2019-Breakout-v0-dqn/states
+  state_dest: /data/experiments/agent-of-atari/16-12-2019-Breakout-v0-dqn/states

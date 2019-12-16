@@ -60,7 +60,7 @@ def play_atari(config_file, model_file=None, device='gpu'):
 
     agent.reset()
     # no exploration
-    agent.eps = 0.1
+    agent.eps = 0.0
 
     frame = env.game.reset()
 

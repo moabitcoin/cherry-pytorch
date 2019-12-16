@@ -99,14 +99,16 @@ class AgentOfAtari():
     self.action_size = action_size
     self.device = device
 
-    end_state = np.zeros([1] + self.input_shape, np.float32)
-    end_state = np.ascontiguousarray(end_state)
-    self.end_state = torch.tensor(end_state, device=self.device)
+    null_state = np.zeros([1] + self.input_shape, np.float32)
+    null_state = np.ascontiguousarray(null_state)
+    self.null_state = torch.tensor(null_state, device=self.device)
     self.eps = self.max_eps
 
     assert self.device is not None, "Device has to be CPU/GPU"
 
-    transforms = [ToPILImage(), Grayscale()]
+    transforms = [ToPILImage(), CenterCrop(self.crop_shape)] \
+        if self.crop_shape else []
+
     transforms.append(ToTensor())
 
     self.transform = Compose(transforms)
@@ -130,7 +132,7 @@ class AgentOfAtari():
     self.losses = []
     self.scores = []
 
-    no_history = [self.end_state for _ in range(self.state_size)]
+    no_history = [self.null_state for _ in range(self.state_size)]
     self.history = deque(no_history, maxlen=self.state_size)
 
   def reset(self):
@@ -161,26 +163,22 @@ class AgentOfAtari():
 
   def set_history(self, frame, new_episode=False):
 
-    if frame is None:
-      state = self.end_state
-    else:
-      state = self.transform(frame).to(self.device)
+    replicas = self.state_size if new_episode else 1
 
-    history_update = [state for _ in range(self.state_size)] \
-        if new_episode else [state]
+    self.history += [self.transform(frame).to(self.device)
+                     for _ in range(replicas)]
 
-    self.history += history_update
+  def get_history(self, done=False):
 
-  def get_history(self):
-
-    history = [h for h in self.history]
-    history = torch.cat(history).unsqueeze(0).to(self.device)
-
-    return history
+    return None if done else torch.cat([h for h in self.history]).unsqueeze(0)
 
   def push_to_memory(self, state, action, next_state, reward):
 
-    reward = torch.tensor([reward], device=self.device)
+    mem = [state, action, next_state]
+    mem = [m.cpu().detach().numpy() if m is not None else None for m in mem]
+    (state, action, next_state) = mem
+
+    reward = np.array([reward], dtype=np.float32)
     self.replay.push(state, action, next_state, reward)
 
   def update_scores(self, score):
@@ -195,6 +193,17 @@ class AgentOfAtari():
     transitions = self.replay.sample(batch_size)
     # [(a, b), (c, d), (e, f)] -> [(a, c, e), (b, d, f)]
     batch = Transition(*zip(*transitions))
+
+    def tensorize_inputs(inputs):
+
+      input_tensors = [None if a is None else
+                       torch.tensor(a).to(self.device) for a in inputs]
+
+      return input_tensors
+
+    memory = [batch.state, batch.action, batch.next_state, batch.reward]
+    memory = list(map(tensorize_inputs, memory))
+    batch = Transition(*memory)
 
     non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
                                             batch.next_state)),

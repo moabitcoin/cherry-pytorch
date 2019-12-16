@@ -29,7 +29,8 @@ class AtariEnvironment():
     try:
 
       env = gym.make(self.env_name)
-      self.game = AtariPreprocessing(env, grayscale_obs=False, scale_obs=False)
+      # default to [84, 84, 1] and in [0.0, 1.0]
+      self.game = AtariPreprocessing(env)
 
       self.action_size = self.game.action_space.n
       self.actions = range(self.action_size)
