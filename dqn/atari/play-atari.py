@@ -46,7 +46,8 @@ def play_atari(config_file, model_file=None, device='gpu'):
   state_dest = test_cfgs['state_dest']
   test_episodes = test_cfgs['n_test_episodes']
 
-  test_ep = tqdm.tqdm(range(test_episodes), ascii=True, unit='episode')
+  test_ep = tqdm.tqdm(range(test_episodes), ascii=True,
+                      unit='episode')
 
   if not Path(state_dest).is_dir():
     os.makedirs(state_dest)
@@ -61,18 +62,16 @@ def play_atari(config_file, model_file=None, device='gpu'):
     agent.reset()
     # no exploration
     agent.eps = 0.0
-    max_fires = 100
 
     frame = env.game.reset()
-
-    for _ in range(max_fires):
-      env.game.step(1)
-    frame = env.game.step(1)[0]
     agent.set_history(frame, new_episode=True)
 
     writer.writeFrame(frame)
 
-    for step in range(test_cfgs['max_steps']):
+    test_steps = tqdm.tqdm(range(test_cfgs['max_steps']), ascii=True,
+                           unit='episode', leave=False)
+
+    for step in test_steps:
 
       state = agent.get_history()
       action = agent.get_action(state)
@@ -80,22 +79,17 @@ def play_atari(config_file, model_file=None, device='gpu'):
       agent.update_scores(reward)
 
       writer.writeFrame(next_state)
-      agent.set_history(next_state)
 
       if done:
-        best_score = np.sum(agent.scores)
+        next_state = env.game.reset()
+        agent.show_score(test_steps, step)
 
-        agent.reset()
-        frame = env.game.reset()
-
-        for _ in range(max_fires):
-          env.game.step(1)
-        frame = env.game.step(1)[0]
-        agent.set_history(frame, new_episode=True)
-
-        test_ep.set_description('At {}, score {:.3f}'.format(step, best_score))
+      agent.set_history(next_state)
 
     writer.close()
+
+    test_ep.set_description('Ep : {0}, Best Reward : {1:.3f}'
+                            .format(ep, agent.top_scr))
 
 
 if __name__ == '__main__':

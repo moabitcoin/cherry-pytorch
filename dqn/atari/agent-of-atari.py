@@ -72,21 +72,17 @@ def train_agent_of_atari(config_file, device='gpu'):
       state = agent.get_history()
       action = agent.get_action(state)
       next_state, reward, done, info = env.game.step(env.actions[action])
-
-      agent.set_history(next_state)
-      next_state = agent.get_history(done=done)
-      agent.push_to_memory(state, action, next_state, reward)
-
-      agent.update(batch_size=batch_size)
       agent.update_scores(reward)
 
       if done:
-
-        frame = env.game.reset()
+        next_state = env.game.reset()
         agent.show_score(train_step, global_step)
 
-        agent.restart()
-        agent.set_history(frame, new_episode=True)
+      agent.set_history(next_state)
+      next_state = agent.get_history()
+      agent.push_to_memory(state, action, next_state, reward)
+
+      agent.update(batch_size=batch_size)
 
       if global_step % update_target == 0:
         agent.update_target(global_step)

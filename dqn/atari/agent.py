@@ -124,19 +124,19 @@ class AgentOfAtari():
     if model_file:
       self.load_model(model_file)
 
-  def restart(self):
+  def flash(self):
 
     self.losses = []
     self.scores = []
-
-    no_history = [self.null_state for _ in range(self.state_size)]
-    self.history = deque(no_history, maxlen=self.state_size)
 
   def reset(self):
 
     self.top_scr = 0.0
 
-    self.restart()
+    no_history = [self.null_state for _ in range(self.state_size)]
+    self.history = deque(no_history, maxlen=self.state_size)
+
+    self.flash()
 
   def load_model(self, model_file):
 
@@ -250,7 +250,7 @@ class AgentOfAtari():
 
   def show_score(self, pbar, step):
 
-    total_score = 0.0 if self.scores == [] else np.sum(self.scores)
+    total_score = np.sum(self.scores, initial=0.0)
     mean_loss = 0.0 if self.losses == [] else np.mean(self.losses)
 
     pbar.set_description('Step : {0} Reward : {1:.3f}, Loss : {2:.4f}, Eps'

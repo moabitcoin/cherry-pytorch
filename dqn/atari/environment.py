@@ -7,7 +7,7 @@ from collections import namedtuple
 import gym
 import numpy as np
 import torch.nn.functional as F
-from gym.wrappers import AtariPreprocessing
+from baselines.common.atari_wrappers import make_atari, wrap_deepmind
 
 
 from utils.helpers import get_logger
@@ -28,9 +28,8 @@ class AtariEnvironment():
 
     try:
 
-      env = gym.make(self.env_name)
-      # default to [84, 84, 1] and in [0, 255]
-      self.game = AtariPreprocessing(env)
+      env = make_atari(self.env_name)
+      self.game = wrap_deepmind(env)
 
       self.action_size = self.game.action_space.n
       self.actions = range(self.action_size)
