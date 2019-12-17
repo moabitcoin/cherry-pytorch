@@ -195,8 +195,8 @@ class AgentOfDoom():
 
   def get_state(self, complete=False):
 
-    size = [self.state_size, self.state_size + 1][complete]
-    return torch.cat(list(self.history)[: size]).unsqueeze(0)
+    size = [1, 0][complete]
+    return torch.cat(list(self.history)[size:]).unsqueeze(0)
 
   def push_to_memory(self, states, action, reward, done):
 
