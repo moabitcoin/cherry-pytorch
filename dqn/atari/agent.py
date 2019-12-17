@@ -19,7 +19,7 @@ from utils.helpers import get_logger
 logger = get_logger(__file__)
 
 Transition = namedtuple('Transition',
-                        ('state', 'action', 'next_state', 'reward'))
+                        ('states', 'action', 'done', 'reward'))
 
 
 class ReplayBuffer(object):
@@ -45,7 +45,7 @@ class ReplayBuffer(object):
 
 class AtariNet(torch.nn.Module):
 
-  def __init__(self, input_shape, state_size, action_size, lr):
+  def __init__(self, input_shape, state_size, action_size, lr, device):
 
     super(AtariNet, self).__init__()
 
@@ -53,6 +53,7 @@ class AtariNet(torch.nn.Module):
     self.state_size = state_size
     self.action_size = action_size
     self.lr = lr
+    self.device = device
 
     (w, h) = self.input_shape
 
@@ -72,6 +73,7 @@ class AtariNet(torch.nn.Module):
 
   def forward(self, x):
 
+    x = x.to(self.device).float() / 255.
     x = F.relu(self.bn1(self.conv1(x)))
     x = F.relu(self.bn2(self.conv2(x)))
     x = F.relu(self.bn3(self.conv3(x)))
@@ -86,7 +88,7 @@ class AgentOfAtari():
     self.history = None
     self.losses = None
     self.rewards = None
-    self.null_state = None
+    self.zero_state = None
     self.top_scr = 0.0
     self.crop_shape = cfgs['crop_shape']
     self.input_shape = cfgs['input_shape']
@@ -101,19 +103,18 @@ class AgentOfAtari():
     self.device = device
     self.eps = self.max_eps
 
+    zero_state = np.zeros([1] + self.input_shape, np.uint8)
+    zero_state = np.ascontiguousarray(zero_state)
+    self.zero_state = torch.tensor(zero_state)
+
     assert self.device is not None, "Device has to be CPU/GPU"
 
-    transforms = [ToPILImage(), CenterCrop(self.crop_shape)] \
-        if self.crop_shape else []
-
-    transforms.append(ToTensor())
-
-    self.transform = Compose(transforms)
-
     self.policy = AtariNet(self.input_shape, self.state_size,
-                           self.action_size, self.lr).to(self.device)
+                           self.action_size, self.lr,
+                           self.device).to(self.device)
     self.target = AtariNet(self.input_shape, self.state_size,
-                           self.action_size, self.lr).to(self.device)
+                           self.action_size, self.lr,
+                           self.device).to(self.device)
 
     self.target.load_state_dict(self.policy.state_dict())
     self.target.eval()
@@ -124,19 +125,19 @@ class AgentOfAtari():
     if model_file:
       self.load_model(model_file)
 
-  def restart(self):
+  def flush_episode(self):
 
     self.losses = []
     self.scores = []
-
-    no_history = [self.null_state for _ in range(self.state_size)]
-    self.history = deque(no_history, maxlen=self.state_size)
 
   def reset(self):
 
     self.top_scr = 0.0
 
-    self.restart()
+    self.flush_episode()
+
+    no_history = [self.zero_state for _ in range(self.state_size + 1)]
+    self.history = deque(no_history, maxlen=self.state_size + 1)
 
   def load_model(self, model_file):
 
@@ -149,36 +150,31 @@ class AgentOfAtari():
 
     if random.random() > self.eps:
       with torch.no_grad():
-        return self.policy(state).max(1)[1].view(1, 1)
+        return self.policy(state).max(1)[1].view(1, 1).detach().cpu()
     else:
         return torch.tensor([[random.randrange(self.action_size)]],
-                            device=self.device, dtype=torch.long)
+                            dtype=torch.long)
 
   def set_eps(self, step):
+
     self.eps -= (self.max_eps - self.min_eps) / self.eps_decay
     self.eps = max(self.eps, self.min_eps)
 
-  def set_history(self, frame, new_episode=False):
+  def append_state(self, state):
 
-    replicas = self.state_size if new_episode else 1
+    self.history.append(torch.from_numpy(state))
 
-    self.history += [self.transform(frame).to(self.device)
-                     for _ in range(replicas)]
+  def get_state(self, complete=False):
 
-  def get_history(self, done=False):
+    size = [self.state_size, self.state_size + 1][complete]
+    return torch.cat(list(self.history)[: size]).unsqueeze(0)
 
-    return self.null_state if done else \
-      torch.cat([h for h in self.history]).unsqueeze(0)
+  def push_to_memory(self, states, action, done, reward):
 
-  def push_to_memory(self, state, action, next_state, reward):
+    reward = torch.from_numpy(np.array([reward], dtype=np.float32))
+    done = torch.from_numpy(np.array([done], dtype=np.bool))
 
-    mem = [state, action, next_state]
-    mem = [m.cpu().detach().numpy()
-           if m is not self.null_state else self.null_state for m in mem]
-    (state, action, next_state) = mem
-
-    reward = np.array([reward], dtype=np.float32)
-    self.replay.push(state, action, next_state, reward)
+    self.replay.push(states, action, done, reward)
 
   def update_scores(self, score):
 
@@ -193,36 +189,19 @@ class AgentOfAtari():
     # [(a, b), (c, d), (e, f)] -> [(a, c, e), (b, d, f)]
     batch = Transition(*zip(*transitions))
 
-    def tensorize_inputs(inputs):
+    states = torch.cat(batch.states)
+    action_batch = torch.cat(batch.action).to(self.device)
+    done_batch = torch.cat(batch.done).to(self.device).float()
+    reward_batch = torch.cat(batch.reward).to(self.device)
 
-      input_tensors = [None if a is None else
-                       torch.tensor(a).to(self.device) for a in inputs]
-
-      return input_tensors
-
-    memory = [batch.state, batch.action, batch.next_state, batch.reward]
-    memory = list(map(tensorize_inputs, memory))
-    batch = Transition(*memory)
-
-    non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
-                                            batch.next_state)),
-                                  device=self.device, dtype=torch.bool)
-
-    non_final_states = torch.cat([s for s in batch.next_state
-                                  if s is not None])
-
-    state_batch = torch.cat(batch.state)
-    action_batch = torch.cat(batch.action)
-    reward_batch = torch.cat(batch.reward)
+    state_batch = states[:, :self.state_size]
+    next_state_batch = states[:, 1:]
 
     q_values = self.policy(state_batch).gather(1, action_batch)
-
-    q_values_next = torch.zeros(batch_size, device=self.device)
-    target_q_values = self.target(non_final_states).max(1)[0].detach()
-    q_values_next[non_final_mask] = target_q_values
+    q_values_next = self.target(next_state_batch).max(1)[0].detach()
 
     # Compute the expected Q values (target)
-    q_values_target = (q_values_next * self.gamma) + reward_batch
+    q_values_target = (q_values_next * self.gamma) * (1. - done_batch) + reward_batch
 
     # Compute Huber loss
     loss = F.smooth_l1_loss(q_values, q_values_target.unsqueeze(1))
@@ -250,7 +229,7 @@ class AgentOfAtari():
 
   def show_score(self, pbar, step):
 
-    total_score = 0.0 if self.scores == [] else np.sum(self.scores)
+    total_score = np.sum(self.scores, initial=0.0)
     mean_loss = 0.0 if self.losses == [] else np.mean(self.losses)
 
     pbar.set_description('Step : {0} Reward : {1:.3f}, Loss : {2:.4f}, Eps'

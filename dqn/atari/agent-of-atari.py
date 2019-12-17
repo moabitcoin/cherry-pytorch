@@ -56,9 +56,9 @@ def train_agent_of_atari(config_file, device='gpu'):
   for ep in train_ep:
 
     agent.reset()
-    frame = env.game.reset()
+    frame = env.reset()
 
-    agent.set_history(frame, new_episode=True)
+    agent.append_state(frame)
 
     train_step = tqdm.tqdm(range(max_steps), ascii=True,
                            unit='stp', leave=False)
@@ -66,27 +66,25 @@ def train_agent_of_atari(config_file, device='gpu'):
     for step in train_step:
 
       global_step = ep * max_steps + step
-
       agent.set_eps(global_step)
 
-      state = agent.get_history()
+      state = agent.get_state()
       action = agent.get_action(state)
-      next_state, reward, done, info = env.game.step(env.actions[action])
-
-      agent.set_history(next_state)
-      next_state = agent.get_history(done=done)
-      agent.push_to_memory(state, action, next_state, reward)
-
-      agent.update(batch_size=batch_size)
+      next_state, reward, done, info = env.step(action)
       agent.update_scores(reward)
 
       if done:
+        next_state = env.reset()
 
-        frame = env.game.reset()
+      if info['ale.lives'] == 0:
         agent.show_score(train_step, global_step)
+        agent.flush_episode()
 
-        agent.restart()
-        agent.set_history(frame, new_episode=True)
+      agent.append_state(next_state)
+      states = agent.get_state(complete=True)
+      agent.push_to_memory(states, action, done, reward)
+
+      agent.update(batch_size=batch_size)
 
       if global_step % update_target == 0:
         agent.update_target(global_step)

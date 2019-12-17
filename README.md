@@ -26,6 +26,12 @@ export DISPLAY=:0
 https://github.com/openai/gym/blob/master/docs/environments.md#atari
 ```
 
+## OpenAI RL baselines
+Needed for Deepmind styled pre-processing wrappers. Needs TF>=1.14 :woman_facepalming:
+```
+pip install tensorflow_gpu==1.14
+https://github.com/openai/baselines/tree/master#installation
+```
 
 ## Remote Render
 ```
