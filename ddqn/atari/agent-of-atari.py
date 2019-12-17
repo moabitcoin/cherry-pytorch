@@ -9,8 +9,8 @@ import tqdm
 import torch
 import numpy as np
 
-from ddqn.atari.environment import AtariEnvironment
-from ddqn.atari.agent import AgentOfAtari
+from dqn.atari.environment import AtariEnvironment
+from dqn.atari.agent import AgentOfAtari
 from utils.helpers import read_yaml, get_logger
 
 
@@ -38,6 +38,7 @@ def train_agent_of_atari(config_file, device='gpu'):
   model_dest = train_cfgs['model_dest']
   train_eps = train_cfgs['n_train_episodes']
   max_steps = train_cfgs['max_steps']
+  policy_update = train_cfgs['policy_update']
 
   env = AtariEnvironment(cfgs['env'])
   agent = AgentOfAtari(cfgs['agent'], action_size=env.action_size,
@@ -56,9 +57,9 @@ def train_agent_of_atari(config_file, device='gpu'):
   for ep in train_ep:
 
     agent.reset()
-    frame = env.game.reset()
+    frame = env.reset()
 
-    agent.set_history(frame, new_episode=True)
+    agent.append_state(frame)
 
     train_step = tqdm.tqdm(range(max_steps), ascii=True,
                            unit='stp', leave=False)
@@ -66,39 +67,35 @@ def train_agent_of_atari(config_file, device='gpu'):
     for step in train_step:
 
       global_step = ep * max_steps + step
-
       agent.set_eps(global_step)
 
-      state = agent.get_history()
+      state = agent.get_state()
       action = agent.get_action(state)
-      next_state, reward, done, info = env.game.step(env.actions[action])
+      next_state, reward, done, info = env.step(action)
       agent.update_scores(reward)
 
-      next_frame = None if done else next_state
-
-      agent.set_history(next_frame)
-      next_state = agent.get_history()
-      agent.push_to_memory(state, action, next_state, reward)
-
-      agent.update(batch_size=batch_size)
-
       if done:
+        next_state = env.reset()
 
-        frame = env.game.reset()
+      if info['ale.lives'] == 0:
+        agent.show_score(train_step, global_step)
+        agent.flush_episode()
 
-        agent.set_history(frame, new_episode=True)
-        agent.show_score(train_step)
+      agent.append_state(next_state)
+      states = agent.get_state(complete=True)
+      agent.push_to_memory(states, action, reward, done)
 
-        agent.restart()
+      if global_step % policy_update == 0:
+        agent.optimize(batch_size=batch_size)
 
       if global_step % update_target == 0:
         agent.update_target(global_step)
 
       if global_step % save_model == 0:
-        agent.save_model('{0:06d}'.format(global_step), model_dest)
+        agent.save_model('{0:09d}'.format(global_step), model_dest)
 
-    train_ep.set_description('Best Reward : {0:.3f}'
-                             'Eps : {1:.4f}'.format(agent.top_scr,
+    train_ep.set_description('Ep : {0}, Best Reward : {1:.3f}, '
+                             'Eps : {2:.4f}'.format(ep, agent.top_scr,
                                                     agent.eps))
 
   agent.save_model('final', model_dest)
@@ -107,7 +104,7 @@ def train_agent_of_atari(config_file, device='gpu'):
 if __name__ == '__main__':
 
   parser = argparse.ArgumentParser('Train an RL Agent to'
-                                   ' play Atari Game (DDQN)')
+                                   ' play Atari Game (DQN)')
   parser.add_argument('-x', dest='config_file', type=str,
                       help='Config for the Atari env/agent', required=True)
   parser.add_argument('-d', dest='device', choices=['gpu', 'cpu'],

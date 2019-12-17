@@ -18,65 +18,84 @@ from utils.helpers import get_logger
 
 logger = get_logger(__file__)
 
-Transition = namedtuple('Transition',
-                        ('state', 'action', 'next_state', 'reward'))
-
 
 class ReplayBuffer(object):
 
-  def __init__(self, capacity):
-    self.capacity = capacity
-    self.memory = []
+  def __init__(self, capacity, state_shape, device):
+
+    (c, h, w) = state_shape
+    self.size = 0
     self.position = 0
+    self.capacity = capacity
+    self.device = device
+    self.states = torch.zeros((capacity, c + 1, h, w), dtype=torch.uint8)
+    self.actions = torch.zeros((capacity, 1), dtype=torch.long)
+    self.rewards = torch.zeros((capacity, 1), dtype=torch.int8)
+    self.dones = torch.zeros((capacity, 1), dtype=torch.bool)
 
   def push(self, *args):
     """Saves a transition."""
-    if len(self.memory) < self.capacity:
-      self.memory.append(None)
-    self.memory[self.position] = Transition(*args)
+
+    s, a, r, d = args
+
+    self.states[self.position] = s
+    self.actions[self.position, 0] = a
+    self.rewards[self.position, 0] = r
+    self.dones[self.position, 0] = d
     self.position = (self.position + 1) % self.capacity
 
+    self.size = max(self.size, self.position)
+
   def sample(self, batch_size):
-    return random.sample(self.memory, batch_size)
+
+    i = torch.randint(0, high=self.size, size=(batch_size,))
+    s = self.states[i]
+    a = self.actions[i].to(self.device)
+    r = self.rewards[i].to(self.device).float()
+    d = self.dones[i].to(self.device).float()
+    return s, a, r, d
 
   def __len__(self):
-    return len(self.memory)
+    return self.size
 
 
 class AtariNet(torch.nn.Module):
 
-  def __init__(self, input_shape, state_size, action_size, lr):
+  def __init__(self, input_shape, state_size, action_size, lr, device):
 
     super(AtariNet, self).__init__()
 
+    self.lr = lr
+    self.device = device
     self.input_shape = input_shape
     self.state_size = state_size
     self.action_size = action_size
-    self.lr = lr
 
-    (w, h) = self.input_shape
+    self.conv1 = nn.Conv2d(state_size, 32, kernel_size=8, stride=4, bias=False)
+    self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2, bias=False)
+    self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1, bias=False)
+    self.fc1 = nn.Linear(64 * 7 * 7, 512)
+    self.fc2 = nn.Linear(512, action_size)
+    self.device = device
 
-    self.conv1 = nn.Conv2d(self.state_size, 16, kernel_size=5, stride=2)
-    self.bn1 = nn.BatchNorm2d(16)
-    self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2)
-    self.bn2 = nn.BatchNorm2d(32)
-    self.conv3 = nn.Conv2d(32, 32, kernel_size=5, stride=2)
-    self.bn3 = nn.BatchNorm2d(32)
+  def init_weights(self, m):
+    if type(m) == nn.Linear:
+      torch.nn.init.kaiming_normal_(m.weight, nonlinearity='relu')
+      m.bias.data.fill_(0.0)
 
-    def feat_shape(size, kernel_size=5, stride=2):
-      return (size - (kernel_size - 1) - 1) // stride + 1
-    convw = feat_shape(feat_shape(feat_shape(w)))
-    convh = feat_shape(feat_shape(feat_shape(h)))
-    feat_spatial_shape = convw * convh * 32
-    self.head = nn.Linear(feat_spatial_shape, self.action_size)
+    if type(m) == nn.Conv2d:
+      torch.nn.init.kaiming_normal_(m.weight, nonlinearity='relu')
 
   def forward(self, x):
 
-    x = F.relu(self.bn1(self.conv1(x)))
-    x = F.relu(self.bn2(self.conv2(x)))
-    x = F.relu(self.bn3(self.conv3(x)))
+    x = x.to(self.device).float() / 255.
 
-    return self.head(x.view(x.size(0), -1))
+    x = F.relu(self.conv1(x))
+    x = F.relu(self.conv2(x))
+    x = F.relu(self.conv3(x))
+    x = F.relu(self.fc1(x.view(x.size(0), -1)))
+
+    return self.fc2(x)
 
 
 class AgentOfAtari():
@@ -86,6 +105,7 @@ class AgentOfAtari():
     self.history = None
     self.losses = None
     self.rewards = None
+    self.zero_state = None
     self.top_scr = 0.0
     self.crop_shape = cfgs['crop_shape']
     self.input_shape = cfgs['input_shape']
@@ -98,49 +118,48 @@ class AgentOfAtari():
     self.state_size = cfgs['state_size']
     self.action_size = action_size
     self.device = device
-
-    end_state = np.zeros([1] + self.input_shape, np.float32)
-    end_state = np.ascontiguousarray(end_state)
-    self.end_state = torch.tensor(end_state, device=self.device)
     self.eps = self.max_eps
 
-    assert self.device is not None, "Device has to be CPU/GPU"
+    assert self.input_shape is not None, 'Input shape has to be not None'
+    assert self.action_size is not None, 'Action size has to non None'
+    assert self.device is not None, 'Device has to be CPU/GPU'
 
-    transforms = [ToPILImage(), Grayscale()]
-    if self.crop_shape:
-      transforms.append(CenterCrop(self.crop_shape))
-    transforms.append(Resize(self.input_shape))
-    transforms.append(ToTensor())
-
-    self.transform = Compose(transforms)
+    self.zero_state = torch.zeros([1] + self.input_shape, dtype=torch.uint8)
 
     self.policy = AtariNet(self.input_shape, self.state_size,
-                           self.action_size, self.lr).to(self.device)
+                           self.action_size, self.lr,
+                           self.device).to(self.device)
+
+    self.policy.apply(self.policy.init_weights)
+
     self.target = AtariNet(self.input_shape, self.state_size,
-                           self.action_size, self.lr).to(self.device)
+                           self.action_size, self.lr,
+                           self.device).to(self.device)
 
     self.target.load_state_dict(self.policy.state_dict())
     self.target.eval()
 
-    self.optimizer = optim.RMSprop(self.policy.parameters(), lr=self.lr)
-    self.replay = ReplayBuffer(self.replay_size)
+    self.optimizer = optim.Adam(self.policy.parameters(),
+                                lr=self.lr, eps=1.5e-4)
+    self.replay = ReplayBuffer(self.replay_size,
+                               [self.state_size] + self.input_shape,
+                               self.device)
 
     if model_file:
       self.load_model(model_file)
 
-  def restart(self):
+  def flush_episode(self):
 
     self.losses = []
     self.scores = []
 
-    no_history = [self.end_state for _ in range(self.state_size)]
-    self.history = deque(no_history, maxlen=self.state_size)
-
   def reset(self):
 
     self.top_scr = 0.0
+    self.flush_episode()
 
-    self.restart()
+    no_history = [self.zero_state for _ in range(self.state_size + 1)]
+    self.history = deque(no_history, maxlen=self.state_size + 1)
 
   def load_model(self, model_file):
 
@@ -153,76 +172,57 @@ class AgentOfAtari():
 
     if random.random() > self.eps:
       with torch.no_grad():
-        return self.policy(state).max(1)[1].view(1, 1)
+        a = self.policy(state).max(1)[1].cpu().view(1, 1)
     else:
-        return torch.tensor([[random.randrange(self.action_size)]],
-                            device=self.device, dtype=torch.long)
+      a = torch.tensor([[random.randrange(self.action_size)]],
+                       device='cpu', dtype=torch.long)
+
+    return a.numpy()[0, 0].item()
 
   def set_eps(self, step):
+
     self.eps -= (self.max_eps - self.min_eps) / self.eps_decay
     self.eps = max(self.eps, self.min_eps)
 
-  def set_history(self, frame, new_episode=False):
+  def append_state(self, state):
 
-    if frame is None:
-      state = self.end_state
-    else:
-      state = self.transform(frame).to(self.device)
+    state = torch.from_numpy(state).view(1, self.input_shape[0],
+                                         self.input_shape[1])
 
-    history_update = [state for _ in range(self.state_size)] \
-        if new_episode else [state]
+    self.history.append(state)
 
-    self.history += history_update
+  def get_state(self, complete=False):
 
-  def get_history(self):
+    size = [1, 0][complete]
+    return torch.cat(list(self.history)[size:]).unsqueeze(0)
 
-    history = [h for h in self.history]
-    history = torch.cat(history).unsqueeze(0).to(self.device)
+  def push_to_memory(self, states, action, reward, done):
 
-    return history
-
-  def push_to_memory(self, state, action, next_state, reward):
-
-    reward = torch.tensor([reward], device=self.device)
-    self.replay.push(state, action, next_state, reward)
+    self.replay.push(states, action, reward, done)
 
   def update_scores(self, score):
 
     self.scores.append(score)
 
-  def update(self, batch_size=32):
+  def optimize(self, batch_size=32):
 
     if len(self.replay) < batch_size:
       return
 
-    transitions = self.replay.sample(batch_size)
-    # [(a, b), (c, d), (e, f)] -> [(a, c, e), (b, d, f)]
-    batch = Transition(*zip(*transitions))
+    batch = self.replay.sample(batch_size)
 
-    non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
-                                            batch.next_state)),
-                                  device=self.device, dtype=torch.bool)
+    states, action, reward, done = batch
 
-    non_final_states = torch.cat([s for s in batch.next_state
-                                  if s is not None])
-
-    state_batch = torch.cat(batch.state)
-    action_batch = torch.cat(batch.action)
-    reward_batch = torch.cat(batch.reward)
+    state_batch = states[:, :self.state_size]
+    next_state_batch = states[:, 1:]
 
     # DDQN
-    # q values online
-    q_values = self.policy(state_batch).gather(1, action_batch)
-    q_values_next = torch.zeros(batch_size, device=self.device)
-
-    # best action of online model on next states
-    target_action = self.policy(non_final_states).max(1)[1].view(-1, 1)
-    # best target q values from best actions by online model
-    target_q_values = self.target(non_final_states).gather(1, target_action).view(-1)
-    q_values_next[non_final_mask] = target_q_values
+    q_values = self.policy(state_batch).gather(1, action)
+    target_action = self.policy(next_state_batch).max(1)[1].view(-1, 1)
+    q_values_next = self.target(next_state_batch).gather(1, target_action).view(-1)
 
     # Compute the expected Q values (target)
-    q_values_target = (q_values_next * self.gamma) + reward_batch
+    q_values_target = (q_values_next * self.gamma) * (1. - done[:, 0]) + reward[:, 0]
 
     # Compute Huber loss
     loss = F.smooth_l1_loss(q_values, q_values_target.unsqueeze(1))
@@ -233,8 +233,6 @@ class AgentOfAtari():
     for param in self.policy.parameters():
       param.grad.data.clamp_(-1, 1)
     self.optimizer.step()
-
-    self.losses.append(loss.item())
 
   def update_target(self, step):
 
@@ -248,15 +246,12 @@ class AgentOfAtari():
 
     torch.save(self.target.state_dict(), model_savefile)
 
-  def show_score(self, pbar):
+  def show_score(self, pbar, step):
 
-    total_score = 0.0 if self.scores == [] else np.sum(self.scores)
-    mean_loss = 0.0 if self.losses == [] else np.mean(self.losses)
+    total_score = np.sum(self.scores, initial=0.0)
 
-    pbar.set_description('Reward : {0:.3f}, Loss : {1:.4f}, Eps'
-                         ' : {2:.4f}, Buffer : {3}'.format(total_score,
-                                                           mean_loss,
-                                                           self.eps,
-                                                           len(self.replay)))
+    pbar.set_description('Reward : {0:.3f}, Eps : {1:.4f}, '
+                         'Buffer : {2}'.format(total_score, self.eps,
+                                               len(self.replay)))
 
     self.top_scr = total_score if self.top_scr < total_score else self.top_scr
