@@ -69,9 +69,9 @@ def play_doom(config_file, model_file=None, device='gpu'):
 
     writer.writeFrame(frame)
 
-    test_steps = tqdm.tqdm(range(max_steps), ascii=True, unit='stp')
+    test_step = tqdm.tqdm(range(max_steps), ascii=True, unit='stp')
 
-    for step in test_steps:
+    for step in test_step:
 
       state = agent.get_state()
       action = agent.get_action(state)
@@ -84,8 +84,8 @@ def play_doom(config_file, model_file=None, device='gpu'):
         agent.reset()
         env.game.new_episode()
 
-        train_step.set_description('{0}/{1} Reward : {2:.3f}'.format(ep, step,
-                                                                     reward))
+        test_step.set_description('{0}/{1} Reward : {2:.3f}'.format(ep, step,
+                                                                    reward))
 
       next_frame = env.game.get_state().screen_buffer
       agent.append_state(next_frame)

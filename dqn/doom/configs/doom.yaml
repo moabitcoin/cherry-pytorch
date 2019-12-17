@@ -14,7 +14,7 @@ agent:
   # minimum exploration likelihood
   min_eps : 0.05
   # exploration likelihood decay
-  eps_decay: 1000
+  eps_decay: 10000
   # crop shape leave empty for no center cropping
   crop_shape: [224, 224]
   # frame shape full resolution frame would be resized to this size
@@ -26,7 +26,7 @@ agent:
 
 train:
   # Number of training episodes
-  n_train_episodes : 1000
+  n_train_episodes : 100
   # Max steps in each episode
   max_steps : 1000
   # batch size
@@ -34,7 +34,7 @@ train:
   # model location
   model_dest: /data/experiments/agent-of-doom/17-12-2019-320x240-basic-dqn
   # update target every update_target episodes
-  update_target: 5000
+  update_target: 1000
   # save model every save_model episodes
   save_model: 10000
   # policy update
@@ -43,7 +43,7 @@ train:
 
 test:
   # Number of testing episodes
-  n_test_episodes : 10
+  n_test_episodes : 1
   # Max steps in each episode
   max_steps : 1000
   # path where to save played video
