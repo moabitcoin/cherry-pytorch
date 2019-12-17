@@ -37,7 +37,7 @@ train:
   update_target: 10000
   # save model every save_model steps
   save_model: 100000
-  # policy update
+  # update model with backprop every policy_update steps
   policy_update: 4
 
 
