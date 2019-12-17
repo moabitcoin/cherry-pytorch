@@ -234,11 +234,8 @@ class AgentOfAtari():
     total_score = np.sum(self.scores, initial=0.0)
     mean_loss = 0.0 if self.losses == [] else np.mean(self.losses)
 
-    pbar.set_description('Step : {0} Reward : {1:.3f}, Loss : {2:.4f}, Eps'
-                         ' : {3:.4f}, Buffer : {4}'.format(step,
-                                                           total_score,
-                                                           mean_loss,
-                                                           self.eps,
-                                                           len(self.replay)))
+    pbar.set_description('[{0}], Reward : {1:.3f}, Eps : {2:.4f}, '
+                         'Buffer : {3}'.format(step, total_score,
+                                               self.eps, len(self.replay)))
 
     self.top_scr = total_score if self.top_scr < total_score else self.top_scr
