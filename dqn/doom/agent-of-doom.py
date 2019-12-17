@@ -42,6 +42,8 @@ def train_agent_of_doom(config_file, device='gpu'):
   save_model = train_cfgs['save_model']
   model_dest = train_cfgs['model_dest']
   train_eps = train_cfgs['n_train_episodes']
+  max_steps = train_cfgs['max_steps']
+  policy_update = train_cfgs['policy_update']
 
   os.makedirs(model_dest, exist_ok=True)
   shutil.copy(config_file, model_dest)
@@ -49,7 +51,10 @@ def train_agent_of_doom(config_file, device='gpu'):
   assert env.action_size == agent.action_size, \
       "Environment and state action size should match"
 
-  train_ep = tqdm.tqdm(range(train_eps), ascii=True, unit='episode')
+  train_ep = tqdm.tqdm(range(train_eps), ascii=True,
+                       unit='episode', leave=False)
+
+  global_step = 0
 
   for ep in train_ep:
 
@@ -57,47 +62,45 @@ def train_agent_of_doom(config_file, device='gpu'):
     env.game.new_episode()
 
     frame = env.game.get_state().screen_buffer
-    agent.set_history(frame, new_episode=True)
+    agent.append_state(frame)
 
-    for step in range(train_cfgs['max_steps']):
+    train_step = tqdm.tqdm(range(max_steps), ascii=True,
+                           unit='stp', leave=False)
 
-      agent.set_eps(ep * step)
+    for step in train_step:
 
-      state = agent.get_history()
+      global_step = ep * max_steps + step
+      agent.set_eps(global_step)
+
+      state = agent.get_state()
       action = agent.get_action(state)
       reward = env.game.make_action(env.actions[action])
-
       done = env.game.is_episode_finished()
 
-      next_frame = None if done \
-          else env.game.get_state().screen_buffer
-
-      agent.set_history(next_frame)
-      next_state = agent.get_history()
-      agent.push_to_memory(state, action, next_state, reward)
-
-      agent.update(batch_size=batch_size)
-
       if done:
-        agent.update_scores(env.game.get_total_reward())
+        total_score = env.game.get_total_reward()
 
-        agent.restart()
+        agent.reset()
         env.game.new_episode()
 
-        frame = env.game.get_state().screen_buffer
-        agent.set_history(frame, new_episode=True)
+        train_step.set_description('{0}, Reward : {1:.3f}, '
+                                   'Eps : {2:.4f}'.format(ep, total_score,
+                                                          agent.eps))
 
-    mean_score = 0.0 if agent.scores == [] else np.mean(agent.scores)
-    mean_loss = 0.0 if agent.losses == [] else np.mean(agent.losses)
+      next_frame = env.game.get_state().screen_buffer
 
-    train_ep.set_description('Reward : {1:.3f} Loss : {2:.4f} eps'
-                             ' : {3:.4f}'.format(ep, mean_score, mean_loss,
-                                                 agent.eps))
-    if ep % update_target == 0:
-      agent.update_target(ep)
+      agent.append_state(next_frame)
+      states = agent.get_state(complete=True)
+      agent.push_to_memory(states, action, reward, done)
 
-    if ep % save_model == 0:
-      agent.save_model('{0:06d}'.format(ep), model_dest)
+      if global_step % policy_update == 0:
+        agent.optimize(batch_size=batch_size)
+
+      if global_step % update_target == 0:
+        agent.update_target(global_step)
+
+      if global_step % save_model == 0:
+        agent.save_model('{0:09d}'.format(global_step), model_dest)
 
   agent.save_model('final', model_dest)
 
