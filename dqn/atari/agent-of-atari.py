@@ -86,7 +86,7 @@ def train_agent_of_atari(config_file, device='gpu'):
       agent.push_to_memory(states, action, done, reward)
 
       if global_step % policy_update == 0:
-        agent.update(batch_size=batch_size)
+        agent.optimize(batch_size=batch_size)
 
       if global_step % update_target == 0:
         agent.update_target(global_step)

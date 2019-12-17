@@ -25,13 +25,13 @@ class ReplayBuffer(object):
 
     (c, h, w) = state_shape
     self.size = 0
+    self.position = 0
     self.capacity = capacity
     self.device = device
     self.states = torch.zeros((capacity, c + 1, h, w), dtype=torch.uint8)
     self.actions = torch.zeros((capacity, 1), dtype=torch.long)
     self.rewards = torch.zeros((capacity, 1), dtype=torch.int8)
     self.dones = torch.zeros((capacity, 1), dtype=torch.bool)
-    self.position = 0
 
   def push(self, *args):
     """Saves a transition."""
@@ -65,11 +65,11 @@ class AtariNet(torch.nn.Module):
 
     super(AtariNet, self).__init__()
 
+    self.lr = lr
+    self.device = device
     self.input_shape = input_shape
     self.state_size = state_size
     self.action_size = action_size
-    self.lr = lr
-    self.device = device
 
     (w, h) = self.input_shape
 
@@ -123,9 +123,7 @@ class AgentOfAtari():
     assert self.action_size is not None, 'Action size has to non None'
     assert self.device is not None, 'Device has to be CPU/GPU'
 
-    zero_state = np.zeros([1] + self.input_shape, np.uint8)
-    zero_state = np.ascontiguousarray(zero_state)
-    self.zero_state = torch.tensor(zero_state)
+    self.zero_state = torch.zeros([1] + self.input_shape, dtype=torch.uint8)
 
     self.policy = AtariNet(self.input_shape, self.state_size,
                            self.action_size, self.lr,
@@ -170,10 +168,12 @@ class AgentOfAtari():
 
     if random.random() > self.eps:
       with torch.no_grad():
-        return self.policy(state).max(1)[1].view(1, 1).detach().cpu()
+        a = self.policy(state).max(1)[1].cpu().view(1, 1)
     else:
-      return torch.tensor([[random.randrange(self.action_size)]],
-                          dtype=torch.long)
+      a = torch.tensor([[random.randrange(self.action_size)]],
+                       device='cpu', dtype=torch.long)
+
+    return a.numpy()[0, 0].item()
 
   def set_eps(self, step):
 
@@ -182,7 +182,10 @@ class AgentOfAtari():
 
   def append_state(self, state):
 
-    self.history.append(torch.from_numpy(state))
+    state = torch.from_numpy(state).view(1, self.input_shape[0],
+                                         self.input_shape[1])
+
+    self.history.append(state)
 
   def get_state(self, complete=False):
 
@@ -191,16 +194,13 @@ class AgentOfAtari():
 
   def push_to_memory(self, states, action, done, reward):
 
-    reward = torch.from_numpy(np.array([reward], dtype=np.float32))
-    done = torch.from_numpy(np.array([done], dtype=np.bool))
-
     self.replay.push(states, action, done, reward)
 
   def update_scores(self, score):
 
     self.scores.append(score)
 
-  def update(self, batch_size=32):
+  def optimize(self, batch_size=32):
 
     if len(self.replay) < batch_size:
       return
@@ -227,8 +227,6 @@ class AgentOfAtari():
     for param in self.policy.parameters():
       param.grad.data.clamp_(-1, 1)
     self.optimizer.step()
-
-    self.losses.append(loss.item())
 
   def update_target(self, step):
 
