@@ -103,11 +103,13 @@ class AgentOfAtari():
     self.device = device
     self.eps = self.max_eps
 
+    assert self.input_shape is not None, 'Input shape has to be not None'
+    assert self.action_size is not None, 'Action size has to non None'
+    assert self.device is not None, 'Device has to be CPU/GPU'
+
     zero_state = np.zeros([1] + self.input_shape, np.uint8)
     zero_state = np.ascontiguousarray(zero_state)
     self.zero_state = torch.tensor(zero_state)
-
-    assert self.device is not None, "Device has to be CPU/GPU"
 
     self.policy = AtariNet(self.input_shape, self.state_size,
                            self.action_size, self.lr,
@@ -133,7 +135,6 @@ class AgentOfAtari():
   def reset(self):
 
     self.top_scr = 0.0
-
     self.flush_episode()
 
     no_history = [self.zero_state for _ in range(self.state_size + 1)]
@@ -152,8 +153,8 @@ class AgentOfAtari():
       with torch.no_grad():
         return self.policy(state).max(1)[1].view(1, 1).detach().cpu()
     else:
-        return torch.tensor([[random.randrange(self.action_size)]],
-                            dtype=torch.long)
+      return torch.tensor([[random.randrange(self.action_size)]],
+                          dtype=torch.long)
 
   def set_eps(self, step):
 
