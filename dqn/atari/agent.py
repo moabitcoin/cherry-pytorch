@@ -18,9 +18,6 @@ from utils.helpers import get_logger
 
 logger = get_logger(__file__)
 
-Transition = namedtuple('Transition',
-                        ('states', 'action', 'done', 'reward'))
-
 
 class ReplayBuffer(object):
 
@@ -39,11 +36,12 @@ class ReplayBuffer(object):
   def push(self, *args):
     """Saves a transition."""
 
-    transition = Transition(*args)
-    self.states[self.position] = transition.states
-    self.actions[self.position, 0] = transition.action
-    self.dones[self.position, 0] = transition.done
-    self.rewards[self.position, 0] = transition.reward
+    s, a, r, d = args
+
+    self.states[self.position] = s
+    self.actions[self.position, 0] = a
+    self.rewards[self.position, 0] = r
+    self.dones[self.position, 0] = d
     self.position = (self.position + 1) % self.capacity
 
     self.size = max(self.size, self.position)
@@ -55,7 +53,7 @@ class ReplayBuffer(object):
     a = self.actions[i].to(self.device)
     r = self.rewards[i].to(self.device).float()
     d = self.dones[i].to(self.device).float()
-    return Transition(s, a, r, d)
+    return s, a, r, d
 
   def __len__(self):
     return self.size
@@ -209,14 +207,16 @@ class AgentOfAtari():
 
     batch = self.replay.sample(batch_size)
 
-    state_batch = batch.states[:, :self.state_size]
-    next_state_batch = batch.states[:, 1:]
+    states, action, reward, done = batch
 
-    q_values = self.policy(state_batch).gather(1, batch.action)
+    state_batch = states[:, :self.state_size]
+    next_state_batch = states[:, 1:]
+
+    q_values = self.policy(state_batch).gather(1, action)
     q_values_next = self.target(next_state_batch).max(1)[0].detach()
 
     # Compute the expected Q values (target)
-    q_values_target = (q_values_next * self.gamma) * (1. - batch.done[:, 0]) + batch.reward[:, 0]
+    q_values_target = (q_values_next * self.gamma) * (1. - done[:, 0]) + reward[:, 0]
 
     # Compute Huber loss
     loss = F.smooth_l1_loss(q_values, q_values_target.unsqueeze(1))
