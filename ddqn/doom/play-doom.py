@@ -12,8 +12,8 @@ import skvideo
 import skvideo.io
 from skvideo.io import FFmpegWriter as vid_writer
 
-from ddqn.doom.environment import DoomEnvironment
-from ddqn.doom.agent import AgentOfDoom
+from dqn.doom.environment import DoomEnvironment
+from dqn.doom.agent import AgentOfDoom
 from utils.helpers import read_yaml, get_logger
 
 
@@ -44,6 +44,7 @@ def play_doom(config_file, model_file=None, device='gpu'):
   test_cfgs = cfgs['test']
   state_dest = test_cfgs['state_dest']
   test_episodes = test_cfgs['n_test_episodes']
+  max_steps = test_cfgs['max_steps']
 
   test_ep = tqdm.tqdm(range(test_episodes), ascii=True, unit='episode')
 
@@ -52,7 +53,7 @@ def play_doom(config_file, model_file=None, device='gpu'):
 
   for ep in test_ep:
 
-    vid_file = '{0}/states-ep-{1:06d}.mp4'.format(state_dest, ep)
+    vid_file = '{0}/states-ep-{1:09d}.mp4'.format(state_dest, ep)
 
     writer = vid_writer(vid_file, outputdict={'-vcodec': 'h264',
                                               '-b': '300000000'})
@@ -64,41 +65,34 @@ def play_doom(config_file, model_file=None, device='gpu'):
     agent.eps = 0.0
 
     frame = env.game.get_state().screen_buffer
-    agent.set_history(frame, new_episode=True)
+    agent.append_state(frame)
 
     writer.writeFrame(frame)
 
-    for step in range(test_cfgs['max_steps']):
+    test_step = tqdm.tqdm(range(max_steps), ascii=True, unit='stp')
 
-      state = agent.get_history()
+    for step in test_step:
+
+      state = agent.get_state()
       action = agent.get_action(state)
       reward = env.game.make_action(env.actions[action])
-
       done = env.game.is_episode_finished()
 
-      next_frame = None if done \
-          else env.game.get_state().screen_buffer
-
-      if next_frame is not None:
-        writer.writeFrame(next_frame)
-
-      agent.set_history(next_frame)
-
       if done:
-        agent.update_scores(env.game.get_total_reward())
+        reward = env.game.get_total_reward()
 
-        agent.restart()
+        agent.reset()
         env.game.new_episode()
 
-        frame = env.game.get_state().screen_buffer
-        agent.set_history(frame, new_episode=True)
+        test_step.set_description('{0}/{1} Reward : {2:.3f}'.format(ep, step,
+                                                                    reward))
+
+      next_frame = env.game.get_state().screen_buffer
+      agent.append_state(next_frame)
+
+      writer.writeFrame(next_frame)
 
     writer.close()
-
-    mean_score = 0.0 if agent.scores == [] else np.mean(agent.scores)
-
-    test_ep.set_description('Episode {0} Reward : {1:.3f}'.format(ep,
-                                                                  mean_score))
 
 
 if __name__ == '__main__':
