@@ -18,29 +18,45 @@ from utils.helpers import get_logger
 
 logger = get_logger(__file__)
 
-Transition = namedtuple('Transition',
-                        ('states', 'action', 'done', 'reward'))
-
 
 class ReplayBuffer(object):
 
-  def __init__(self, capacity):
-    self.capacity = capacity
-    self.memory = []
+  def __init__(self, capacity, state_shape, device):
+
+    (c, h, w) = state_shape
+    self.size = 0
     self.position = 0
+    self.capacity = capacity
+    self.device = device
+    self.states = torch.zeros((capacity, c + 1, h, w), dtype=torch.uint8)
+    self.actions = torch.zeros((capacity, 1), dtype=torch.long)
+    self.rewards = torch.zeros((capacity, 1), dtype=torch.int8)
+    self.dones = torch.zeros((capacity, 1), dtype=torch.bool)
 
   def push(self, *args):
     """Saves a transition."""
-    if len(self.memory) < self.capacity:
-      self.memory.append(None)
-    self.memory[self.position] = Transition(*args)
+
+    s, a, r, d = args
+
+    self.states[self.position] = s
+    self.actions[self.position, 0] = a
+    self.rewards[self.position, 0] = r
+    self.dones[self.position, 0] = d
     self.position = (self.position + 1) % self.capacity
 
+    self.size = max(self.size, self.position)
+
   def sample(self, batch_size):
-    return random.sample(self.memory, batch_size)
+
+    i = torch.randint(0, high=self.size, size=(batch_size,))
+    s = self.states[i]
+    a = self.actions[i].to(self.device)
+    r = self.rewards[i].to(self.device).float()
+    d = self.dones[i].to(self.device).float()
+    return s, a, r, d
 
   def __len__(self):
-    return len(self.memory)
+    return self.size
 
 
 class AtariNet(torch.nn.Module):
@@ -49,36 +65,37 @@ class AtariNet(torch.nn.Module):
 
     super(AtariNet, self).__init__()
 
+    self.lr = lr
+    self.device = device
     self.input_shape = input_shape
     self.state_size = state_size
     self.action_size = action_size
-    self.lr = lr
+
+    self.conv1 = nn.Conv2d(state_size, 32, kernel_size=8, stride=4, bias=False)
+    self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2, bias=False)
+    self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1, bias=False)
+    self.fc1 = nn.Linear(64 * 7 * 7, 512)
+    self.fc2 = nn.Linear(512, action_size)
     self.device = device
 
-    (w, h) = self.input_shape
+  def init_weights(self, m):
+    if type(m) == nn.Linear:
+      torch.nn.init.kaiming_normal_(m.weight, nonlinearity='relu')
+      m.bias.data.fill_(0.0)
 
-    self.conv1 = nn.Conv2d(self.state_size, 16, kernel_size=5, stride=2)
-    self.bn1 = nn.BatchNorm2d(16)
-    self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2)
-    self.bn2 = nn.BatchNorm2d(32)
-    self.conv3 = nn.Conv2d(32, 32, kernel_size=5, stride=2)
-    self.bn3 = nn.BatchNorm2d(32)
-
-    def feat_shape(size, kernel_size=5, stride=2):
-      return (size - (kernel_size - 1) - 1) // stride + 1
-    convw = feat_shape(feat_shape(feat_shape(w)))
-    convh = feat_shape(feat_shape(feat_shape(h)))
-    feat_spatial_shape = convw * convh * 32
-    self.head = nn.Linear(feat_spatial_shape, self.action_size)
+    if type(m) == nn.Conv2d:
+      torch.nn.init.kaiming_normal_(m.weight, nonlinearity='relu')
 
   def forward(self, x):
 
     x = x.to(self.device).float() / 255.
-    x = F.relu(self.bn1(self.conv1(x)))
-    x = F.relu(self.bn2(self.conv2(x)))
-    x = F.relu(self.bn3(self.conv3(x)))
 
-    return self.head(x.view(x.size(0), -1))
+    x = F.relu(self.conv1(x))
+    x = F.relu(self.conv2(x))
+    x = F.relu(self.conv3(x))
+    x = F.relu(self.fc1(x.view(x.size(0), -1)))
+
+    return self.fc2(x)
 
 
 class AgentOfAtari():
@@ -107,13 +124,14 @@ class AgentOfAtari():
     assert self.action_size is not None, 'Action size has to non None'
     assert self.device is not None, 'Device has to be CPU/GPU'
 
-    zero_state = np.zeros([1] + self.input_shape, np.uint8)
-    zero_state = np.ascontiguousarray(zero_state)
-    self.zero_state = torch.tensor(zero_state)
+    self.zero_state = torch.zeros([1] + self.input_shape, dtype=torch.uint8)
 
     self.policy = AtariNet(self.input_shape, self.state_size,
                            self.action_size, self.lr,
                            self.device).to(self.device)
+
+    self.policy.apply(self.policy.init_weights)
+
     self.target = AtariNet(self.input_shape, self.state_size,
                            self.action_size, self.lr,
                            self.device).to(self.device)
@@ -123,7 +141,9 @@ class AgentOfAtari():
 
     self.optimizer = optim.Adam(self.policy.parameters(),
                                 lr=self.lr, eps=1.5e-4)
-    self.replay = ReplayBuffer(self.replay_size)
+    self.replay = ReplayBuffer(self.replay_size,
+                               [self.state_size] + self.input_shape,
+                               self.device)
 
     if model_file:
       self.load_model(model_file)
@@ -152,10 +172,12 @@ class AgentOfAtari():
 
     if random.random() > self.eps:
       with torch.no_grad():
-        return self.policy(state).max(1)[1].view(1, 1).detach().cpu()
+        a = self.policy(state).max(1)[1].cpu().view(1, 1)
     else:
-      return torch.tensor([[random.randrange(self.action_size)]],
-                          dtype=torch.long)
+      a = torch.tensor([[random.randrange(self.action_size)]],
+                       device='cpu', dtype=torch.long)
+
+    return a.numpy()[0, 0].item()
 
   def set_eps(self, step):
 
@@ -164,46 +186,41 @@ class AgentOfAtari():
 
   def append_state(self, state):
 
-    self.history.append(torch.from_numpy(state))
+    state = torch.from_numpy(state).view(1, self.input_shape[0],
+                                         self.input_shape[1])
+
+    self.history.append(state)
 
   def get_state(self, complete=False):
 
     size = [self.state_size, self.state_size + 1][complete]
     return torch.cat(list(self.history)[: size]).unsqueeze(0)
 
-  def push_to_memory(self, states, action, done, reward):
+  def push_to_memory(self, states, action, reward, done):
 
-    reward = torch.from_numpy(np.array([reward], dtype=np.float32))
-    done = torch.from_numpy(np.array([done], dtype=np.bool))
-
-    self.replay.push(states, action, done, reward)
+    self.replay.push(states, action, reward, done)
 
   def update_scores(self, score):
 
     self.scores.append(score)
 
-  def update(self, batch_size=32):
+  def optimize(self, batch_size=32):
 
     if len(self.replay) < batch_size:
       return
 
-    transitions = self.replay.sample(batch_size)
-    # [(a, b), (c, d), (e, f)] -> [(a, c, e), (b, d, f)]
-    batch = Transition(*zip(*transitions))
+    batch = self.replay.sample(batch_size)
 
-    states = torch.cat(batch.states)
-    action_batch = torch.cat(batch.action).to(self.device)
-    done_batch = torch.cat(batch.done).to(self.device).float()
-    reward_batch = torch.cat(batch.reward).to(self.device)
+    states, action, reward, done = batch
 
     state_batch = states[:, :self.state_size]
     next_state_batch = states[:, 1:]
 
-    q_values = self.policy(state_batch).gather(1, action_batch)
+    q_values = self.policy(state_batch).gather(1, action)
     q_values_next = self.target(next_state_batch).max(1)[0].detach()
 
     # Compute the expected Q values (target)
-    q_values_target = (q_values_next * self.gamma) * (1. - done_batch) + reward_batch
+    q_values_target = (q_values_next * self.gamma) * (1. - done[:, 0]) + reward[:, 0]
 
     # Compute Huber loss
     loss = F.smooth_l1_loss(q_values, q_values_target.unsqueeze(1))
@@ -214,8 +231,6 @@ class AgentOfAtari():
     for param in self.policy.parameters():
       param.grad.data.clamp_(-1, 1)
     self.optimizer.step()
-
-    self.losses.append(loss.item())
 
   def update_target(self, step):
 
@@ -232,7 +247,6 @@ class AgentOfAtari():
   def show_score(self, pbar, step):
 
     total_score = np.sum(self.scores, initial=0.0)
-    mean_loss = 0.0 if self.losses == [] else np.mean(self.losses)
 
     pbar.set_description('Reward : {0:.3f}, Eps : {1:.4f}, '
                          'Buffer : {2}'.format(total_score, self.eps,

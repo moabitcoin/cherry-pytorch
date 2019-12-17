@@ -83,16 +83,16 @@ def train_agent_of_atari(config_file, device='gpu'):
 
       agent.append_state(next_state)
       states = agent.get_state(complete=True)
-      agent.push_to_memory(states, action, done, reward)
+      agent.push_to_memory(states, action, reward, done)
 
       if global_step % policy_update == 0:
-        agent.update(batch_size=batch_size)
+        agent.optimize(batch_size=batch_size)
 
       if global_step % update_target == 0:
         agent.update_target(global_step)
 
       if global_step % save_model == 0:
-        agent.save_model('{0:06d}'.format(global_step), model_dest)
+        agent.save_model('{0:09d}'.format(global_step), model_dest)
 
     train_ep.set_description('Ep : {0}, Best Reward : {1:.3f}, '
                              'Eps : {2:.4f}'.format(ep, agent.top_scr,

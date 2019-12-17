@@ -46,15 +46,9 @@ class AtariEnvironment():
   def reset(self):
 
     state = self.game.reset()
-
-    # 84x84x1 -> 1x84x84
-    return state.transpose((2, 0, 1))
+    return state
 
   def step(self, action):
 
-    state, reward, done, info = self.game.step(self.actions[action])
-
-    # 84x84x1 -> 1x84x84
-    state = state.transpose((2, 0, 1))
-
+    state, reward, done, info = self.game.step(action)
     return state, reward, done, info
