@@ -83,8 +83,9 @@ def train_agent_of_doom(config_file, device='gpu'):
         agent.reset()
         env.game.new_episode()
 
-        train_step.set_description('{0}, Reward : {1:.3f}, '
-                                   'Eps : {2:.4f}'.format(ep, total_score,
+        train_step.set_description('{0}/{1}, Reward : {2:.3f}, '
+                                   'Eps : {3:.4f}'.format(ep, step,
+                                                          total_score,
                                                           agent.eps))
 
       next_frame = env.game.get_state().screen_buffer

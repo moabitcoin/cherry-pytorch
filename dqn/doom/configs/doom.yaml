@@ -8,13 +8,13 @@ agent:
   # Learning rate for the agent
   lr : 0.00025
   # Bellman equation reward discount
-  gamma : 0.999
+  gamma : 0.99
   # maximum exploration likelihood
   max_eps : 0.9
   # minimum exploration likelihood
-  min_eps : 0.05
+  min_eps : 0.1
   # exploration likelihood decay
-  eps_decay: 10000
+  eps_decay: 50000
   # crop shape leave empty for no center cropping
   crop_shape: [224, 224]
   # frame shape full resolution frame would be resized to this size
