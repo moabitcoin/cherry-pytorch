@@ -192,9 +192,9 @@ class AgentOfAtari():
     size = [self.state_size, self.state_size + 1][complete]
     return torch.cat(list(self.history)[: size]).unsqueeze(0)
 
-  def push_to_memory(self, states, action, done, reward):
+  def push_to_memory(self, states, action, reward, done):
 
-    self.replay.push(states, action, done, reward)
+    self.replay.push(states, action, reward, done)
 
   def update_scores(self, score):
 
@@ -243,7 +243,6 @@ class AgentOfAtari():
   def show_score(self, pbar, step):
 
     total_score = np.sum(self.scores, initial=0.0)
-    mean_loss = 0.0 if self.losses == [] else np.mean(self.losses)
 
     pbar.set_description('Reward : {0:.3f}, Eps : {1:.4f}, '
                          'Buffer : {2}'.format(total_score, self.eps,
