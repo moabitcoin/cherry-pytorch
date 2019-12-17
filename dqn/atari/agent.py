@@ -71,8 +71,6 @@ class AtariNet(torch.nn.Module):
     self.state_size = state_size
     self.action_size = action_size
 
-    (w, h) = self.input_shape
-
     self.conv1 = nn.Conv2d(state_size, 32, kernel_size=8, stride=4, bias=False)
     self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2, bias=False)
     self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1, bias=False)
@@ -89,12 +87,15 @@ class AtariNet(torch.nn.Module):
       torch.nn.init.kaiming_normal_(m.weight, nonlinearity='relu')
 
   def forward(self, x):
-      x = x.to(self.device).float() / 255.
-      x = F.relu(self.conv1(x))
-      x = F.relu(self.conv2(x))
-      x = F.relu(self.conv3(x))
-      x = F.relu(self.fc1(x.view(x.size(0), -1)))
-      return self.fc2(x)
+
+    x = x.to(self.device).float() / 255.
+
+    x = F.relu(self.conv1(x))
+    x = F.relu(self.conv2(x))
+    x = F.relu(self.conv3(x))
+    x = F.relu(self.fc1(x.view(x.size(0), -1)))
+
+    return self.fc2(x)
 
 
 class AgentOfAtari():
