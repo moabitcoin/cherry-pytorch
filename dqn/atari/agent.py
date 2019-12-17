@@ -73,28 +73,28 @@ class AtariNet(torch.nn.Module):
 
     (w, h) = self.input_shape
 
-    self.conv1 = nn.Conv2d(self.state_size, 16, kernel_size=5, stride=2)
-    self.bn1 = nn.BatchNorm2d(16)
-    self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2)
-    self.bn2 = nn.BatchNorm2d(32)
-    self.conv3 = nn.Conv2d(32, 32, kernel_size=5, stride=2)
-    self.bn3 = nn.BatchNorm2d(32)
+    self.conv1 = nn.Conv2d(state_size, 32, kernel_size=8, stride=4, bias=False)
+    self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2, bias=False)
+    self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1, bias=False)
+    self.fc1 = nn.Linear(64 * 7 * 7, 512)
+    self.fc2 = nn.Linear(512, action_size)
+    self.device = device
 
-    def feat_shape(size, kernel_size=5, stride=2):
-      return (size - (kernel_size - 1) - 1) // stride + 1
-    convw = feat_shape(feat_shape(feat_shape(w)))
-    convh = feat_shape(feat_shape(feat_shape(h)))
-    feat_spatial_shape = convw * convh * 32
-    self.head = nn.Linear(feat_spatial_shape, self.action_size)
+  def init_weights(self, m):
+    if type(m) == nn.Linear:
+      torch.nn.init.kaiming_normal_(m.weight, nonlinearity='relu')
+      m.bias.data.fill_(0.0)
+
+    if type(m) == nn.Conv2d:
+      torch.nn.init.kaiming_normal_(m.weight, nonlinearity='relu')
 
   def forward(self, x):
-
-    x = x.to(self.device).float() / 255.
-    x = F.relu(self.bn1(self.conv1(x)))
-    x = F.relu(self.bn2(self.conv2(x)))
-    x = F.relu(self.bn3(self.conv3(x)))
-
-    return self.head(x.view(x.size(0), -1))
+      x = x.to(self.device).float() / 255.
+      x = F.relu(self.conv1(x))
+      x = F.relu(self.conv2(x))
+      x = F.relu(self.conv3(x))
+      x = F.relu(self.fc1(x.view(x.size(0), -1)))
+      return self.fc2(x)
 
 
 class AgentOfAtari():
@@ -128,6 +128,9 @@ class AgentOfAtari():
     self.policy = AtariNet(self.input_shape, self.state_size,
                            self.action_size, self.lr,
                            self.device).to(self.device)
+
+    self.policy.apply(self.policy.init_weights)
+
     self.target = AtariNet(self.input_shape, self.state_size,
                            self.action_size, self.lr,
                            self.device).to(self.device)
