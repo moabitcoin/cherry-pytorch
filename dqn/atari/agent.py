@@ -24,23 +24,41 @@ Transition = namedtuple('Transition',
 
 class ReplayBuffer(object):
 
-  def __init__(self, capacity):
+  def __init__(self, capacity, state_shape, device):
+
+    (c, h, w) = state_shape
+    self.size = 0
     self.capacity = capacity
-    self.memory = []
+    self.device = device
+    self.states = torch.zeros((capacity, c + 1, h, w), dtype=torch.uint8)
+    self.actions = torch.zeros((capacity, 1), dtype=torch.long)
+    self.rewards = torch.zeros((capacity, 1), dtype=torch.int8)
+    self.dones = torch.zeros((capacity, 1), dtype=torch.bool)
     self.position = 0
 
   def push(self, *args):
     """Saves a transition."""
-    if len(self.memory) < self.capacity:
-      self.memory.append(None)
-    self.memory[self.position] = Transition(*args)
+
+    transition = Transition(*args)
+    self.states[self.position] = transition.states
+    self.actions[self.position, 0] = transition.action
+    self.dones[self.position, 0] = transition.done
+    self.rewards[self.position, 0] = transition.reward
     self.position = (self.position + 1) % self.capacity
 
+    self.size = max(self.size, self.position)
+
   def sample(self, batch_size):
-    return random.sample(self.memory, batch_size)
+
+    i = torch.randint(0, high=self.size, size=(batch_size,))
+    s = self.states[i]
+    a = self.actions[i].to(self.device)
+    r = self.rewards[i].to(self.device).float()
+    d = self.dones[i].to(self.device).float()
+    return Transition(s, a, r, d)
 
   def __len__(self):
-    return len(self.memory)
+    return self.size
 
 
 class AtariNet(torch.nn.Module):
@@ -123,7 +141,9 @@ class AgentOfAtari():
 
     self.optimizer = optim.Adam(self.policy.parameters(),
                                 lr=self.lr, eps=1.5e-4)
-    self.replay = ReplayBuffer(self.replay_size)
+    self.replay = ReplayBuffer(self.replay_size,
+                               [self.state_size] + self.input_shape,
+                               self.device)
 
     if model_file:
       self.load_model(model_file)
@@ -187,23 +207,16 @@ class AgentOfAtari():
     if len(self.replay) < batch_size:
       return
 
-    transitions = self.replay.sample(batch_size)
-    # [(a, b), (c, d), (e, f)] -> [(a, c, e), (b, d, f)]
-    batch = Transition(*zip(*transitions))
+    batch = self.replay.sample(batch_size)
 
-    states = torch.cat(batch.states)
-    action_batch = torch.cat(batch.action).to(self.device)
-    done_batch = torch.cat(batch.done).to(self.device).float()
-    reward_batch = torch.cat(batch.reward).to(self.device)
+    state_batch = batch.states[:, :self.state_size]
+    next_state_batch = batch.states[:, 1:]
 
-    state_batch = states[:, :self.state_size]
-    next_state_batch = states[:, 1:]
-
-    q_values = self.policy(state_batch).gather(1, action_batch)
+    q_values = self.policy(state_batch).gather(1, batch.action)
     q_values_next = self.target(next_state_batch).max(1)[0].detach()
 
     # Compute the expected Q values (target)
-    q_values_target = (q_values_next * self.gamma) * (1. - done_batch) + reward_batch
+    q_values_target = (q_values_next * self.gamma) * (1. - batch.done[:, 0]) + batch.reward[:, 0]
 
     # Compute Huber loss
     loss = F.smooth_l1_loss(q_values, q_values_target.unsqueeze(1))
