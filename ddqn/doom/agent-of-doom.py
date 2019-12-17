@@ -9,8 +9,8 @@ import tqdm
 import torch
 import numpy as np
 
-from dqn.doom.environment import DoomEnvironment
-from dqn.doom.agent import AgentOfDoom
+from ddqn.doom.environment import DoomEnvironment
+from ddqn.doom.agent import AgentOfDoom
 from utils.helpers import read_yaml, get_logger
 
 

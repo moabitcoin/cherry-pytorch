@@ -12,8 +12,8 @@ import skvideo
 import skvideo.io
 from skvideo.io import FFmpegWriter as vid_writer
 
-from dqn.doom.environment import DoomEnvironment
-from dqn.doom.agent import AgentOfDoom
+from ddqn.doom.environment import DoomEnvironment
+from ddqn.doom.agent import AgentOfDoom
 from utils.helpers import read_yaml, get_logger
 
 
