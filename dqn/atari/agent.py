@@ -121,7 +121,8 @@ class AgentOfAtari():
     self.target.load_state_dict(self.policy.state_dict())
     self.target.eval()
 
-    self.optimizer = optim.RMSprop(self.policy.parameters(), lr=self.lr)
+    self.optimizer = optim.Adam(self.policy.parameters(),
+                                lr=self.lr, eps=1.5e-4)
     self.replay = ReplayBuffer(self.replay_size)
 
     if model_file:

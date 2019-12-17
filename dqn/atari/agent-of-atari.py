@@ -38,6 +38,7 @@ def train_agent_of_atari(config_file, device='gpu'):
   model_dest = train_cfgs['model_dest']
   train_eps = train_cfgs['n_train_episodes']
   max_steps = train_cfgs['max_steps']
+  policy_update = train_cfgs['policy_update']
 
   env = AtariEnvironment(cfgs['env'])
   agent = AgentOfAtari(cfgs['agent'], action_size=env.action_size,
@@ -84,7 +85,8 @@ def train_agent_of_atari(config_file, device='gpu'):
       states = agent.get_state(complete=True)
       agent.push_to_memory(states, action, done, reward)
 
-      agent.update(batch_size=batch_size)
+      if global_step % policy_update == 0:
+        agent.update(batch_size=batch_size)
 
       if global_step % update_target == 0:
         agent.update_target(global_step)
