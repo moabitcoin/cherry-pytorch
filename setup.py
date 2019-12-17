@@ -3,10 +3,10 @@ from setuptools import setup
 
 base_url = 'https://github.com/moabitcoin/'
 
-setup(name='cherry',
-      version_format='{tag}.dev{commits}',
+setup(name='cherry-rl',
+      version_format='dev{commits}',
       setup_requires=['very-good-setuptools-git-version'],
-      description='Data catalogue tools',
+      description='RL muse in Pytorch',
       url=base_url + 'cherry-pytorch',
       author='Harsimrat Sandhawalia',
       author_email='hs.sandhawalia@gmail.com',
