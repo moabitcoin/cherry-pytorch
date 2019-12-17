@@ -85,7 +85,7 @@ def play_atari(config_file, model_file=None, device='gpu'):
 
       if info['ale.lives'] == 0:
         agent.show_score(test_steps, step)
-        agent.flash()
+        agent.flush_episode()
 
       agent.append_state(next_state)
 
