@@ -88,7 +88,7 @@ class AgentOfAtari():
     self.history = None
     self.losses = None
     self.rewards = None
-    self.null_state = None
+    self.zero_state = None
     self.top_scr = 0.0
     self.crop_shape = cfgs['crop_shape']
     self.input_shape = cfgs['input_shape']
@@ -103,9 +103,9 @@ class AgentOfAtari():
     self.device = device
     self.eps = self.max_eps
 
-    null_state = np.zeros([1] + self.input_shape, np.uint8)
-    null_state = np.ascontiguousarray(null_state)
-    self.null_state = torch.tensor(null_state)
+    zero_state = np.zeros([1] + self.input_shape, np.uint8)
+    zero_state = np.ascontiguousarray(zero_state)
+    self.zero_state = torch.tensor(zero_state)
 
     assert self.device is not None, "Device has to be CPU/GPU"
 
@@ -136,7 +136,7 @@ class AgentOfAtari():
 
     self.flush_episode()
 
-    no_history = [self.null_state for _ in range(self.state_size + 1)]
+    no_history = [self.zero_state for _ in range(self.state_size + 1)]
     self.history = deque(no_history, maxlen=self.state_size + 1)
 
   def load_model(self, model_file):
