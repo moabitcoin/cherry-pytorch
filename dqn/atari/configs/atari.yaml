@@ -30,9 +30,9 @@ train:
   # Max steps in each episode
   max_steps : 10000
   # batch size
-  batch_size: 32
+  batch_size: 64
   # model location
-  model_dest: /data/experiments/agent-of-atari/17-12-2019-Breakout-v0-dqn-test
+  model_dest: /data/experiments/agent-of-atari/17-12-2019-Breakout-v0-dqn-buffer
   # update target every update_target steps
   update_target: 10000
   # save model every save_model steps
@@ -47,4 +47,4 @@ test:
   # Max steps in each episode
   max_steps : 10000
   # path where to save played video
-  state_dest: /data/experiments/agent-of-atari/17-12-2019-Breakout-v0-dqn-test/states
+  state_dest: /data/experiments/agent-of-atari/17-12-2019-Breakout-v0-dqn-buffer/states
