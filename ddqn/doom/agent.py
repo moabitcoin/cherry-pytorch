@@ -218,6 +218,7 @@ class AgentOfDoom():
     state_batch = states[:, :self.state_size]
     next_state_batch = states[:, 1:]
 
+    # DDQN
     q_values = self.policy(state_batch).gather(1, action)
     target_action = self.policy(next_state_batch).max(1)[1].view(-1, 1)
     q_values_next = self.target(next_state_batch).gather(1, target_action).view(-1)

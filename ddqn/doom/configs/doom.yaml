@@ -1,7 +1,7 @@
 # Environment config
 env:
-  game_config : 'dqn/doom/assets/basic.cfg'
-  scenario_config : 'dqn/doom/assets/basic.wad'
+  game_config : 'ddqn/doom/assets/basic.cfg'
+  scenario_config : 'ddqn/doom/assets/basic.wad'
 
 # Agent config
 agent:
@@ -32,7 +32,7 @@ train:
   # batch size
   batch_size: 64
   # model location
-  model_dest: /data/experiments/agent-of-doom/17-12-2019-320x240-basic-dqn
+  model_dest: /data/experiments/agent-of-doom/17-12-2019-320x240-basic-ddqn
   # update target every update_target episodes
   update_target: 1000
   # save model every save_model episodes
@@ -47,4 +47,4 @@ test:
   # Max steps in each episode
   max_steps : 1000
   # path where to save played video
-  state_dest: /data/experiments/agent-of-doom/17-12-2019-320x240-basic-dqn/states
+  state_dest: /data/experiments/agent-of-doom/17-12-2019-320x240-basic-ddqn/states
