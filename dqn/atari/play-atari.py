@@ -63,8 +63,8 @@ def play_atari(config_file, model_file=None, device='gpu'):
     # no exploration
     agent.eps = 0.0
 
-    frame = env.game.reset()
-    agent.set_history(frame, new_episode=True)
+    frame = env.reset()
+    agent.append_state(frame)
 
     writer.writeFrame(frame)
 
@@ -73,18 +73,21 @@ def play_atari(config_file, model_file=None, device='gpu'):
 
     for step in test_steps:
 
-      state = agent.get_history()
+      state = agent.get_state()
       action = agent.get_action(state)
-      next_state, reward, done, info = env.game.step(env.actions[action])
+      next_state, reward, done, info = env.step(action)
       agent.update_scores(reward)
 
       writer.writeFrame(next_state)
 
       if done:
-        next_state = env.game.reset()
-        agent.show_score(test_steps, step)
+        next_state = env.reset()
 
-      agent.set_history(next_state)
+      if info['ale.lives'] == 0:
+        agent.show_score(test_steps, step)
+        agent.flash()
+
+      agent.append_state(next_state)
 
     writer.close()
 
