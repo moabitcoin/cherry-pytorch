@@ -17,7 +17,9 @@ Install dependencies as outlined [here](https://github.com/mwydmuch/ViZDoom/blob
 ```
 sudo apt-get install libcanberra-gtk-module
 pip install vizdoom
-# If on a headless machine
+# If on a headless machine of
+vizdoom.vizdoom.ViZDoomErrorException: Could not initialize SDL video:
+No available video device
 export DISPLAY=:0
 ```
 

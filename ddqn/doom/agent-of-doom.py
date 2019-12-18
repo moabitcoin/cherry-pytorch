@@ -58,6 +58,8 @@ def train_agent_of_doom(config_file, device='gpu'):
 
   for ep in train_ep:
 
+    reward = 0
+
     agent.reset()
     env.game.new_episode()
 
@@ -77,22 +79,25 @@ def train_agent_of_doom(config_file, device='gpu'):
       reward = env.game.make_action(env.actions[action])
       done = env.game.is_episode_finished()
 
+      next_frame = agent.zero_state if done else env.game.get_state().screen_buffer
+
+      agent.append_state(next_frame)
+      states = agent.get_state(complete=True)
+      agent.push_to_memory(states, action, reward, done)
+
       if done:
+
         total_score = env.game.get_total_reward()
 
         agent.reset()
         env.game.new_episode()
+        next_frame = env.game.get_state().screen_buffer
+        agent.append_state(next_frame)
 
         train_step.set_description('{0}/{1}, Reward : {2:.3f}, '
                                    'Eps : {3:.4f}'.format(ep, step,
                                                           total_score,
                                                           agent.eps))
-
-      next_frame = env.game.get_state().screen_buffer
-
-      agent.append_state(next_frame)
-      states = agent.get_state(complete=True)
-      agent.push_to_memory(states, action, reward, done)
 
       if global_step % policy_update == 0:
         agent.optimize(batch_size=batch_size)
