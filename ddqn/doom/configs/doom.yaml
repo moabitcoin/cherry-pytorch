@@ -26,7 +26,7 @@ agent:
 
 train:
   # Number of training episodes
-  n_train_episodes : 100
+  n_train_episodes : 200
   # Max steps in each episode
   max_steps : 1000
   # batch size
