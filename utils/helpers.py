@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 
 import yaml
+from baselines.common.atari_wrappers import EpisodicLifeEnv, FireResetEnv
 
 CLI_LOGGING_FORMAT = '[%(filename)s][%(funcName)s:%(lineno)d]' + \
     '[%(levelname)s] %(message)s'
@@ -43,3 +44,13 @@ def read_yaml(config_file):
     return d
   except Exception as err:
     logger.error('Error reading {}, {}'.format(config_file, err))
+
+
+def atari_play_env(env):
+
+  env = EpisodicLifeEnv(env)
+
+  if 'FIRE' in env.unwrapped.get_action_meanings():
+    env = FireResetEnv(env)
+
+  return env
