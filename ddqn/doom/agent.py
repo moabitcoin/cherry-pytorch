@@ -140,8 +140,7 @@ class AgentOfDoom():
     self.target.load_state_dict(self.policy.state_dict())
     self.target.eval()
 
-    self.optimizer = optim.Adam(self.policy.parameters(),
-                                lr=self.lr, eps=1.5e-4)
+    self.optimizer = optim.RMSprop(self.policy.parameters(), lr=self.lr)
     self.replay = ReplayBuffer(self.replay_size,
                                [self.state_size] + self.input_shape,
                                self.device)
@@ -220,8 +219,10 @@ class AgentOfDoom():
 
     # DDQN
     q_values = self.policy(state_batch).gather(1, action)
-    target_action = self.policy(next_state_batch).max(1)[1].view(-1, 1)
-    q_values_next = self.target(next_state_batch).gather(1, target_action).view(-1)
+    # Decouple policy selection and policy evaluation
+    with torch.no_grad():
+      next_action = self.policy(next_state_batch).max(1)[1].view(-1, 1)
+    q_values_next = self.target(next_state_batch).gather(1, next_action).view(-1)
 
     # Compute the expected Q values (target)
     q_values_target = (q_values_next * self.gamma) * (1. - done[:, 0]) + reward[:, 0]
