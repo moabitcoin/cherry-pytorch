@@ -88,20 +88,17 @@ def play_atari(config_file, model_file=None, device='gpu'):
       state = agent.get_state()
       action = agent.get_action(state)
       next_state, reward, done, info = env.step(action)
-
-      writer.writeFrame(next_state)
-
-      next_state = convert_game_frame(next_state, agent.input_shape)
       agent.update_scores(reward)
 
       if done:
         next_state = env.reset()
-        next_state = convert_game_frame(next_state, agent.input_shape)
 
       if info['ale.lives'] == 0:
         agent.show_score(test_steps, step)
         agent.flush_episode()
 
+      writer.writeFrame(next_state)
+      next_state = convert_game_frame(next_state, agent.input_shape)
       agent.append_state(next_state)
 
     writer.close()
