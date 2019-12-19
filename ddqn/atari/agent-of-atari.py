@@ -104,7 +104,7 @@ def train_agent_of_atari(config_file, device='gpu'):
 if __name__ == '__main__':
 
   parser = argparse.ArgumentParser('Train an RL Agent to'
-                                   ' play Atari Game (DQN)')
+                                   ' play Atari Game (DDQN)')
   parser.add_argument('-x', dest='config_file', type=str,
                       help='Config for the Atari env/agent', required=True)
   parser.add_argument('-d', dest='device', choices=['gpu', 'cpu'],
