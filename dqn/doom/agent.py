@@ -140,8 +140,7 @@ class AgentOfDoom():
     self.target.load_state_dict(self.policy.state_dict())
     self.target.eval()
 
-    self.optimizer = optim.Adam(self.policy.parameters(),
-                                lr=self.lr, eps=1.5e-4)
+    self.optimizer = optim.RMSprop(self.policy.parameters(), lr=self.lr)
     self.replay = ReplayBuffer(self.replay_size,
                                [self.state_size] + self.input_shape,
                                self.device)

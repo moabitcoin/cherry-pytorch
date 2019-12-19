@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from baselines.common.atari_wrappers import make_atari, wrap_deepmind
 
 
-from utils.helpers import get_logger
+from utils.helpers import get_logger, atari_play_env
 
 logger = get_logger(__file__)
 Transition = namedtuple('Transition',
@@ -19,7 +19,7 @@ Transition = namedtuple('Transition',
 
 class AtariEnvironment():
 
-  def __init__(self, cfgs):
+  def __init__(self, cfgs, play=False):
 
     self.game = None
     self.env_name = cfgs.get('env_name')
@@ -29,7 +29,7 @@ class AtariEnvironment():
     try:
 
       env = make_atari(self.env_name)
-      self.game = wrap_deepmind(env)
+      self.game = [wrap_deepmind, atari_play_env][play](env)
 
       self.action_size = self.game.action_space.n
       self.actions = range(self.action_size)

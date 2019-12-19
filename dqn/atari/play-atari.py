@@ -6,6 +6,7 @@ import random
 import argparse
 from pathlib import Path
 
+import cv2
 import tqdm
 import torch
 import numpy as np
@@ -19,6 +20,16 @@ from utils.helpers import read_yaml, get_logger
 
 
 logger = get_logger(__file__)
+
+
+def convert_game_frame(frame, input_shape):
+
+  input_shape = tuple(input_shape)
+
+  frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+  frame = cv2.resize(frame, input_shape, interpolation=cv2.INTER_AREA)
+
+  return frame
 
 
 def play_atari(config_file, model_file=None, device='gpu'):
@@ -38,7 +49,7 @@ def play_atari(config_file, model_file=None, device='gpu'):
 
   cfgs = read_yaml(config_file)
 
-  env = AtariEnvironment(cfgs['env'])
+  env = AtariEnvironment(cfgs['env'], play=True)
   agent = AgentOfAtari(cfgs['agent'], action_size=env.action_size,
                        device=device, model_file=model_file)
 
@@ -64,9 +75,10 @@ def play_atari(config_file, model_file=None, device='gpu'):
     agent.eps = 0.0
 
     frame = env.reset()
-    agent.append_state(frame)
-
     writer.writeFrame(frame)
+
+    frame = convert_game_frame(frame, agent.input_shape)
+    agent.append_state(frame)
 
     test_steps = tqdm.tqdm(range(test_cfgs['max_steps']), ascii=True,
                            unit='episode', leave=False)
@@ -78,8 +90,6 @@ def play_atari(config_file, model_file=None, device='gpu'):
       next_state, reward, done, info = env.step(action)
       agent.update_scores(reward)
 
-      writer.writeFrame(next_state)
-
       if done:
         next_state = env.reset()
 
@@ -87,6 +97,8 @@ def play_atari(config_file, model_file=None, device='gpu'):
         agent.show_score(test_steps, step)
         agent.flush_episode()
 
+      writer.writeFrame(next_state)
+      next_state = convert_game_frame(next_state, agent.input_shape)
       agent.append_state(next_state)
 
     writer.close()
