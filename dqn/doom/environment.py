@@ -74,16 +74,15 @@ class DoomEnvironment():
     rewarded_game_vars = cfgs['rewarded_game_vars']
     reward_override = cfgs['reward_override']
 
-    logger.info('Loading game config from {}'.format(config_file))
-    logger.info('Loading scenario config from {}'.format(scenario_file))
-
     assert config_file.is_file(), \
         "{} no such file".format(config_file)
-    assert scenario_file.is_file(), \
-        "{} no such file".format(scenario_file)
-
+    logger.info('Loading scenario config from {}'.format(scenario_file))
     self.game.load_config(config_file.as_posix())
-    self.game.set_doom_scenario_path(scenario_file.as_posix())
+    # assert scenario_file.is_file(), \
+    #     "{} no such file".format(scenario_file)
+    # logger.info('Loading scenario config from {}'.format(scenario_file))
+    # self.game.set_doom_scenario_path(scenario_file.as_posix())
+
     self.game.set_screen_resolution(ScreenResolution.RES_320X240)
     self.game.set_screen_format(ScreenFormat.GRAY8)
 
@@ -110,14 +109,6 @@ class DoomEnvironment():
     # Effect upon taking damage or picking up items
     self.game.set_render_screen_flashes(True)
 
-    # Adds buttons that will be allowed.
-    # self.game.add_available_button(Button.MOVE_LEFT)
-    # self.game.add_available_button(Button.MOVE_RIGHT)
-    # self.game.add_available_button(Button.ATTACK)
-
-    # Adds game variables that will be included in state.
-    # self.game.add_available_game_variable(GameVariable.HEALTH)
-
     # Causes episodes to finish after 2100 tics (actions)
     self.game.set_episode_timeout(2100)
 
@@ -130,17 +121,19 @@ class DoomEnvironment():
     # Turns on the sound. (turned off by default)
     self.game.set_sound_enabled(True)
 
-    # Sets the livin reward (for each move)
-    # self.game.set_living_reward(1)
-
     # Sets ViZDoom mode (PLAYER, ASYNC_PLAYER, SPECTATOR, ASYNC_SPECTATOR,
     # PLAYER mode is default)
     self.game.set_mode(Mode.PLAYER)
 
     self.game.init()
 
-    self.action_size = self.game.get_available_buttons_size()
-    self.actions = [a.tolist() for a in np.eye(self.action_size, dtype=bool)]
+    action_size = self.game.get_available_buttons_size()
+    self.actions = []
+
+    for perm in it.product([False, True], repeat=action_size):
+      self.actions.append(list(perm))
+    # self.actions = [a.tolist() for a in np.eye(self.action_size, dtype=bool)]
+    self.action_size = len(self.actions)
 
     self.reward_values = default_reward_values
     self.reward_values.update(reward_override)
@@ -161,18 +154,6 @@ class DoomEnvironment():
   def make_action(self, action):
 
     reward = self.game.make_action(self.actions[action])
-    current_game_vars = self.get_game_vars()
-
-    state = ['BASE_REWARD', 'DEATH'][self.game.is_player_dead()]
-    reward = self.reward_values[state]
-
-    for var in self.game_var_values.keys():
-      if var == 'health':
-        delta_health = current_game_vars[var] - self.game_var_values[var]
-        reward += np.clip(delta_health, self.reward_values['INJURED'],
-                          self.reward_values['MEDIKIT'])
-
-    self.game_var_values = current_game_vars
 
     self.rewards.append(reward)
 

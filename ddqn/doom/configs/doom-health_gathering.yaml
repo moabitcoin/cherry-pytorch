@@ -2,6 +2,12 @@
 env:
   game_config : 'ddqn/doom/assets/health_gathering.cfg'
   scenario_config : 'ddqn/doom/assets/health_gathering.wad'
+  rewarded_game_vars : ['health']
+  reward_override :
+    BASE_REWARD: 1.0
+    INJURED: -1.0
+    MEDIKIT: 1.0
+    DEATH: -100.0
 
 # Agent config
 agent:
@@ -10,11 +16,11 @@ agent:
   # Bellman equation reward discount
   gamma : 0.99
   # maximum exploration likelihood
-  max_eps : 0.9
+  max_eps : 0.5
   # minimum exploration likelihood
-  min_eps : 0.1
+  min_eps : 0.01
   # exploration likelihood decay
-  eps_decay: 10000
+  eps_decay: 30000
   # crop shape leave empty for no center cropping
   crop_shape:
   # frame shape full resolution frame would be resized to this size
@@ -22,23 +28,23 @@ agent:
   # state size input_shape + [state_size] tensor as enviroment representation
   state_size : 4
   # memory replay size
-  replay_size : 10000
+  replay_size : 1000
 
 train:
   # Number of training episodes
-  n_train_episodes : 100
+  n_train_episodes : 700
   # Max steps in each episode
-  max_steps : 1000
+  max_steps : 1200
   # batch size
-  batch_size: 64
+  batch_size: 8
   # model location
-  model_dest: /data/experiments/agent-of-doom/17-12-2019-320x240-health_gathering-ddqn
+  model_dest: /data/experiments/agent-of-doom/19-12-2019-320x240-health_gathering-ddqn
   # update target every update_target episodes
   update_target: 1000
   # save model every save_model episodes
-  save_model: 10000
+  save_model: 1000
   # policy update
-  policy_update: 4
+  policy_update: 1
 
 
 test:
@@ -47,4 +53,4 @@ test:
   # Max steps in each episode
   max_steps : 1000
   # path where to save played video
-  state_dest: /data/experiments/agent-of-doom/17-12-2019-320x240-health_gathering-ddqn/states
+  state_dest: /data/experiments/agent-of-doom/19-12-2019-320x240-health_gathering-ddqn/states

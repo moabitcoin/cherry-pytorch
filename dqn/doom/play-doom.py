@@ -62,7 +62,7 @@ def play_doom(config_file, model_file=None, device='gpu'):
     env.reset()
 
     # no exploration
-    agent.eps = 0.0
+    agent.eps = 0.1
 
     frame = env.get_screen_buffer()
     agent.append_state(frame)

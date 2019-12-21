@@ -106,6 +106,7 @@ class AgentOfDoom():
     self.history = None
     self.losses = None
     self.rewards = None
+    self.eps = None
     self.crop_shape = cfgs['crop_shape']
     self.input_shape = cfgs['input_shape']
     self.lr = cfgs['lr']
@@ -117,6 +118,7 @@ class AgentOfDoom():
     self.state_size = cfgs['state_size']
     self.action_size = action_size
     self.device = device
+    self.eps = self.max_eps
 
     assert self.input_shape is not None, 'Input shape has to be not None'
     assert self.action_size is not None, 'Action size has to non None'
@@ -170,8 +172,9 @@ class AgentOfDoom():
     self.policy.eval()
 
   def set_eps(self, step):
-    self.eps = self.min_eps + (self.max_eps - self.min_eps) * \
-            math.exp(-1. * step / self.eps_decay)
+
+    self.eps -= (self.max_eps - self.min_eps) / self.eps_decay
+    self.eps = max(self.eps, self.min_eps)
 
   def get_action(self, state):
 
