@@ -94,8 +94,10 @@ def train_agent_of_doom(config_file, device='gpu'):
         agent.append_state(next_frame)
 
         train_step.set_description('{0}/{1}, Reward : {2:.3f}, '
-                                   'Eps : {3:.4f}'.format(ep, step,
-                                                          reward, agent.eps))
+                                   'Eps : {3:.4f}, '
+                                   'Buffer {4}'.format(ep, step,
+                                                       reward, agent.eps,
+                                                       len(agent.replay)))
 
       if global_step % policy_update == 0:
         agent.optimize(batch_size=batch_size)
