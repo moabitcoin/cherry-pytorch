@@ -30,7 +30,7 @@ class ReplayBuffer(object):
     self.device = device
     self.states = torch.zeros((capacity, c + 1, h, w), dtype=torch.uint8)
     self.actions = torch.zeros((capacity, 1), dtype=torch.long)
-    self.rewards = torch.zeros((capacity, 1), dtype=torch.int8)
+    self.rewards = torch.zeros((capacity, 1), dtype=torch.float)
     self.dones = torch.zeros((capacity, 1), dtype=torch.bool)
 
   def push(self, *args):
@@ -53,6 +53,7 @@ class ReplayBuffer(object):
     a = self.actions[i].to(self.device)
     r = self.rewards[i].to(self.device).float()
     d = self.dones[i].to(self.device).float()
+
     return s, a, r, d
 
   def __len__(self):

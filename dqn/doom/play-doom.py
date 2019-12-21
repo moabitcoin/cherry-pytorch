@@ -59,12 +59,12 @@ def play_doom(config_file, model_file=None, device='gpu'):
                                               '-b': '300000000'})
 
     agent.reset()
-    env.game.new_episode()
+    env.reset()
 
     # no exploration
     agent.eps = 0.0
 
-    frame = env.game.get_state().screen_buffer
+    frame = env.get_screen_buffer()
     agent.append_state(frame)
 
     writer.writeFrame(frame)
@@ -75,19 +75,20 @@ def play_doom(config_file, model_file=None, device='gpu'):
 
       state = agent.get_state()
       action = agent.get_action(state)
-      reward = env.game.make_action(env.actions[action])
-      done = env.game.is_episode_finished()
+      reward = env.make_action(action)
+      done = env.is_episode_finished()
 
       if done:
-        reward = env.game.get_total_reward()
+
+        reward = env.get_total_reward()
 
         agent.reset()
-        env.game.new_episode()
+        env.reset()
 
         test_step.set_description('{0}/{1} Reward : {2:.3f}'.format(ep, step,
                                                                     reward))
 
-      next_frame = env.game.get_state().screen_buffer
+      next_frame = env.get_screen_buffer()
       agent.append_state(next_frame)
 
       writer.writeFrame(next_frame)
