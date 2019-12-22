@@ -2,6 +2,7 @@
 env:
   game_config : 'dqn/doom/assets/basic.cfg'
   scenario_config : 'dqn/doom/assets/basic.wad'
+  rewarded_game_vars : ['bullets']
   reward_override :
     BASE_REWARD: 0.01
     INJURED: 0.0
@@ -37,7 +38,7 @@ train:
   # batch size
   batch_size: 64
   # model location
-  model_dest: /data/experiments/agent-of-doom/19-12-2019-320x240-basic-dqn
+  model_dest: /data/experiments/agent-of-doom/22-12-2019-320x240-basic-dqn
   # update target every update_target episodes
   update_target: 1000
   # save model every save_model episodes
@@ -52,4 +53,4 @@ test:
   # Max steps in each episode
   max_steps : 1000
   # path where to save played video
-  state_dest: /data/experiments/agent-of-doom/19-12-2019-320x240-basic-dqn/states
+  state_dest: /data/experiments/agent-of-doom/22-12-2019-320x240-basic-dqn/states

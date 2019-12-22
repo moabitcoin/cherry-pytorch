@@ -74,14 +74,14 @@ class DoomNet(torch.nn.Module):
 
     (w, h) = self.input_shape
 
-    self.conv1 = nn.Conv2d(self.state_size, 16, kernel_size=5, stride=2)
+    self.conv1 = nn.Conv2d(self.state_size, 16, kernel_size=3, stride=2)
     self.bn1 = nn.BatchNorm2d(16)
-    self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2)
+    self.conv2 = nn.Conv2d(16, 32, kernel_size=3, stride=2)
     self.bn2 = nn.BatchNorm2d(32)
-    self.conv3 = nn.Conv2d(32, 32, kernel_size=5, stride=2)
+    self.conv3 = nn.Conv2d(32, 32, kernel_size=3, stride=2)
     self.bn3 = nn.BatchNorm2d(32)
 
-    def feat_shape(size, kernel_size=5, stride=2):
+    def feat_shape(size, kernel_size=3, stride=2):
       return (size - (kernel_size - 1) - 1) // stride + 1
     convw = feat_shape(feat_shape(feat_shape(w)))
     convh = feat_shape(feat_shape(feat_shape(h)))

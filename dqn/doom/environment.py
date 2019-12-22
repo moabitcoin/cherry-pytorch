@@ -110,7 +110,7 @@ class DoomEnvironment():
     self.game.set_render_screen_flashes(True)
 
     # Causes episodes to finish after 2100 tics (actions)
-    self.game.set_episode_timeout(2100)
+    self.game.set_episode_timeout(200)
 
     # Makes episodes start after 10 tics (~after raising the weapon)
     self.game.set_episode_start_time(10)
@@ -128,11 +128,8 @@ class DoomEnvironment():
     self.game.init()
 
     action_size = self.game.get_available_buttons_size()
-    self.actions = []
 
-    for perm in it.product([False, True], repeat=action_size):
-      self.actions.append(list(perm))
-    # self.actions = [a.tolist() for a in np.eye(self.action_size, dtype=bool)]
+    self.actions = [a.tolist() for a in np.eye(action_size, dtype=bool)]
     self.action_size = len(self.actions)
 
     self.reward_values = default_reward_values
