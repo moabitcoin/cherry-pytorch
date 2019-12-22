@@ -44,6 +44,7 @@ def train_agent_of_doom(config_file, device='gpu'):
   train_eps = train_cfgs['n_train_episodes']
   max_steps = train_cfgs['max_steps']
   policy_update = train_cfgs['policy_update']
+  n_buffer_episodes = train_cfgs['n_buffer_episodes']
 
   os.makedirs(model_dest, exist_ok=True)
   shutil.copy(config_file, model_dest)
@@ -58,16 +59,18 @@ def train_agent_of_doom(config_file, device='gpu'):
 
   for ep in train_ep:
 
-    reward = 0
-
+    env.reset()
     agent.reset()
-    env.game.new_episode()
 
-    frame = env.game.get_state().screen_buffer
-    agent.append_state(frame)
+    next_states = [env.get_frame() for _ in range(agent.state_size)]
+    agent.append_states(next_states)
 
     train_step = tqdm.tqdm(range(max_steps), ascii=True,
                            unit='stp', leave=False)
+
+    train_step.set_description('{0}, Reward : {1:.3f}, Eps : {2:.4f}, '
+                               'Buffer {3}'.format(0, 0, agent.eps,
+                                                   len(agent.replay)))
 
     for step in train_step:
 
@@ -76,33 +79,28 @@ def train_agent_of_doom(config_file, device='gpu'):
 
       state = agent.get_state()
       action = agent.get_action(state)
-      reward = env.game.make_action(env.actions[action])
-      done = env.game.is_episode_finished()
+      next_state, reward, done = env.step(action)
 
-      next_frame = agent.zero_state if done else env.game.get_state().screen_buffer
-
-      agent.append_state(next_frame)
+      agent.append_states(next_states)
       states = agent.get_state(complete=True)
       agent.push_to_memory(states, action, reward, done)
 
       if done:
 
-        total_score = env.game.get_total_reward()
+        total_score = env.get_total_reward()
 
+        env.reset()
         agent.reset()
-        env.game.new_episode()
-        next_frame = env.game.get_state().screen_buffer
-        agent.append_state(next_frame)
 
-        next_frame = env.game.get_state().screen_buffer
-        agent.append_state(next_frame)
+        next_states = [env.get_frame() for _ in range(agent.state_size)]
+        agent.append_states(next_states)
 
-        train_step.set_description('{0}/{1}, Reward : {2:.3f}, '
-                                   'Eps : {3:.4f}'.format(ep, step,
-                                                          total_score,
-                                                          agent.eps))
+        train_step.set_description('{0}, Reward : {1:.3f}, Eps : {2:.4f}, '
+                                   'Buffer : {3}'.format(step, total_score,
+                                                         agent.eps,
+                                                         len(agent.replay)))
 
-      if global_step % policy_update == 0:
+      if global_step % policy_update == 0 and ep > n_buffer_episodes:
         agent.optimize(batch_size=batch_size)
 
       if global_step % update_target == 0:

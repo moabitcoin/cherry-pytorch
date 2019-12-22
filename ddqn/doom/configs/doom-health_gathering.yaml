@@ -1,51 +1,49 @@
 # Environment config
 env:
-  game_config : 'ddqn/doom/assets/health_gathering.cfg'
-  scenario_config : 'ddqn/doom/assets/health_gathering.wad'
+  game_config : 'ddqn/doom/assets/basic.cfg'
+  scenario_config : 'ddqn/doom/assets/basic.wad'
   rewarded_game_vars : ['health']
-  reward_override :
-    BASE_REWARD: 1.0
-    INJURED: -1.0
-    MEDIKIT: 1.0
-    DEATH: -100.0
 
 # Agent config
 agent:
   # Learning rate for the agent
-  lr : 0.00025
+  lr : 0.001
   # Bellman equation reward discount
   gamma : 0.99
   # maximum exploration likelihood
-  max_eps : 0.5
+  max_eps : 0.9
   # minimum exploration likelihood
-  min_eps : 0.01
+  min_eps : 0.1
   # exploration likelihood decay
-  eps_decay: 30000
+  eps_decay: 10000
   # crop shape leave empty for no center cropping
   crop_shape:
   # frame shape full resolution frame would be resized to this size
-  input_shape : [84, 84]
+  input_shape : [60, 80]
   # state size input_shape + [state_size] tensor as enviroment representation
   state_size : 4
   # memory replay size
-  replay_size : 1000
+  replay_size : 10000
 
 train:
   # Number of training episodes
-  n_train_episodes : 700
+  n_train_episodes : 100
+  # Number of episodes to buffer from initially before learning
+  n_buffer_episodes: 0
   # Max steps in each episode
-  max_steps : 1200
+  max_steps : 300
+  # Skip steps
+  skip_steps: 4
   # batch size
-  batch_size: 8
+  batch_size: 64
   # model location
-  model_dest: /data/experiments/agent-of-doom/19-12-2019-320x240-health_gathering-ddqn
+  model_dest: /data/experiments/agent-of-doom/19-12-2019-320x240-basic-ddqn
   # update target every update_target episodes
   update_target: 1000
   # save model every save_model episodes
-  save_model: 1000
+  save_model: 10000
   # policy update
   policy_update: 1
-
 
 test:
   # Number of testing episodes
@@ -53,4 +51,4 @@ test:
   # Max steps in each episode
   max_steps : 1000
   # path where to save played video
-  state_dest: /data/experiments/agent-of-doom/19-12-2019-320x240-health_gathering-ddqn/states
+  state_dest: /data/experiments/agent-of-doom/19-12-2019-320x240-basic-ddqn/states

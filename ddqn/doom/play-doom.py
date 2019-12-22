@@ -59,15 +59,14 @@ def play_doom(config_file, model_file=None, device='gpu'):
                                               '-b': '300000000'})
 
     agent.reset()
-    env.game.new_episode()
+    env.reset()
+
+    next_states = [env.get_frame() for _ in range(agent.state_size)]
+    agent.append_states(next_states)
 
     # no exploration
     agent.eps = 0.0
-
-    frame = env.game.get_state().screen_buffer
-    agent.append_state(frame)
-
-    writer.writeFrame(frame)
+    writer.writeFrame(next_states[0])
 
     test_step = tqdm.tqdm(range(max_steps), ascii=True, unit='stp')
 
@@ -75,22 +74,21 @@ def play_doom(config_file, model_file=None, device='gpu'):
 
       state = agent.get_state()
       action = agent.get_action(state)
-      reward = env.game.make_action(env.actions[action])
-      done = env.game.is_episode_finished()
+      next_states, reward, done = env.step(action)
 
       if done:
-        reward = env.game.get_total_reward()
+        reward = env.get_total_reward()
 
         agent.reset()
-        env.game.new_episode()
+        env.reset()
+
+        next_states = [env.get_frame() for _ in range(agent.state_size)]
 
         test_step.set_description('{0}/{1} Reward : {2:.3f}'.format(ep, step,
                                                                     reward))
+      agent.append_states(next_states)
 
-      next_frame = env.game.get_state().screen_buffer
-      agent.append_state(next_frame)
-
-      writer.writeFrame(next_frame)
+      writer.writeFrame(next_states[0])
 
     writer.close()
 

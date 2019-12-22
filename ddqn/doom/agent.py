@@ -28,7 +28,7 @@ class ReplayBuffer(object):
     self.position = 0
     self.capacity = capacity
     self.device = device
-    self.states = torch.zeros((capacity, c + 1, h, w), dtype=torch.uint8)
+    self.states = torch.zeros((capacity, c * 2, h, w), dtype=torch.uint8)
     self.actions = torch.zeros((capacity, 1), dtype=torch.long)
     self.rewards = torch.zeros((capacity, 1), dtype=torch.int8)
     self.dones = torch.zeros((capacity, 1), dtype=torch.bool)
@@ -73,27 +73,24 @@ class DoomNet(torch.nn.Module):
 
     (w, h) = self.input_shape
 
-    self.conv1 = nn.Conv2d(self.state_size, 16, kernel_size=5, stride=2)
-    self.bn1 = nn.BatchNorm2d(16)
-    self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2)
-    self.bn2 = nn.BatchNorm2d(32)
-    self.conv3 = nn.Conv2d(32, 32, kernel_size=5, stride=2)
-    self.bn3 = nn.BatchNorm2d(32)
+    self.conv1 = nn.Conv2d(self.state_size, 16, kernel_size=3, stride=2)
+    self.conv2 = nn.Conv2d(16, 32, kernel_size=3, stride=2)
+    self.conv3 = nn.Conv2d(32, 64, kernel_size=3, stride=2)
 
-    def feat_shape(size, kernel_size=5, stride=2):
+    def feat_shape(size, kernel_size=3, stride=2):
       return (size - (kernel_size - 1) - 1) // stride + 1
     convw = feat_shape(feat_shape(feat_shape(w)))
     convh = feat_shape(feat_shape(feat_shape(h)))
-    feat_spatial_shape = convw * convh * 32
+    feat_spatial_shape = convw * convh * 64
     self.head = nn.Linear(feat_spatial_shape, self.action_size)
 
   def forward(self, x):
 
     x = x.to(self.device).float() / 255.
 
-    x = F.relu(self.bn1(self.conv1(x)))
-    x = F.relu(self.bn2(self.conv2(x)))
-    x = F.relu(self.bn3(self.conv3(x)))
+    x = F.relu(self.conv1(x))
+    x = F.relu(self.conv2(x))
+    x = F.relu(self.conv3(x))
 
     return self.head(x.view(x.size(0), -1))
 
@@ -116,6 +113,7 @@ class AgentOfDoom():
     self.state_size = cfgs['state_size']
     self.action_size = action_size
     self.device = device
+    self.eps = self.max_eps
 
     assert self.input_shape is not None, 'Input shape has to be not None'
     assert self.action_size is not None, 'Action size has to non None'
@@ -140,7 +138,7 @@ class AgentOfDoom():
     self.target.load_state_dict(self.policy.state_dict())
     self.target.eval()
 
-    self.optimizer = optim.RMSprop(self.policy.parameters(), lr=self.lr)
+    self.optimizer = optim.Adam(self.policy.parameters(), lr=self.lr)
     self.replay = ReplayBuffer(self.replay_size,
                                [self.state_size] + self.input_shape,
                                self.device)
@@ -158,8 +156,8 @@ class AgentOfDoom():
     self.top_scr = 0.0
     self.flush_episode()
 
-    no_history = [self.zero_state for _ in range(self.state_size + 1)]
-    self.history = deque(no_history, maxlen=self.state_size + 1)
+    no_history = [self.zero_state for _ in range(self.state_size * 2)]
+    self.history = deque(no_history, maxlen=self.state_size * 2)
 
   def load_model(self, model_file):
 
@@ -169,8 +167,9 @@ class AgentOfDoom():
     self.policy.eval()
 
   def set_eps(self, step):
-    self.eps = self.min_eps + (self.max_eps - self.min_eps) * \
-            math.exp(-1. * step / self.eps_decay)
+
+    self.eps -= (self.max_eps - self.min_eps) / self.eps_decay
+    self.eps = max(self.eps, self.min_eps)
 
   def get_action(self, state):
 
@@ -183,19 +182,20 @@ class AgentOfDoom():
 
     return a.numpy()[0, 0].item()
 
-  def append_state(self, state):
+  def append_states(self, states):
 
-    state = np.array(self.transform(state), dtype=np.uint8)
+    states = [s if s is not None else self.zero_state for s in states]
+    states = [np.array(self.transform(s), dtype=np.uint8) for s in states]
 
-    state = torch.from_numpy(state).view(1, self.input_shape[0],
-                                         self.input_shape[1])
+    states = [torch.from_numpy(s).view(1, self.input_shape[0],
+                                       self.input_shape[1]) for s in states]
 
-    self.history.append(state)
+    self.history += states
 
   def get_state(self, complete=False):
 
-    size = [1, 0][complete]
-    return torch.cat(list(self.history)[size:]).unsqueeze(0)
+    begin = [self.state_size, 0][complete]
+    return torch.cat(list(self.history)[begin:self.state_size*2]).unsqueeze(0)
 
   def push_to_memory(self, states, action, reward, done):
 
@@ -215,7 +215,7 @@ class AgentOfDoom():
     states, action, reward, done = batch
 
     state_batch = states[:, :self.state_size]
-    next_state_batch = states[:, 1:]
+    next_state_batch = states[:, self.state_size:]
 
     # DDQN
     q_values = self.policy(state_batch).gather(1, action)
