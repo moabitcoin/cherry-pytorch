@@ -1,0 +1,37 @@
+# Environment config
+env:
+  game_config : 'policy_gradients/doom/assets/basic.cfg'
+  scenario_config : 'policy_gradients/doom/assets/basic.wad'
+
+# Agent config
+agent:
+  # Learning rate for the agent
+  lr : 0.0001
+  # Bellman equation reward discount
+  gamma : 0.99
+  # crop shape leave empty for no center cropping
+  crop_shape: [224, 224]
+  # frame shape full resolution frame would be resized to this size
+  input_shape : [84, 84]
+  # state size input_shape + [state_size] tensor as enviroment representation
+  state_size : 4
+
+train:
+  # Number of training episodes
+  n_train_episodes : 1000
+  # Max steps in each episode
+  max_steps : 1024
+  # model location
+  model_dest: /data/experiments/agent-of-doom/22-12-2019-basic-policy_gradients
+  # save model every save_model episodes
+  save_model: 10000
+  # update target
+  update_target: 16
+
+test:
+  # Number of testing episodes
+  n_test_episodes : 1
+  # Max steps in each episode
+  max_steps : 1000
+  # path where to save played video
+  state_dest: /data/experiments/agent-of-doom/22-12-2019-basic-policy_gradients/states
