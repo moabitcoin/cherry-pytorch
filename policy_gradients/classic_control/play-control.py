@@ -13,8 +13,8 @@ import skvideo
 import skvideo.io
 from skvideo.io import FFmpegWriter as vid_writer
 
-from ddqn.atari.environment import AtariEnvironment
-from ddqn.atari.agent import AgentOfAtari
+from policy_gradients.atari.environment import AtariEnvironment
+from policy_gradients.atari.agent import AgentOfAtari
 from utils.helpers import read_yaml, get_logger
 
 
