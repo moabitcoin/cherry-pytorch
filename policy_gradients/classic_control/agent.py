@@ -108,9 +108,12 @@ class AgentOfControl():
     self.policy.load_state_dict(torch.load(model_file))
     self.policy.eval()
 
-  def get_action(self, state):
+  def get_action(self, state, deterministic=False):
 
     aprob, value = self.policy(state)
+
+    if deterministic:
+      return aprob.max(1)[1]
 
     c = Categorical(aprob)
     a = c.sample()
