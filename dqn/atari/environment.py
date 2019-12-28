@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from baselines.common.atari_wrappers import make_atari, wrap_deepmind
 
 
-from utils.helpers import get_logger, atari_play_env
+from utils.helpers import get_logger
 
 logger = get_logger(__file__)
 Transition = namedtuple('Transition',
@@ -21,7 +21,7 @@ class AtariEnvironment():
 
   def __init__(self, cfgs, play=False):
 
-    self.game = None
+    self.env = None
     self.env_name = cfgs.get('env_name')
 
     assert self.env_name is not None, 'env_name not found in config'
@@ -29,9 +29,9 @@ class AtariEnvironment():
     try:
 
       env = make_atari(self.env_name)
-      self.game = [wrap_deepmind, atari_play_env][play](env)
+      self.env = wrap_deepmind(env)
 
-      self.action_size = self.game.action_space.n
+      self.action_size = self.env.action_space.n
       self.actions = range(self.action_size)
 
       logger.debug('{}: Action space size {}'.format(self.env_name,
@@ -45,10 +45,18 @@ class AtariEnvironment():
 
   def reset(self):
 
-    state = self.game.reset()
+    state = self.env.reset()
     return state
 
   def step(self, action):
 
-    state, reward, done, info = self.game.step(action)
+    state, reward, done, info = self.env.step(action)
     return state, reward, done, info
+
+  def close(self):
+
+    self.env.close()
+
+  def update_env(self, update_fn, **kwargs):
+
+    self.env = update_fn(self.env, **kwargs)
