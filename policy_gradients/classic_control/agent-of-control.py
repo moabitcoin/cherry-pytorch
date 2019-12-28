@@ -50,7 +50,7 @@ def train_agent_of_control(config_file, device='gpu'):
 
   train_ep = tqdm.tqdm(range(train_eps), ascii=True, unit='ep', leave=True)
 
-  global_step = 0
+  ep_reward = 0
   running_reward = 10
 
   for ep in train_ep:
@@ -65,8 +65,6 @@ def train_agent_of_control(config_file, device='gpu'):
 
     for step in train_step:
 
-      global_step = ep * max_steps + step
-
       state = agent.get_state()
       action = agent.get_action(state)
       next_state, reward, done, info = env.step(action)
@@ -74,19 +72,30 @@ def train_agent_of_control(config_file, device='gpu'):
       agent.append_state(next_state)
 
       if done:
-        break
 
-    running_reward = running_reward * 0.99 + step * 0.01
+        running_reward = 0.05 * agent.get_episode_rewards() + \
+            (1 - 0.05) * running_reward
+
+        agent.append_episode_reward(running_reward)
+
+        agent.discount_episode()
+        agent.flash_episode()
+        state = env.reset()
+        agent.append_state(state)
+
     loss = agent.optimize()
 
+    mean_rewards = np.mean(agent.batch_rewards)
+    train_ep.set_description('Average reward: {:.3f}'.format(mean_rewards))
+
     if ep % save_model == 0:
-      agent.save_model('{0:09d}'.format(global_step), model_dest)
-      train_ep.set_description('Ep {}, Last length: {:5d},'
-                               'Av length: {:.2f}'.format(ep, step,
-                                                          running_reward))
-    if running_reward >= env_solved:
-      logger.info('Solved! {} reward {:.3f}'
-                  ' > {:.3f}'.format(ep, running_reward, env_solved))
+      agent.save_model('{0:09d}'.format(ep * max_steps), model_dest)
+
+    best_reward = np.max(agent.batch_rewards)
+    if best_reward >= env_solved:
+      logger.info('Solved! At epside {}'
+                  ' reward {:.3f} > {:.3f}'.format(ep, best_reward,
+                                                   env_solved))
       break
 
   agent.save_model('final', model_dest)
@@ -94,8 +103,8 @@ def train_agent_of_control(config_file, device='gpu'):
 
 if __name__ == '__main__':
 
-  parser = argparse.ArgumentParser('Train an RL Agent to'
-                                   ' play Classic Control Problems (PG)')
+  parser = argparse.ArgumentParser('Train an RL Agent to solve Classic '
+                                   'Control problems (with PG)')
   parser.add_argument('-x', dest='config_file', type=str,
                       help='Config for the Atari env/agent', required=True)
   parser.add_argument('-d', dest='device', choices=['gpu', 'cpu'],

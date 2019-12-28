@@ -57,10 +57,11 @@ class AgentOfControl():
 
     self.history = None
     self.rewards = None
+    self.values = None
+    self.aprobs = None
     self.log_probs = None
-    self.batch_rewards = None
-    self.batch_log_probs = None
-    self.episode_scores = None
+    self.batch_loss = []
+    self.batch_rewards = []
     self.input_shape = cfgs['input_shape']
     self.lr = cfgs['lr']
     self.gamma = cfgs['gamma']
@@ -85,11 +86,8 @@ class AgentOfControl():
 
   def reset(self):
 
-    self.batch_aprobs = []
-    self.batch_log_probs = []
+    self.batch_loss = []
     self.batch_rewards = []
-    self.batch_values = []
-    self.episode_scores = []
 
     self.flash_episode()
 
@@ -139,40 +137,11 @@ class AgentOfControl():
 
     self.rewards.append(r)
 
-  def get_total_rewards(self):
+  def get_episode_rewards(self):
 
     return np.sum(self.rewards)
 
   def discount_episode(self):
-
-    ep_length = len(self.rewards)
-    ep_rewards = np.array(self.rewards)
-    ep_discounts = np.array([self.gamma ** t for t in range(ep_length)])
-
-    rewards = [ep_rewards[idx:] * ep_discounts[:ep_length - idx]
-               for idx in range(ep_length)]
-
-    rewards = np.array(list(map(np.sum, rewards)))
-
-    mean, std = rewards.mean(), rewards.std()
-    rewards = (rewards - mean)/(std + np.finfo(np.float32).eps.item())
-
-    rewards = torch.from_numpy(rewards).to(self.device).float()
-
-    log_probs = torch.cat(self.log_probs)
-    values = torch.cat(self.values)
-    aprobs = torch.cat(self.aprobs)
-
-    self.batch_rewards.append(rewards)
-    self.batch_log_probs.append(log_probs)
-    self.batch_values.append(values)
-    self.batch_aprobs.append(aprobs)
-
-  def append_episode_score(self, s):
-
-    self.episode_scores.append(s)
-
-  def optimize(self):
 
     ep_length = len(self.rewards)
     gamma = torch.tensor(self.gamma)
@@ -192,18 +161,20 @@ class AgentOfControl():
     neg_log_probs = torch.cat(self.log_probs).mul(-1)
     policy_loss = neg_log_probs * rewards
 
+    self.batch_loss.append(policy_loss)
+
+  def append_episode_reward(self, ep_reward):
+
+    self.batch_rewards.append(ep_reward)
+
+  def optimize(self):
+
     self.optimizer.zero_grad()
-    policy_loss = policy_loss.sum()
-    policy_loss.backward()
+    batch_policy_loss = torch.cat(self.batch_loss).mean()
+    batch_policy_loss.backward()
     self.optimizer.step()
 
-    return policy_loss.detach().cpu().numpy()
-
-  def show_progress(self):
-
-    rewards = self.get_total_rewards()
-
-    logger.info()
+    return batch_policy_loss.detach().cpu().numpy()
 
   def save_model(self, step, dest):
 

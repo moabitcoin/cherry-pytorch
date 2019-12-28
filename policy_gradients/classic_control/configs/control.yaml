@@ -1,6 +1,6 @@
 # Environment config
 env:
-  # AtariPreprocessing has default frame_skip=4
+  # Classic control env name
   env_name : 'CartPole-v0'
   # seed
   seed: 543
@@ -20,7 +20,7 @@ train:
   # Number of training episodes
   n_train_episodes : 1000
   # Max steps in each episode
-  max_steps : 10000
+  max_steps : 1000
   # model location
   model_dest: /data/experiments/agent-of-control/25-12-2019-CartPole-v0-pg
   # save model every save_model steps
