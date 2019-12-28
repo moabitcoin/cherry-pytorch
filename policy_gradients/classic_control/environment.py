@@ -31,7 +31,6 @@ class ClassicControlEnvironment():
 
       self.env = gym.make(self.env_name)
       self.env.seed(self.seed)
-
       torch.manual_seed(self.seed)
 
       self.action_size = self.env.action_space.n

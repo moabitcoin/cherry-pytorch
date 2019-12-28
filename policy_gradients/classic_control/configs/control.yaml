@@ -22,10 +22,11 @@ train:
   # Max steps in each episode
   max_steps : 10000
   # model location
-  model_dest: /data/experiments/agent-of-atari/25-12-2019-CartPole-v0-pg
+  model_dest: /data/experiments/agent-of-control/25-12-2019-CartPole-v0-pg
   # save model every save_model steps
   save_model: 20
-
+  # solution rewards
+  env_solution: 195.0
 
 test:
   # Number of testing episodes
@@ -33,4 +34,4 @@ test:
   # Max steps in each episode
   max_steps : 10000
   # path where to save played video
-  state_dest: /data/experiments/agent-of-atari/25-12-2019-CartPole-v0-pg/states
+  state_dest: /data/experiments/agent-of-control/25-12-2019-CartPole-v0-pg/states

@@ -36,6 +36,7 @@ def train_agent_of_control(config_file, device='gpu'):
   model_dest = train_cfgs['model_dest']
   train_eps = train_cfgs['n_train_episodes']
   max_steps = train_cfgs['max_steps']
+  env_solved = train_cfgs['env_solution']
 
   env = ClassicControlEnvironment(cfgs['env'])
   agent = AgentOfControl(cfgs['agent'], action_size=env.action_size,
@@ -47,7 +48,7 @@ def train_agent_of_control(config_file, device='gpu'):
   assert env.action_size == agent.action_size, \
       "Environment and state action size should match"
 
-  train_ep = tqdm.tqdm(range(train_eps), ascii=True, unit='ep', leave=False)
+  train_ep = tqdm.tqdm(range(train_eps), ascii=True, unit='ep', leave=True)
 
   global_step = 0
   running_reward = 10
@@ -59,7 +60,6 @@ def train_agent_of_control(config_file, device='gpu'):
 
     agent.append_state(state)
 
-    step = 0
     train_step = tqdm.tqdm(range(max_steps), ascii=True,
                            unit='stp', leave=False)
 
@@ -81,9 +81,13 @@ def train_agent_of_control(config_file, device='gpu'):
 
     if ep % save_model == 0:
       agent.save_model('{0:09d}'.format(global_step), model_dest)
-      print('Episode {}\tLast length: {:5d}'
-            '\tAverage length: {:.2f}\tLoss: '
-            '{:.4f}'.format(ep, step, running_reward, loss))
+      train_ep.set_description('Ep {}, Last length: {:5d},'
+                               'Av length: {:.2f}'.format(ep, step,
+                                                          running_reward))
+    if running_reward >= env_solved:
+      logger.info('Solved! {} reward {:.3f}'
+                  ' > {:.3f}'.format(ep, running_reward, env_solved))
+      break
 
   agent.save_model('final', model_dest)
 

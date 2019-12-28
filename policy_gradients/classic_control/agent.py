@@ -175,34 +175,29 @@ class AgentOfControl():
   def optimize(self):
 
     ep_length = len(self.rewards)
-    ep_rewards = np.array(self.rewards)
-    ep_discounts = np.array([self.gamma ** t for t in range(ep_length)])
+    gamma = torch.tensor(self.gamma)
+    ep_rewards = torch.tensor(self.rewards, dtype=torch.float32)
+    ep_discounts = torch.tensor([gamma ** t for t in range(ep_length)],
+                                dtype=torch.float32)
 
     rewards = [ep_rewards[idx:] * ep_discounts[:ep_length - idx]
                for idx in range(ep_length)]
 
-    rewards = np.array(list(map(np.sum, rewards)))
+    rewards = list(map(torch.sum, rewards))
+    rewards = torch.stack(rewards).to(self.device)
 
     mean, std = rewards.mean(), rewards.std()
     rewards = (rewards - mean)/(std + np.finfo(np.float32).eps.item())
 
     neg_log_probs = torch.cat(self.log_probs).mul(-1)
-    rewards = torch.from_numpy(rewards).to(self.device).float()
+    policy_loss = neg_log_probs * rewards
 
-    policy_grad_loss = neg_log_probs * rewards
-
-    # + value_loss
-
-    # Optimize the model
     self.optimizer.zero_grad()
-    loss = policy_grad_loss.sum()
-    loss.backward()
+    policy_loss = policy_loss.sum()
+    policy_loss.backward()
     self.optimizer.step()
 
-    del self.rewards[:]
-    del self.log_probs[:]
-
-    return loss.detach().cpu().numpy()
+    return policy_loss.detach().cpu().numpy()
 
   def show_progress(self):
 
