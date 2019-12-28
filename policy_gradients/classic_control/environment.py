@@ -8,6 +8,7 @@ import gym
 import numpy as np
 import torch
 import torch.nn.functional as F
+from gym import wrappers
 
 
 from utils.helpers import get_logger
@@ -19,7 +20,7 @@ Transition = namedtuple('Transition',
 
 class ClassicControlEnvironment():
 
-  def __init__(self, cfgs, play=False):
+  def __init__(self, cfgs):
 
     self.game = None
     self.env_name = cfgs.get('env_name')
@@ -45,6 +46,10 @@ class ClassicControlEnvironment():
 
       logger.error('{}: Error setting up env, {}'.format(self.env_name, err))
 
+  def update_env(self, update_fn, **kwargs):
+
+    self.env = update_fn(self.env, **kwargs)
+
   def reset(self):
 
     state = self.env.reset()
@@ -54,3 +59,7 @@ class ClassicControlEnvironment():
 
     next_state, reward, done, info = self.env.step(action)
     return next_state, reward, done, info
+
+  def close(self):
+
+    self.env.close()

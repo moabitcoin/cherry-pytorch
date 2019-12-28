@@ -30,8 +30,8 @@ train:
 
 test:
   # Number of testing episodes
-  n_test_episodes : 1
+  n_test_episodes : 5
   # Max steps in each episode
-  max_steps : 10000
+  max_steps : 1000
   # path where to save played video
   state_dest: /data/experiments/agent-of-control/25-12-2019-CartPole-v0-pg/states
