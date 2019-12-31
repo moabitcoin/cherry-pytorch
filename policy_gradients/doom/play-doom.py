@@ -40,6 +40,7 @@ def play_doom(config_file, model_file=None, device='gpu'):
   env = DoomEnvironment(cfgs['env'])
   agent = AgentOfDoom(cfgs['agent'], action_size=env.action_size,
                       device=device, model_file=model_file)
+  agent.eval()
 
   test_cfgs = cfgs['test']
   state_dest = test_cfgs['state_dest']

@@ -50,7 +50,6 @@ def train_agent_of_control(config_file, device='gpu'):
 
   train_ep = tqdm.tqdm(range(train_eps), ascii=True, unit='ep', leave=True)
 
-  ep_reward = 0
   running_reward = 10
 
   for ep in train_ep:
@@ -85,13 +84,13 @@ def train_agent_of_control(config_file, device='gpu'):
 
     loss = agent.optimize()
 
-    mean_rewards = np.mean(agent.batch_rewards)
+    mean_rewards = np.mean(agent.ep_rewards)
     train_ep.set_description('Average reward: {:.3f}'.format(mean_rewards))
 
     if ep % save_model == 0:
       agent.save_model('{0:09d}'.format(ep * max_steps), model_dest)
 
-    best_reward = np.max(agent.batch_rewards)
+    best_reward = np.max(agent.ep_rewards)
     if best_reward >= env_solved:
       logger.info('Solved! At epside {}'
                   ' reward {:.3f} > {:.3f}'.format(ep, best_reward,
