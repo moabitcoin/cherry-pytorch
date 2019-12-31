@@ -81,15 +81,18 @@ class AgentOfDoom():
     self.states = None
     self.actions = None
     self.rewards = None
+    self.values = None
     self.mb_states = None
     self.mb_actions = None
     self.mb_rewards = None
+    self.mb_values = None
     self.ep_rewards = None
+    self.gamma = cfgs['gamma']
+    self.policy_lr = cfgs['policy_lr']
+    self.value_lr = cfgs['value_lr']
+    self.state_size = cfgs['state_size']
     self.crop_shape = cfgs['crop_shape']
     self.input_shape = cfgs['input_shape']
-    self.lr = cfgs['lr']
-    self.gamma = cfgs['gamma']
-    self.state_size = cfgs['state_size']
     self.action_size = action_size
     self.device = device
 
@@ -109,9 +112,15 @@ class AgentOfDoom():
     self.policy = DoomNet(self.input_shape, self.state_size,
                           self.action_size, self.device).to(self.device)
 
+    self.value = DoomNet(self.input_shape, self.state_size,
+                         self.action_size, self.device).to(self.device)
+
     # self.policy.apply(self.policy.init_weights)
 
-    self.optimizer = optim.Adam(self.policy.parameters(), lr=self.lr)
+    self.policy_optimizer = optim.Adam(self.policy.parameters(),
+                                       lr=self.policy_lr)
+    self.value_optimizer = optim.Adam(self.value.parameters(),
+                                      lr=self.value_lr)
 
     if model_file:
       self.load_model(model_file)
@@ -121,6 +130,7 @@ class AgentOfDoom():
     self.mb_states = []
     self.mb_actions = []
     self.mb_rewards = []
+    self.mb_values = []
     self.ep_rewards = []
 
     self.flash_episode()
@@ -130,6 +140,7 @@ class AgentOfDoom():
     self.states = []
     self.actions = []
     self.rewards = []
+    self.values = []
 
     no_history = [self.zero_state for _ in range(self.state_size)]
     self.history = deque(no_history, maxlen=self.state_size)
@@ -148,20 +159,17 @@ class AgentOfDoom():
 
     with torch.no_grad():
       logits, _ = self.policy(state)
+      _, value = self.value(state)
 
     if deterministic:
       return logits.max(1)[1]
 
-    try:
-
-      c = Categorical(logits=logits)
-      a = c.sample()
-    except Exception as err:
-      import pdb
-      pdb.set_trace()
+    c = Categorical(logits=logits)
+    a = c.sample()
 
     self.states.append(state)
     self.actions.append(a)
+    self.values.append(value)
 
     return a.detach().cpu().numpy()[0]
 
@@ -205,6 +213,7 @@ class AgentOfDoom():
     states = torch.cat(self.states)
     actions = torch.cat(self.actions)
     rewards = torch.stack(rewards).to(self.device)
+    values = torch.cat(self.values)
 
     mean, std = rewards.mean(), rewards.std()
     rewards = (rewards - mean)/(std + np.finfo(np.float32).eps.item())
@@ -212,6 +221,7 @@ class AgentOfDoom():
     self.mb_states.append(states)
     self.mb_actions.append(actions)
     self.mb_rewards.append(rewards)
+    self.mb_values.append(values)
 
   def append_episode_reward(self, reward):
 
@@ -226,20 +236,25 @@ class AgentOfDoom():
     mb_states = torch.cat(self.mb_states)
     mb_actions = torch.cat(self.mb_actions)
     mb_rewards = torch.cat(self.mb_rewards)
+    mb_values = torch.cat(self.mb_values)
 
-    self.optimizer.zero_grad()
-    mb_logits, mb_values = self.policy(mb_states)
-    mb_logits += np.finfo(np.float32).eps.item()
-    mb_values = mb_values.squeeze(1)
-
+    # policy optimisation
+    self.policy_optimizer.zero_grad()
+    mb_logits, _ = self.policy(mb_states)
     ce = F.cross_entropy(mb_logits, mb_actions, reduction='none')
     policy_loss = ((mb_rewards - mb_values) * ce).mean()
-    value_loss = F.mse_loss(mb_values, mb_rewards)
+    policy_loss.backward()
+    self.policy_optimizer.step()
+
+    # value optimisation
+    self.value_optimizer.zero_grad()
+    _, mb_values = self.value(mb_states)
+    mb_values = mb_values.squeeze(1)
+    value_loss = F.smooth_l1_loss(mb_values, mb_rewards)
+    value_loss.backward()
+    self.value_optimizer.step()
 
     loss = policy_loss + value_loss
-    loss.backward()
-    nn.utils.clip_grad_norm_(self.policy.parameters(), 40)
-    self.optimizer.step()
 
     return loss.detach().cpu().numpy()
 

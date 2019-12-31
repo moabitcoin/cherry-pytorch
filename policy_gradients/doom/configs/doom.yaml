@@ -6,7 +6,9 @@ env:
 # Agent config
 agent:
   # Learning rate for the agent
-  lr : 0.001
+  policy_lr : 0.001
+  # Learning rate for the agent
+  value_lr : 0.001
   # Bellman equation reward discount
   gamma : 0.99
   # crop shape leave empty for no center cropping
@@ -20,7 +22,7 @@ train:
   # Number of training episodes
   n_train_episodes : 1000
   # Max steps in each episode
-  max_steps : 300
+  max_steps : 1000
   # model location
   model_dest: /data/experiments/agent-of-doom/28-12-2019-basic-policy_gradients
   # save model every save_model episodes
