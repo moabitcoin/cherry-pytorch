@@ -36,8 +36,6 @@ class ControlNet(torch.nn.Module):
     self.action = nn.Linear(128, action_size)
     self.value = nn.Linear(128, 1)
 
-    self.softmax = nn.Softmax(dim=1)
-
   def forward(self, x):
 
     x = x.to(self.device).float()
@@ -45,10 +43,9 @@ class ControlNet(torch.nn.Module):
     x = F.relu(self.fc1(x))
     q = self.action(x)
     v = self.value(x)
-    aprob = self.softmax(q)
 
-    # action, log_prob for action, value estimate for action, softmax probs
-    return aprob, v
+    # logits, value estimate for state
+    return q, v
 
 
 class AgentOfControl():
@@ -56,16 +53,21 @@ class AgentOfControl():
   def __init__(self, cfgs, action_size=None, device=None, model_file=None):
 
     self.history = None
+    self.states = None
+    self.action = None
     self.rewards = None
     self.values = None
-    self.aprobs = None
-    self.log_probs = None
-    self.batch_loss = []
-    self.batch_rewards = []
-    self.input_shape = cfgs['input_shape']
-    self.lr = cfgs['lr']
+    self.mb_state = None
+    self.mb_actions = None
+    self.mb_rewards = None
+    self.mb_values = None
+    self.ep_rewards = []
     self.gamma = cfgs['gamma']
+    self.policy_lr = cfgs['policy_lr']
+    self.value_lr = cfgs['value_lr']
+    self.value_iter = cfgs['value_iter']
     self.state_size = cfgs['state_size']
+    self.input_shape = cfgs['input_shape']
     self.action_size = action_size
     self.device = device
 
@@ -76,27 +78,36 @@ class AgentOfControl():
     self.zero_state = torch.zeros([1] + self.input_shape, dtype=torch.float)
 
     self.policy = ControlNet(self.input_shape, self.state_size,
-                             self.action_size, self.lr,
+                             self.action_size, self.policy_lr,
                              self.device).to(self.device)
+    self.value = ControlNet(self.input_shape, self.state_size,
+                            self.action_size, self.value_lr,
+                            self.device).to(self.device)
 
-    self.optimizer = optim.Adam(self.policy.parameters(), lr=self.lr)
+    self.policy_optimizer = optim.Adam(self.policy.parameters(),
+                                       lr=self.policy_lr)
+    self.value_optimizer = optim.Adam(self.value.parameters(),
+                                      lr=self.value_lr)
 
     if model_file:
       self.load_model(model_file)
 
   def reset(self):
 
-    self.batch_loss = []
-    self.batch_rewards = []
+    self.mb_states = []
+    self.mb_actions = []
+    self.mb_rewards = []
+    self.mb_values = []
+    self.ep_rewards = []
 
     self.flash_episode()
 
   def flash_episode(self):
 
+    self.states = []
+    self.actions = []
     self.rewards = []
-    self.log_probs = []
     self.values = []
-    self.aprobs = []
 
     no_history = [self.zero_state for _ in range(self.state_size)]
     self.history = deque(no_history, maxlen=self.state_size)
@@ -110,19 +121,19 @@ class AgentOfControl():
 
   def get_action(self, state, deterministic=False):
 
-    aprob, value = self.policy(state)
+    with torch.no_grad():
+      logits, _ = self.policy(state)
+      _, value = self.value(state)
 
     if deterministic:
-      return aprob.max(1)[1]
+      return logits.max(1)[1]
 
-    c = Categorical(aprob)
+    c = Categorical(logits=logits)
     a = c.sample()
 
-    log_prob = c.log_prob(a)
-
-    self.log_probs.append(log_prob)
-    self.values.append(value[0])
-    self.aprobs.append(aprob[0])
+    self.states.append(state)
+    self.actions.append(a)
+    self.values.append(value)
 
     return a.detach().cpu().numpy()[0]
 
@@ -156,32 +167,54 @@ class AgentOfControl():
                for idx in range(ep_length)]
 
     rewards = list(map(torch.sum, rewards))
+
+    states = torch.cat(self.states)
+    actions = torch.cat(self.actions)
     rewards = torch.stack(rewards).to(self.device)
+    values = torch.cat(self.values)
 
     mean, std = rewards.mean(), rewards.std()
     rewards = (rewards - mean)/(std + np.finfo(np.float32).eps.item())
 
-    neg_log_probs = torch.cat(self.log_probs).mul(-1)
-    policy_loss = neg_log_probs * rewards
-
-    self.batch_loss.append(policy_loss)
+    self.mb_states.append(states)
+    self.mb_actions.append(actions)
+    self.mb_rewards.append(rewards)
+    self.mb_values.append(values)
 
   def append_episode_reward(self, ep_reward):
 
-    self.batch_rewards.append(ep_reward)
+    self.ep_rewards.append(ep_reward)
 
   def optimize(self):
 
-    self.optimizer.zero_grad()
-    batch_policy_loss = torch.cat(self.batch_loss).mean()
-    batch_policy_loss.backward()
-    self.optimizer.step()
+    mb_states = torch.cat(self.mb_states)
+    mb_actions = torch.cat(self.mb_actions)
+    mb_rewards = torch.cat(self.mb_rewards)
+    mb_values = torch.cat(self.mb_values)
 
-    return batch_policy_loss.detach().cpu().numpy()
+    # policy optimisation
+    self.policy_optimizer.zero_grad()
+    mb_logits, _ = self.policy(mb_states)
+    ce = F.cross_entropy(mb_logits, mb_actions, reduction='none')
+    policy_loss = ((mb_rewards - mb_values) * ce).mean()
+    policy_loss.backward()
+    self.policy_optimizer.step()
+
+    # value optimisation
+    self.value_optimizer.zero_grad()
+    _, mb_values = self.value(mb_states)
+    mb_values = mb_values.squeeze(1)
+    value_loss = F.smooth_l1_loss(mb_values, mb_rewards)
+    value_loss.backward()
+    self.value_optimizer.step()
+
+    loss = policy_loss + value_loss
+
+    return loss.detach().cpu().numpy()
 
   def save_model(self, step, dest):
 
-    model_savefile = '{0}/atari-agent-{1}.pth'.format(dest, step)
-    logger.debug("Saving Atari Agent to {}".format(model_savefile))
+    model_savefile = '{0}/classic-control-agent-{1}.pth'.format(dest, step)
+    logger.debug("Saving Classic Control Agent to {}".format(model_savefile))
 
     torch.save(self.policy.state_dict(), model_savefile)
