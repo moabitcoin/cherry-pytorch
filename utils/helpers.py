@@ -1,8 +1,11 @@
 import sys
 import logging
 from pathlib import Path
+import shutil
 
+import git
 import yaml
+import torch
 from baselines.common.atari_wrappers import EpisodicLifeEnv, FireResetEnv
 
 CLI_LOGGING_FORMAT = '[%(filename)s][%(funcName)s:%(lineno)d]' + \
@@ -30,8 +33,6 @@ logger = get_logger(__file__)
 
 def read_yaml(config_file):
 
-  config_file = Path(config_file)
-
   if not config_file.is_file():
     logger.error('Not a file, {}'.format(config_file))
     return
@@ -54,3 +55,30 @@ def atari_play_env(env):
     env = FireResetEnv(env)
 
   return env
+
+
+def get_repo_hexsha():
+
+  filepath = __file__
+  repopath = filepath.split('utils')[0]
+
+  g = git.Repo(repopath)
+
+  return g.head.commit.hexsha[:8]
+
+
+def copy_yaml(src_file, dest_dir, hexsha):
+
+  stem = src_file.stem
+  fname = '{}-{}.yaml'.format(stem, hexsha)
+  dst_file = dest_dir.joinpath(fname)
+
+  shutil.copyfile(src_file.as_posix(), dst_file.as_posix())
+
+
+def write_model(model, tag, dest):
+
+  model_savefile = '{0}/agent-{1}.pth'.format(dest, tag)
+  logger.debug("Saving Agent to {}".format(model_savefile))
+
+  torch.save(model.state_dict(), model_savefile)

@@ -24,7 +24,7 @@ train:
   # Max steps in each episode
   max_steps : 5000
   # model location
-  model_dest: /data/experiments/agent-of-doom/30-12-2019-health_gathering-policy_gradients
+  model_dest: /data/experiments/agent-of-doom/03-01-2020-health_gathering-policy_gradients
   # save model every save_model episodes
   save_model: 100
   # scenario solved
@@ -36,4 +36,4 @@ test:
   # Max steps in each episode
   max_steps : 1000
   # path where to save played video
-  state_dest: /data/experiments/agent-of-doom/30-12-2019-health_gathering-policy_gradients/states
+  state_dest: /data/experiments/agent-of-doom/03-01-2020-health_gathering-policy_gradients/states

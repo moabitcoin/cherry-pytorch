@@ -257,10 +257,3 @@ class AgentOfDoom():
     loss = policy_loss + value_loss
 
     return loss.detach().cpu().numpy()
-
-  def save_model(self, step, dest):
-
-    model_savefile = '{0}/doom-agent-{1}.pth'.format(dest, step)
-    logger.debug("Saving Doom Agent to {}".format(model_savefile))
-
-    torch.save(self.policy.state_dict(), model_savefile)

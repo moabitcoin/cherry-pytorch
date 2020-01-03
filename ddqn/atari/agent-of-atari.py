@@ -12,12 +12,16 @@ import numpy as np
 from ddqn.atari.environment import AtariEnvironment
 from ddqn.atari.agent import AgentOfAtari
 from utils.helpers import read_yaml, get_logger
+from utils.helpers import read_yaml, get_logger, get_repo_hexsha, copy_yaml, \
+    write_model
 
 
 logger = get_logger(__file__)
 
 
 def train_agent_of_atari(config_file, device='gpu'):
+
+  hexsha = get_repo_hexsha()
 
   cuda_available = torch.cuda.is_available()
   cuda_and_device = cuda_available and device == 'gpu'
@@ -40,12 +44,14 @@ def train_agent_of_atari(config_file, device='gpu'):
   max_steps = train_cfgs['max_steps']
   policy_update = train_cfgs['policy_update']
 
+  model_dest = Path(model_dest)
+
   env = AtariEnvironment(cfgs['env'])
   agent = AgentOfAtari(cfgs['agent'], action_size=env.action_size,
                        device=device)
 
-  os.makedirs(model_dest, exist_ok=True)
-  shutil.copy(config_file, model_dest)
+  model_dest.mkdir(parents=True, exist_ok=True)
+  copy_yaml(config_file, model_dest, hexsha)
 
   assert env.action_size == agent.action_size, \
       "Environment and state action size should match"
@@ -92,13 +98,15 @@ def train_agent_of_atari(config_file, device='gpu'):
         agent.update_target(global_step)
 
       if global_step % save_model == 0:
-        agent.save_model('{0:09d}'.format(global_step), model_dest)
+        tag = '{0:09d}-{1}'.format(global_step, hexsha)
+        write_model(agent.policy, tag, model_dest)
 
     train_ep.set_description('Ep : {0}, Best Reward : {1:.3f}, '
                              'Eps : {2:.4f}'.format(ep, agent.top_scr,
                                                     agent.eps))
 
-  agent.save_model('final', model_dest)
+  tag = 'final-{0}'.format(hexsha)
+  write_model(agent.policy, tag, model_dest)
 
 
 if __name__ == '__main__':

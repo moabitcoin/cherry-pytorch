@@ -6,3 +6,4 @@ argparse
 scikit-video
 ipython
 pyglet
+GitPython
