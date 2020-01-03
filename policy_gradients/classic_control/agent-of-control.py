@@ -104,7 +104,7 @@ def train_agent_of_control(config_file, device='gpu'):
                                                    env_solved))
       break
 
-  tag = 'final-{}'.format(hexsha)
+  tag = 'final-{0}'.format(hexsha)
   write_model(agent.policy, tag, model_dest)
 
 

@@ -113,7 +113,7 @@ def train_agent_of_doom(config_file, device='gpu'):
         tag = '{0:09d}-{1}'.format(global_step, hexsha)
         write_model(agent.policy, tag, model_dest)
 
-  tag = 'final-{1}'.format(hexsha)
+  tag = 'final-{0}'.format(hexsha)
   write_model(agent.policy, tag, model_dest)
 
 

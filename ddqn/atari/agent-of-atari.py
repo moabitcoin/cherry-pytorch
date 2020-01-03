@@ -105,7 +105,7 @@ def train_agent_of_atari(config_file, device='gpu'):
                              'Eps : {2:.4f}'.format(ep, agent.top_scr,
                                                     agent.eps))
 
-  tag = 'final-{1}'.format(hexsha)
+  tag = 'final-{0}'.format(hexsha)
   write_model(agent.policy, tag, model_dest)
 
 
