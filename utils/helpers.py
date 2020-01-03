@@ -78,7 +78,7 @@ def copy_yaml(src_file, dest_dir, hexsha):
 
 def write_model(model, tag, dest):
 
-  model_savefile = '{0}/classic-control-agent-{1}.pth'.format(dest, tag)
-  logger.debug("Saving Classic Control Agent to {}".format(model_savefile))
+  model_savefile = '{0}/agent-{1}.pth'.format(dest, tag)
+  logger.debug("Saving Agent to {}".format(model_savefile))
 
   torch.save(model.state_dict(), model_savefile)
