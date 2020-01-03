@@ -93,7 +93,7 @@ def train_agent_of_control(config_file, device='gpu'):
     train_ep.set_description('Average reward: {:.3f}'.format(mean_rewards))
 
     if ep % save_model == 0:
-      agent.save_model('{0:09d}'.format(ep * max_steps), model_dest)
+      agent.save_model('{0:09d}'.format(ep * max_steps), model_dest, hexsha)
 
     best_reward = np.max(agent.ep_rewards)
     if best_reward >= env_solved:
@@ -102,7 +102,7 @@ def train_agent_of_control(config_file, device='gpu'):
                                                    env_solved))
       break
 
-  agent.save_model('final', model_dest)
+  agent.save_model('final', model_dest, hexsha)
 
 
 if __name__ == '__main__':
