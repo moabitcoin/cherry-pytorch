@@ -5,6 +5,7 @@ import shutil
 
 import git
 import yaml
+import torch
 from baselines.common.atari_wrappers import EpisodicLifeEnv, FireResetEnv
 
 CLI_LOGGING_FORMAT = '[%(filename)s][%(funcName)s:%(lineno)d]' + \
@@ -73,3 +74,11 @@ def copy_yaml(src_file, dest_dir, hexsha):
   dst_file = dest_dir.joinpath(fname)
 
   shutil.copyfile(src_file.as_posix(), dst_file.as_posix())
+
+
+def write_model(model, tag, dest):
+
+  model_savefile = '{0}/classic-control-agent-{1}.pth'.format(dest, tag)
+  logger.debug("Saving Classic Control Agent to {}".format(model_savefile))
+
+  torch.save(model.state_dict(), model_savefile)

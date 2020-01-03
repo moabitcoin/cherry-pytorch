@@ -12,7 +12,8 @@ import numpy as np
 
 from policy_gradients.classic_control.environment import ClassicControlEnvironment
 from policy_gradients.classic_control.agent import AgentOfControl
-from utils.helpers import read_yaml, get_logger, get_repo_hexsha, copy_yaml
+from utils.helpers import read_yaml, get_logger, get_repo_hexsha, copy_yaml, \
+    write_model
 
 
 logger = get_logger(__file__)
@@ -93,7 +94,8 @@ def train_agent_of_control(config_file, device='gpu'):
     train_ep.set_description('Average reward: {:.3f}'.format(mean_rewards))
 
     if ep % save_model == 0:
-      agent.save_model('{0:09d}'.format(ep * max_steps), model_dest, hexsha)
+      tag = '{0:09d}-{1}'.format(ep * max_steps, hexsha)
+      write_model(agent.policy, tag, model_dest)
 
     best_reward = np.max(agent.ep_rewards)
     if best_reward >= env_solved:
@@ -102,7 +104,8 @@ def train_agent_of_control(config_file, device='gpu'):
                                                    env_solved))
       break
 
-  agent.save_model('final', model_dest, hexsha)
+  tag = 'final-{}'.format(hexsha)
+  write_model(agent.policy, tag, model_dest)
 
 
 if __name__ == '__main__':

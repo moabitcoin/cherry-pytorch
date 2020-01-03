@@ -211,12 +211,3 @@ class AgentOfControl():
     loss = policy_loss + value_loss
 
     return loss.detach().cpu().numpy()
-
-  def save_model(self, step, dest, hexsha):
-
-    model_savefile = '{0}/classic-control-agent-{1}-{2}.pth'.format(dest,
-                                                                    step,
-                                                                    hexsha)
-    logger.debug("Saving Classic Control Agent to {}".format(model_savefile))
-
-    torch.save(self.policy.state_dict(), model_savefile)
