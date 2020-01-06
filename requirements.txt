@@ -4,6 +4,13 @@
 #
 #    pip-compile --generate-hashes
 #
+argparse==1.4.0 \
+    --hash=sha256:62b089a55be1d8949cd2bc7e0df0bddb9e028faefc8c32038cc84862aefdd6e4 \
+    --hash=sha256:c31647edb69fd3d465a847ea3157d37bed1f95f19760b11a47aa91c04b666314
+backcall==0.1.0 \
+    --hash=sha256:38ecd85be2c1e78f77fd91700c76e14667dc21e2713b63876c0eb901196e01e4 \
+    --hash=sha256:bbbf4b1e5cd2bdb08f915895b51081c041bac22394fdfcfdfbe9f14b77c08bf2 \
+    # via ipython
 click==7.0 \
     --hash=sha256:2335065e6395b9e67ca716de5f7526736bfa6ceead690adf616d925bdc622b13 \
     --hash=sha256:5b94b49521f6456670fdb30cd82a4eca9412788a93fa6dd6df72c94d5a8ff2d7 \
@@ -12,11 +19,33 @@ cloudpickle==1.2.2 \
     --hash=sha256:922401d7140e133253ff5fab4faa4a1166416066453a783b00b507dca93f8859 \
     --hash=sha256:f3ef2c9d438f1553ce7795afb18c1f190d8146132496169ef6aa9b7b65caa4c3 \
     # via gym
+decorator==4.4.1 \
+    --hash=sha256:54c38050039232e1db4ad7375cfce6748d7b41c29e95a081c8a6d2c30364a2ce \
+    --hash=sha256:5d19b92a3c8f7f101c8dd86afd86b0f061a8ce4540ab8cd401fa2542756bce6d \
+    # via ipython, traitlets
 future==0.18.2 \
     --hash=sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d \
     # via pyglet
+gitdb2==2.0.6 \
+    --hash=sha256:1b6df1433567a51a4a9c1a5a0de977aa351a405cc56d7d35f3388bad1f630350 \
+    --hash=sha256:96bbb507d765a7f51eb802554a9cfe194a174582f772e0d89f4e87288c288b7b \
+    # via gitpython
+gitpython==3.0.5 \
+    --hash=sha256:9c2398ffc3dcb3c40b27324b316f08a4f93ad646d5a6328cafbb871aa79f5e42 \
+    --hash=sha256:c155c6a2653593ccb300462f6ef533583a913e17857cfef8fc617c246b6dc245
 gym==0.15.4 \
     --hash=sha256:3b930cbe1c76bbd30455b5e82ba723dea94159a5f988e927f443324bf7cc7ddd
+ipython-genutils==0.2.0 \
+    --hash=sha256:72dd37233799e619666c9f639a9da83c34013a73e8bbc79a7a6348d93c61fab8 \
+    --hash=sha256:eb2e116e75ecef9d4d228fdc66af54269afa26ab4463042e33785b887c628ba8 \
+    # via traitlets
+ipython==7.11.1 \
+    --hash=sha256:0f4bcf18293fb666df8511feec0403bdb7e061a5842ea6e88a3177b0ceb34ead \
+    --hash=sha256:387686dd7fc9caf29d2fddcf3116c4b07a11d9025701d220c589a430b0171d8a
+jedi==0.15.2 \
+    --hash=sha256:1349c1e8c107095a55386628bb3b2a79422f3a2cab8381e34ce19909e0cf5064 \
+    --hash=sha256:e909527104a903606dd63bea6e8e888833f0ef087057829b89a18364a856f807 \
+    # via ipython
 numpy==1.17.4 \
     --hash=sha256:0a7a1dd123aecc9f0076934288ceed7fd9a81ba3919f11a855a7887cbe82a02f \
     --hash=sha256:0c0763787133dfeec19904c22c7e358b231c87ba3206b211652f8cbe1241deb6 \
@@ -39,7 +68,7 @@ numpy==1.17.4 \
     --hash=sha256:ede47b98de79565fcd7f2decb475e2dcc85ee4097743e551fe26cfc7eb3ff143 \
     --hash=sha256:f58913e9227400f1395c7b800503ebfdb0772f1c33ff8cb4d6451c06cabdf316 \
     --hash=sha256:fe39f5fd4103ec4ca3cb8600b19216cd1ff316b4990f4c0b6057ad982c0a34d5 \
-    # via gym, opencv-python, scipy
+    # via gym, opencv-python, scikit-video, scipy
 opencv-python==4.1.2.30 \
     --hash=sha256:04bec0a6d3a00360a7fb769b755ff4489a4ac8291821b785151f63e6d8bb59ea \
     --hash=sha256:1a2d1801c038f055852bd2379186ca8b19b4ea24afb0b8410293bc802211579b \
@@ -68,13 +97,75 @@ opencv-python==4.1.2.30 \
     --hash=sha256:eae543b3e9253ff702103333aabd87736b5ed5e46ab834d8e0b929f08f494dee \
     --hash=sha256:f0af656402b73ead2d9f593c2774c04b01e2d0c63e4f99e0dc2f3fde99be22b4 \
     # via gym
+parso==0.5.2 \
+    --hash=sha256:55cf25df1a35fd88b878715874d2c4dc1ad3f0eebd1e0266a67e1f55efccfbe1 \
+    --hash=sha256:5c1f7791de6bd5dbbeac8db0ef5594b36799de198b3f7f7014643b0c5536b9d3 \
+    # via jedi
+pexpect==4.7.0 \
+    --hash=sha256:2094eefdfcf37a1fdbfb9aa090862c1a4878e5c7e0e7e7088bdb511c558e5cd1 \
+    --hash=sha256:9e2c1fd0e6ee3a49b28f95d4b33bc389c89b20af6a1255906e90ff1262ce62eb \
+    # via ipython
+pickleshare==0.7.5 \
+    --hash=sha256:87683d47965c1da65cdacaf31c8441d12b8044cdec9aca500cd78fc2c683afca \
+    --hash=sha256:9649af414d74d4df115d5d718f82acb59c9d418196b7b4290ed47a12ce62df56 \
+    # via ipython
+pillow==7.0.0 \
+    --hash=sha256:0a628977ac2e01ca96aaae247ec2bd38e729631ddf2221b4b715446fd45505be \
+    --hash=sha256:4d9ed9a64095e031435af120d3c910148067087541131e82b3e8db302f4c8946 \
+    --hash=sha256:54ebae163e8412aff0b9df1e88adab65788f5f5b58e625dc5c7f51eaf14a6837 \
+    --hash=sha256:5bfef0b1cdde9f33881c913af14e43db69815c7e8df429ceda4c70a5e529210f \
+    --hash=sha256:5f3546ceb08089cedb9e8ff7e3f6a7042bb5b37c2a95d392fb027c3e53a2da00 \
+    --hash=sha256:5f7ae9126d16194f114435ebb79cc536b5682002a4fa57fa7bb2cbcde65f2f4d \
+    --hash=sha256:62a889aeb0a79e50ecf5af272e9e3c164148f4bd9636cc6bcfa182a52c8b0533 \
+    --hash=sha256:7406f5a9b2fd966e79e6abdaf700585a4522e98d6559ce37fc52e5c955fade0a \
+    --hash=sha256:8453f914f4e5a3d828281a6628cf517832abfa13ff50679a4848926dac7c0358 \
+    --hash=sha256:87269cc6ce1e3dee11f23fa515e4249ae678dbbe2704598a51cee76c52e19cda \
+    --hash=sha256:875358310ed7abd5320f21dd97351d62de4929b0426cdb1eaa904b64ac36b435 \
+    --hash=sha256:8ac6ce7ff3892e5deaab7abaec763538ffd011f74dc1801d93d3c5fc541feee2 \
+    --hash=sha256:91b710e3353aea6fc758cdb7136d9bbdcb26b53cefe43e2cba953ac3ee1d3313 \
+    --hash=sha256:9d2ba4ed13af381233e2d810ff3bab84ef9f18430a9b336ab69eaf3cd24299ff \
+    --hash=sha256:a62ec5e13e227399be73303ff301f2865bf68657d15ea50b038d25fc41097317 \
+    --hash=sha256:ab76e5580b0ed647a8d8d2d2daee170e8e9f8aad225ede314f684e297e3643c2 \
+    --hash=sha256:bf4003aa538af3f4205c5fac56eacaa67a6dd81e454ffd9e9f055fff9f1bc614 \
+    --hash=sha256:bf598d2e37cf8edb1a2f26ed3fb255191f5232badea4003c16301cb94ac5bdd0 \
+    --hash=sha256:c18f70dc27cc5d236f10e7834236aff60aadc71346a5bc1f4f83a4b3abee6386 \
+    --hash=sha256:c5ed816632204a2fc9486d784d8e0d0ae754347aba99c811458d69fcdfd2a2f9 \
+    --hash=sha256:dc058b7833184970d1248135b8b0ab702e6daa833be14035179f2acb78ff5636 \
+    --hash=sha256:ff3797f2f16bf9d17d53257612da84dd0758db33935777149b3334c01ff68865 \
+    # via scikit-video
 pip-tools==4.2.0 \
     --hash=sha256:123174aabf7f4a63dd6e0bfc8aeeb5eaddbecb75a41e9f0dd4c447b1f2de14f7 \
     --hash=sha256:5427ea4dcc175649723985fbcace9b2d8f46f9adbcc63bc2d7b247d9bcc74917
+prompt-toolkit==3.0.2 \
+    --hash=sha256:0278d2f51b5ceba6ea8da39f76d15684e84c996b325475f6e5720edc584326a7 \
+    --hash=sha256:63daee79aa8366c8f1c637f1a4876b890da5fc92a19ebd2f7080ebacb901e990 \
+    # via ipython
+ptyprocess==0.6.0 \
+    --hash=sha256:923f299cc5ad920c68f2bc0bc98b75b9f838b93b599941a6b63ddbc2476394c0 \
+    --hash=sha256:d7cc528d76e76342423ca640335bd3633420dc1366f258cb31d05e865ef5ca1f \
+    # via pexpect
 pyglet==1.3.2 \
     --hash=sha256:8b07aea16f34ac861cffd06a0c17723ca944d172e577b57b21859b7990709a66 \
-    --hash=sha256:b00570e7cdf6971af8953b6ece50d83d13272afa5d1f1197c58c0f478dd17743 \
-    # via gym
+    --hash=sha256:b00570e7cdf6971af8953b6ece50d83d13272afa5d1f1197c58c0f478dd17743
+pygments==2.5.2 \
+    --hash=sha256:2a3fe295e54a20164a9df49c75fa58526d3be48e14aceba6d6b1e8ac0bfd6f1b \
+    --hash=sha256:98c8aa5a9f778fcd1026a17361ddaf7330d1b7c62ae97c3bb0ae73e0b9b6b0fe \
+    # via ipython
+pyyaml==5.2 \
+    --hash=sha256:0e7f69397d53155e55d10ff68fdfb2cf630a35e6daf65cf0bdeaf04f127c09dc \
+    --hash=sha256:2e9f0b7c5914367b0916c3c104a024bb68f269a486b9d04a2e8ac6f6597b7803 \
+    --hash=sha256:35ace9b4147848cafac3db142795ee42deebe9d0dad885ce643928e88daebdcc \
+    --hash=sha256:38a4f0d114101c58c0f3a88aeaa44d63efd588845c5a2df5290b73db8f246d15 \
+    --hash=sha256:483eb6a33b671408c8529106df3707270bfacb2447bf8ad856a4b4f57f6e3075 \
+    --hash=sha256:4b6be5edb9f6bb73680f5bf4ee08ff25416d1400fbd4535fe0069b2994da07cd \
+    --hash=sha256:7f38e35c00e160db592091751d385cd7b3046d6d51f578b29943225178257b31 \
+    --hash=sha256:8100c896ecb361794d8bfdb9c11fce618c7cf83d624d73d5ab38aef3bc82d43f \
+    --hash=sha256:c0ee8eca2c582d29c3c2ec6e2c4f703d1b7f1fb10bc72317355a746057e7346c \
+    --hash=sha256:e4c015484ff0ff197564917b4b4246ca03f411b9bd7f16e02a2f586eb48b6d04 \
+    --hash=sha256:ebc4ed52dcc93eeebeae5cf5deb2ae4347b3a81c3fa12b0b8c976544829396a4
+scikit-video==1.1.11 \
+    --hash=sha256:4fc131e509aaeeb0eecb6acb58b92a7ef905be5dbe27ed1d1ae089634b601f23 \
+    --hash=sha256:5061d2aeae1892b73a97c89a82942b3e8eebf2fe23e59c60e06ede5f8a24ed1e
 scipy==1.3.3 \
     --hash=sha256:0b8c9dc042b9a47912b18b036b4844029384a5b8d89b64a4901ac3e06876e5f6 \
     --hash=sha256:18ad034be955df046b5a27924cdb3db0e8e1d76aaa22c635403fe7aee17f1482 \
@@ -97,11 +188,26 @@ scipy==1.3.3 \
     --hash=sha256:cfee99d085d562a7e3c4afe51ac1fe9b434363489e565a130459307f30077973 \
     --hash=sha256:dfcb0f0a2d8e958611e0b56536285bb435f03746b6feac0e29f045f7c6caf164 \
     --hash=sha256:f5d47351aeb1cb6bda14a8908e56648926a6b2d714f89717c71f7ada41282141 \
-    # via gym
+    # via gym, scikit-video
 six==1.13.0 \
     --hash=sha256:1f1b7d42e254082a9db6279deae68afb421ceba6158efa6131de7b3003ee93fd \
     --hash=sha256:30f610279e8b2578cab6db20741130331735c781b56053c59c4076da27f06b66 \
-    # via gym, pip-tools
+    # via gym, pip-tools, traitlets
+smmap2==2.0.5 \
+    --hash=sha256:0555a7bf4df71d1ef4218e4807bbf9b201f910174e6e08af2e138d4e517b4dde \
+    --hash=sha256:29a9ffa0497e7f2be94ca0ed1ca1aa3cd4cf25a1f6b4f5f87f74b46ed91d609a \
+    # via gitdb2
 tqdm==4.39.0 \
     --hash=sha256:5a1f3d58f3eb53264387394387fe23df469d2a3fab98c9e7f99d5c146c119873 \
     --hash=sha256:f1a1613fee07cc30a253051617f2a219a785c58877f9f6bfa129446cbaf8b4c1
+traitlets==4.3.3 \
+    --hash=sha256:70b4c6a1d9019d7b4f6846832288f86998aa3b9207c6821f3578a6a6a467fe44 \
+    --hash=sha256:d023ee369ddd2763310e4c3eae1ff649689440d4ae59d7485eb4cfbbe3e359f7 \
+    # via ipython
+wcwidth==0.1.8 \
+    --hash=sha256:8fd29383f539be45b20bd4df0dc29c20ba48654a41e661925e612311e9f3c603 \
+    # via prompt-toolkit
+
+# WARNING: The following packages were not pinned, but pip requires them to be
+# pinned when the requirements file includes hashes. Consider using the --allow-unsafe flag.
+# setuptools

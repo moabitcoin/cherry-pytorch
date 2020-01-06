@@ -84,7 +84,7 @@ def play_atari(config_file, model_file=None, device='gpu'):
 if __name__ == '__main__':
 
   parser = argparse.ArgumentParser('Test Agent of Atari(DQN)')
-  parser.add_argument('-x', dest='config_file', type=str,
+  parser.add_argument('-x', dest='config_file', type=Path,
                       help='Config file for the Atari agent', required=True)
   parser.add_argument('-d', dest='device', choices=['gpu', 'cpu'],
                       help='Device to run the train/test', default='gpu')

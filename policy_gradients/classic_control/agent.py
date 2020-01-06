@@ -57,12 +57,13 @@ class AgentOfControl():
     self.action = None
     self.rewards = None
     self.values = None
-    self.mb_state = None
+    self.mb_states = None
     self.mb_actions = None
     self.mb_rewards = None
-    self.mb_values = None
+    self.mb_gaes = None
     self.ep_rewards = []
     self.gamma = cfgs['gamma']
+    self.lambd = cfgs['lambda']
     self.policy_lr = cfgs['policy_lr']
     self.value_lr = cfgs['value_lr']
     self.value_iter = cfgs['value_iter']
@@ -97,7 +98,7 @@ class AgentOfControl():
     self.mb_states = []
     self.mb_actions = []
     self.mb_rewards = []
-    self.mb_values = []
+    self.mb_gaes = []
     self.ep_rewards = []
 
     self.flash_episode()
@@ -155,31 +156,50 @@ class AgentOfControl():
 
     return np.sum(self.rewards)
 
+  def discount(self, episode, cr, normalize=False):
+
+    ep_length = episode.shape[0]
+
+    if ep_length == 1:
+      # std is not defined for array of length 1
+      return
+
+    gs = torch.stack([cr.pow(t) for t in range(ep_length)])
+
+    ep_discounted = [episode[idx:] * gs[:ep_length - idx]
+                     for idx in range(ep_length)]
+
+    episode = list(map(torch.sum, ep_discounted))
+    episode = torch.stack(episode)
+
+    if normalize:
+
+      mean, std = episode.mean(), episode.std()
+      episode = (episode - mean)/(std + np.finfo(np.float32).eps.item())
+
+    return episode
+
   def discount_episode(self):
 
-    ep_length = len(self.rewards)
-    gamma = torch.tensor(self.gamma)
-    ep_rewards = torch.tensor(self.rewards, dtype=torch.float32)
-    ep_discounts = torch.tensor([gamma ** t for t in range(ep_length)],
-                                dtype=torch.float32)
+    gamma = torch.tensor(self.gamma).to(self.device)
+    lambd = torch.tensor(self.lambd).to(self.device)
 
-    rewards = [ep_rewards[idx:] * ep_discounts[:ep_length - idx]
-               for idx in range(ep_length)]
+    vals = torch.cat(self.values).squeeze(1)
+    rews = torch.tensor(self.rewards, dtype=torch.float32).to(self.device)
 
-    rewards = list(map(torch.sum, rewards))
+    # GAE-lambda estimate via TD
+    td = rews[:-1] + gamma * vals[1:] - vals[:-1]
 
-    states = torch.cat(self.states)
-    actions = torch.cat(self.actions)
-    rewards = torch.stack(rewards).to(self.device)
-    values = torch.cat(self.values)
+    gaes = self.discount(td, gamma * lambd, normalize=True)
+    rewards = self.discount(rews, gamma)[:-1]
 
-    mean, std = rewards.mean(), rewards.std()
-    rewards = (rewards - mean)/(std + np.finfo(np.float32).eps.item())
+    states = torch.cat(self.states)[:-1]
+    actions = torch.cat(self.actions)[:-1]
 
     self.mb_states.append(states)
     self.mb_actions.append(actions)
     self.mb_rewards.append(rewards)
-    self.mb_values.append(values)
+    self.mb_gaes.append(gaes)
 
   def append_episode_reward(self, ep_reward):
 
@@ -190,13 +210,13 @@ class AgentOfControl():
     mb_states = torch.cat(self.mb_states)
     mb_actions = torch.cat(self.mb_actions)
     mb_rewards = torch.cat(self.mb_rewards)
-    mb_values = torch.cat(self.mb_values)
+    mb_gaes = torch.cat(self.mb_gaes)
 
     # policy optimisation
     self.policy_optimizer.zero_grad()
     mb_logits, _ = self.policy(mb_states)
     ce = F.cross_entropy(mb_logits, mb_actions, reduction='none')
-    policy_loss = ((mb_rewards - mb_values) * ce).mean()
+    policy_loss = (mb_gaes * ce).mean()
     policy_loss.backward()
     self.policy_optimizer.step()
 
@@ -211,10 +231,3 @@ class AgentOfControl():
     loss = policy_loss + value_loss
 
     return loss.detach().cpu().numpy()
-
-  def save_model(self, step, dest):
-
-    model_savefile = '{0}/classic-control-agent-{1}.pth'.format(dest, step)
-    logger.debug("Saving Classic Control Agent to {}".format(model_savefile))
-
-    torch.save(self.policy.state_dict(), model_savefile)

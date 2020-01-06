@@ -4,13 +4,14 @@
 import os
 import shutil
 import argparse
+from pathlib import Path
 
 import tqdm
 import torch
 import numpy as np
 
-from ddqn.atari.environment import AtariEnvironment
-from ddqn.atari.agent import AgentOfAtari
+from policy_gradients.atari.environment import AtariEnvironment
+from policy_gradients.atari.agent import AgentOfAtari
 from utils.helpers import read_yaml, get_logger
 from utils.helpers import read_yaml, get_logger, get_repo_hexsha, copy_yaml, \
     write_model
@@ -36,13 +37,12 @@ def train_agent_of_atari(config_file, device='gpu'):
   cfgs = read_yaml(config_file)
 
   train_cfgs = cfgs['train']
-  batch_size = train_cfgs['batch_size']
-  update_target = train_cfgs['update_target']
+
   save_model = train_cfgs['save_model']
   model_dest = train_cfgs['model_dest']
   train_eps = train_cfgs['n_train_episodes']
   max_steps = train_cfgs['max_steps']
-  policy_update = train_cfgs['policy_update']
+  env_solved = train_cfgs['env_solution']
 
   model_dest = Path(model_dest)
 
@@ -59,51 +59,62 @@ def train_agent_of_atari(config_file, device='gpu'):
   train_ep = tqdm.tqdm(range(train_eps), ascii=True, unit='ep', leave=False)
 
   global_step = 0
+  done = False
 
   for ep in train_ep:
 
     agent.reset()
-    frame = env.reset()
+    state = env.reset()
 
-    agent.append_state(frame)
+    agent.set_state(state)
 
     train_step = tqdm.tqdm(range(max_steps), ascii=True,
                            unit='stp', leave=False)
 
     for step in train_step:
 
-      global_step = ep * max_steps + step
-      agent.set_eps(global_step)
-
       state = agent.get_state()
       action = agent.get_action(state)
       next_state, reward, done, info = env.step(action)
-      agent.update_scores(reward)
+      agent.append_reward(reward)
 
       if done:
+        # End of life == end of episode, DeepMind hack
         next_state = env.reset()
 
-      if info['ale.lives'] == 0:
-        agent.show_score(train_step, global_step)
-        agent.flush_episode()
-
       agent.append_state(next_state)
-      states = agent.get_state(complete=True)
-      agent.push_to_memory(states, action, reward, done)
+      terminal = info['ale.lives'] == 0
 
-      if global_step % policy_update == 0:
-        agent.optimize(batch_size=batch_size)
+      if terminal:
+        ep_rewards = agent.get_episode_rewards()
+        agent.append_episode_reward(ep_rewards)
+        agent.discount_episode()
+        agent.flash_episode()
+        agent.set_state(next_state)
 
-      if global_step % update_target == 0:
-        agent.update_target(global_step)
+    if not terminal:
+      ep_rewards = agent.get_episode_rewards()
+      agent.append_episode_reward(ep_rewards)
+      agent.discount_episode()
 
-      if global_step % save_model == 0:
-        tag = '{0:09d}-{1}'.format(global_step, hexsha)
-        write_model(agent.policy, tag, model_dest)
+    loss = agent.optimize()
 
-    train_ep.set_description('Ep : {0}, Best Reward : {1:.3f}, '
-                             'Eps : {2:.4f}'.format(ep, agent.top_scr,
-                                                    agent.eps))
+    mean_rewards = np.mean(agent.ep_rewards)
+    ep_count = len(agent.ep_rewards)
+    train_ep.set_description('Mean reward: {:.3f} on {} epsds '
+                             'Loss :{:.3f}'.format(mean_rewards,
+                                                   ep_count,
+                                                   loss))
+    if ep % save_model == 0:
+      tag = '{0:09d}-{1}'.format(ep * max_steps, hexsha)
+      write_model(agent.policy, tag, model_dest)
+
+    best_reward = np.max(agent.ep_rewards)
+    if best_reward >= env_solved:
+      logger.info('Solved! At epside {}'
+                  ' reward {:.3f} > {:.3f}'.format(ep, best_reward,
+                                                   env_solved))
+      break
 
   tag = 'final-{0}'.format(hexsha)
   write_model(agent.policy, tag, model_dest)
@@ -112,8 +123,8 @@ def train_agent_of_atari(config_file, device='gpu'):
 if __name__ == '__main__':
 
   parser = argparse.ArgumentParser('Train an RL Agent to'
-                                   ' play Atari Game (DDQN)')
-  parser.add_argument('-x', dest='config_file', type=str,
+                                   ' play Atari Game (VPG)')
+  parser.add_argument('-x', dest='config_file', type=Path,
                       help='Config for the Atari env/agent', required=True)
   parser.add_argument('-d', dest='device', choices=['gpu', 'cpu'],
                       help='Device to run the train/test', default='gpu')

@@ -237,13 +237,6 @@ class AgentOfAtari():
     logger.debug('Updating agent at {}'.format(step))
     self.target.load_state_dict(self.policy.state_dict())
 
-  def save_model(self, step, dest):
-
-    model_savefile = '{0}/atari-agent-{1}.pth'.format(dest, step)
-    logger.debug("Saving Atari Agent to {}".format(model_savefile))
-
-    torch.save(self.target.state_dict(), model_savefile)
-
   def show_score(self, pbar, step):
 
     total_score = np.sum(self.scores, initial=0.0)

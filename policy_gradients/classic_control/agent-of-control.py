@@ -4,6 +4,7 @@
 import os
 import shutil
 import argparse
+from pathlib import Path
 
 import tqdm
 import torch
@@ -11,13 +12,16 @@ import numpy as np
 
 from policy_gradients.classic_control.environment import ClassicControlEnvironment
 from policy_gradients.classic_control.agent import AgentOfControl
-from utils.helpers import read_yaml, get_logger
+from utils.helpers import read_yaml, get_logger, get_repo_hexsha, copy_yaml, \
+    write_model
 
 
 logger = get_logger(__file__)
 
 
 def train_agent_of_control(config_file, device='gpu'):
+
+  hexsha = get_repo_hexsha()
 
   cuda_available = torch.cuda.is_available()
   cuda_and_device = cuda_available and device == 'gpu'
@@ -38,12 +42,14 @@ def train_agent_of_control(config_file, device='gpu'):
   max_steps = train_cfgs['max_steps']
   env_solved = train_cfgs['env_solution']
 
+  model_dest = Path(model_dest)
+
   env = ClassicControlEnvironment(cfgs['env'])
   agent = AgentOfControl(cfgs['agent'], action_size=env.action_size,
                          device=device)
 
-  os.makedirs(model_dest, exist_ok=True)
-  shutil.copy(config_file, model_dest)
+  model_dest.mkdir(parents=True, exist_ok=True)
+  copy_yaml(config_file, model_dest, hexsha)
 
   assert env.action_size == agent.action_size, \
       "Environment and state action size should match"
@@ -88,7 +94,8 @@ def train_agent_of_control(config_file, device='gpu'):
     train_ep.set_description('Average reward: {:.3f}'.format(mean_rewards))
 
     if ep % save_model == 0:
-      agent.save_model('{0:09d}'.format(ep * max_steps), model_dest)
+      tag = '{0:09d}-{1}'.format(ep * max_steps, hexsha)
+      write_model(agent.policy, tag, model_dest)
 
     best_reward = np.max(agent.ep_rewards)
     if best_reward >= env_solved:
@@ -97,14 +104,15 @@ def train_agent_of_control(config_file, device='gpu'):
                                                    env_solved))
       break
 
-  agent.save_model('final', model_dest)
+  tag = 'final-{0}'.format(hexsha)
+  write_model(agent.policy, tag, model_dest)
 
 
 if __name__ == '__main__':
 
   parser = argparse.ArgumentParser('Train an RL Agent to solve Classic '
                                    'Control problems (with PG)')
-  parser.add_argument('-x', dest='config_file', type=str,
+  parser.add_argument('-x', dest='config_file', type=Path,
                       help='Config for the Atari env/agent', required=True)
   parser.add_argument('-d', dest='device', choices=['gpu', 'cpu'],
                       help='Device to run the train/test', default='gpu')
