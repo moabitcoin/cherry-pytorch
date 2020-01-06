@@ -1,6 +1,6 @@
 import sys
 import logging
-from pathlib import Path
+import argparse
 import shutil
 
 import git
@@ -82,3 +82,15 @@ def write_model(model, tag, dest):
   logger.debug("Saving Agent to {}".format(model_savefile))
 
   torch.save(model.state_dict(), model_savefile)
+
+
+def add_verbosity_parser(parser):
+
+  parser.add_argument('-v', '--verbose', action='store_true',
+                      default=True, help='Only warnings')
+  parser.add_argument('-vv', '--very-verbose', action='store_true',
+                      default=False, help='Warnings + Info')
+  parser.add_argument('-vvv', '--very-very-verbose', action='store_true',
+                      default=False, help='Warning + Info + Debug')
+
+  return parser
