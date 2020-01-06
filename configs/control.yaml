@@ -1,14 +1,15 @@
 # Environment config
 env:
+  type: 'classic_control'
   # Classic control env name
-  env_name : 'CartPole-v0'
+  name : 'CartPole-v0'
   # seed
   seed: 543
 
 # Agent config
 agent:
   # type of agent
-  type: 'vpg'
+  algo_type: 'vpg'
   # model type
   model_type: 'mlp'
   # Learning rate for the policy network
