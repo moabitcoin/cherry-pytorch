@@ -15,6 +15,8 @@ agent:
   value_iter: 80
   # Bellman equation reward discount
   gamma : 0.99
+  # Estimated GAE with TD(lambda)
+  lambda: 0.97
   # input shape
   input_shape : [4]
   # state size
@@ -26,7 +28,7 @@ train:
   # Max steps in each episode
   max_steps : 1000
   # model location
-  model_dest: /data/experiments/agent-of-control/31-12-2019-CartPole-v0-pg
+  model_dest: /data/experiments/agent-of-control/02-12-2020-CartPole-v0-vpg-gae
   # save model every save_model steps
   save_model: 20
   # solution rewards
@@ -38,4 +40,4 @@ test:
   # Max steps in each episode
   max_steps : 1000
   # path where to save played video
-  state_dest: /data/experiments/agent-of-control/31-12-2019-CartPole-v0-pg/states
+  state_dest: /data/experiments/agent-of-control/02-12-2020-CartPole-v0-vpg-gae/states

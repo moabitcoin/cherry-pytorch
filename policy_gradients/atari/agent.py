@@ -20,42 +20,33 @@ from utils.helpers import get_logger
 logger = get_logger(__file__)
 
 
-class DoomNet(torch.nn.Module):
+class AtariNet(torch.nn.Module):
 
   def __init__(self, input_shape, state_size, action_size, device):
 
-    super(DoomNet, self).__init__()
+    super(AtariNet, self).__init__()
 
     self.device = device
     self.input_shape = input_shape
     self.state_size = state_size
     self.action_size = action_size
 
-    (w, h) = self.input_shape
+    self.conv1 = nn.Conv2d(state_size, 32, kernel_size=8, stride=4, bias=False)
+    self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2, bias=False)
+    self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1, bias=False)
+    self.fc1 = nn.Linear(64 * 7 * 7, 512)
+    self.action = nn.Linear(512, action_size)
+    self.value = nn.Linear(512, 1)
 
-    self.conv1 = nn.Conv2d(self.state_size, 16, kernel_size=8, stride=4)
-    self.conv2 = nn.Conv2d(16, 32, kernel_size=8, stride=4)
-
-    def feat_shape(size, kernel_size=8, stride=4):
-      return (size - (kernel_size - 1) - 1) // stride + 1
-    convw = feat_shape(feat_shape(w))
-    convh = feat_shape(feat_shape(h))
-    feat_spatial_shape = convw * convh * 32
-
-    self.head = nn.Linear(feat_spatial_shape, 256)
-    self.action = nn.Linear(256, self.action_size)
-    self.value = nn.Linear(256, 1)
-
-    self.log_softmax = nn.LogSoftmax(dim=1)
+    self.device = device
 
   def init_weights(self, m):
     if type(m) == nn.Linear:
-      torch.nn.init.xavier_uniform_(m.weight)
+      torch.nn.init.kaiming_normal_(m.weight, nonlinearity='relu')
       m.bias.data.fill_(0.0)
 
     if type(m) == nn.Conv2d:
-      torch.nn.init.xavier_uniform_(m.weight)
-      m.bias.data.fill_(0.0)
+      torch.nn.init.kaiming_normal_(m.weight, nonlinearity='relu')
 
   def forward(self, x):
 
@@ -63,8 +54,8 @@ class DoomNet(torch.nn.Module):
 
     x = F.relu(self.conv1(x))
     x = F.relu(self.conv2(x))
-    x = x.view(x.size(0), -1)
-    x = F.relu(self.head(x))
+    x = F.relu(self.conv3(x))
+    x = F.relu(self.fc1(x.view(x.size(0), -1)))
 
     q = self.action(x)
     v = self.value(x)
@@ -73,7 +64,7 @@ class DoomNet(torch.nn.Module):
     return q, v
 
 
-class AgentOfDoom():
+class AgentOfAtari():
 
   def __init__(self, cfgs, action_size=None, device=None, model_file=None):
 
@@ -93,6 +84,7 @@ class AgentOfDoom():
     self.state_size = cfgs['state_size']
     self.crop_shape = cfgs['crop_shape']
     self.input_shape = cfgs['input_shape']
+    self.value_iter = cfgs['value_iter']
     self.action_size = action_size
     self.device = device
 
@@ -109,13 +101,13 @@ class AgentOfDoom():
 
     self.transform = Compose(transforms)
 
-    self.policy = DoomNet(self.input_shape, self.state_size,
+    self.policy = AtariNet(self.input_shape, self.state_size,
+                           self.action_size, self.device).to(self.device)
+
+    self.value = AtariNet(self.input_shape, self.state_size,
                           self.action_size, self.device).to(self.device)
 
-    self.value = DoomNet(self.input_shape, self.state_size,
-                         self.action_size, self.device).to(self.device)
-
-    # self.policy.apply(self.policy.init_weights)
+    self.policy.apply(self.policy.init_weights)
 
     self.policy_optimizer = optim.Adam(self.policy.parameters(),
                                        lr=self.policy_lr)
@@ -249,14 +241,15 @@ class AgentOfDoom():
     ce = F.cross_entropy(mb_logits, mb_actions, reduction='none')
     policy_loss = ((mb_rewards - mb_values) * ce).mean()
     policy_loss.backward()
+    # nn.utils.clip_grad_value_(self.policy.parameters(), 1)
     self.policy_optimizer.step()
 
-    # value optimisation
     self.value_optimizer.zero_grad()
     _, mb_values = self.value(mb_states)
     mb_values = mb_values.squeeze(1)
     value_loss = F.smooth_l1_loss(mb_values, mb_rewards)
     value_loss.backward()
+    # nn.utils.clip_grad_value_(self.value.parameters(), 1)
     self.value_optimizer.step()
 
     loss = policy_loss + value_loss
