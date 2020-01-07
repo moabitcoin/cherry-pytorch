@@ -66,8 +66,7 @@ class DQN():
 
     optimizer = OPTS.get(cfgs['opt_name'])
 
-    self.optimizer = optimizer(self.policy.parameters(),
-                               lr=self.lr, eps=1.5e-4)
+    self.optimizer = optimizer(self.policy.parameters(), lr=self.lr)
     self.replay = ReplayBuffer(self.replay_size,
                                [self.state_size] + self.input_shape,
                                self.device)
