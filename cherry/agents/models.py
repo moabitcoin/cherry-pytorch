@@ -134,6 +134,14 @@ class ConvNetM(torch.nn.Module):
     self.action = nn.Linear(feat_spatial_shape, self.action_size)
     self.value = nn.Linear(feat_spatial_shape, 1)
 
+  def init_weights(self, m):
+    if type(m) == nn.Linear:
+      torch.nn.init.kaiming_normal_(m.weight, nonlinearity='relu')
+      m.bias.data.fill_(0.0)
+
+    if type(m) == nn.Conv2d:
+      torch.nn.init.kaiming_normal_(m.weight, nonlinearity='relu')
+
   def forward(self, x):
 
     x = x.to(self.device).float() / 255.

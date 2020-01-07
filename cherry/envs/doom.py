@@ -12,26 +12,27 @@ from vizdoom import DoomGame, ScreenResolution, \
 from utils.helpers import get_logger
 
 logger = get_logger(__file__)
-Transition = namedtuple('Transition',
-                        ('state', 'action', 'next_state', 'reward'))
 
 
 class DoomEnvironment():
 
   def __init__(self, cfgs):
 
-    self.game = DoomGame()
+    scenario_name = cfgs['name']
+    filepath = Path(__file__).parent
 
-    config_file = Path(cfgs['game_config'])
-    scenario_file = Path(cfgs['scenario_config'])
+    config_file = filepath.joinpath('assets/{}.cfg'.format(scenario_name))
+    scenario_file = filepath.joinpath('assets/{}.wad'.format(scenario_name))
 
-    logger.info('Loading game config from {}'.format(config_file))
-    logger.info('Loading scenario config from {}'.format(scenario_file))
+    logger.info('Loading game config from {}'.format(config_file.name))
+    logger.info('Loading scenario config from {}'.format(scenario_file.name))
 
     assert config_file.is_file(), \
         "{} no such file".format(config_file)
     assert scenario_file.is_file(), \
         "{} no such file".format(scenario_file)
+
+    self.game = DoomGame()
 
     self.game.load_config(config_file.as_posix())
     self.game.set_doom_scenario_path(scenario_file.as_posix())
@@ -61,17 +62,6 @@ class DoomEnvironment():
     # Effect upon taking damage or picking up items
     self.game.set_render_screen_flashes(True)
 
-    # Adds buttons that will be allowed.
-    self.game.add_available_button(Button.MOVE_LEFT)
-    self.game.add_available_button(Button.MOVE_RIGHT)
-    self.game.add_available_button(Button.ATTACK)
-
-    # Adds game variables that will be included in state.
-    self.game.add_available_game_variable(GameVariable.AMMO2)
-
-    # Causes episodes to finish after 200 tics (actions)
-    self.game.set_episode_timeout(200)
-
     # Makes episodes start after 10 tics (~after raising the weapon)
     self.game.set_episode_start_time(10)
 
@@ -80,9 +70,6 @@ class DoomEnvironment():
 
     # Turns on the sound. (turned off by default)
     self.game.set_sound_enabled(True)
-
-    # Sets the livin reward (for each move) to -1
-    self.game.set_living_reward(-1)
 
     # Sets ViZDoom mode (PLAYER, ASYNC_PLAYER, SPECTATOR, ASYNC_SPECTATOR,
     # PLAYER mode is default)
@@ -96,3 +83,31 @@ class DoomEnvironment():
     logger.debug('Action space size {}'.format(self.action_size))
 
     logger.info('Environment setup')
+
+  def step(self, action):
+
+    reward = self.game.make_action(self.actions[action])
+    done = self.game.is_episode_finished()
+    next_state = self.get_frame()
+
+    return next_state, reward, done, {}
+
+  def reset(self):
+
+    self.game.new_episode()
+
+    return self.get_frame()
+
+  def get_total_reward(self):
+
+    return self.game.get_total_reward()
+
+  def close(self):
+
+    self.game.close()
+
+  def get_frame(self):
+
+    state = self.game.get_state()
+
+    return state.screen_buffer if state is not None else None

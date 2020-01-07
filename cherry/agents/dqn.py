@@ -2,26 +2,27 @@
 import os
 import sys
 import math
+from pathlib import Path
 from collections import deque, namedtuple
 
+import tqdm
 import torch
 import random
 import numpy as np
 from torch import nn
 import torch.optim as optim
 import torch.nn.functional as F
-from torchvision.transforms import Compose, CenterCrop, \
-    Grayscale, Resize, ToPILImage, ToTensor
+from torchvision.transforms import Compose, CenterCrop, Resize, ToPILImage
 
-
-from utils.helpers import get_logger
+from cherry.agents import ReplayBuffer
+from utils.helpers import get_logger, write_model
 
 logger = get_logger(__file__)
 
 
 class DQN():
 
-  def __init__(self, cfgs, action_size=None, device=None, model_file=None):
+  def __init__(self, cfgs, model=None, model_file=None, device=None):
 
     self.history = None
     self.losses = None
@@ -37,7 +38,8 @@ class DQN():
     self.eps_decay = cfgs['eps_decay']
     self.replay_size = cfgs['replay_size']
     self.state_size = cfgs['state_size']
-    self.action_size = action_size
+    self.action_size = cfgs['action_size']
+    self.input_transforms = cfgs['input_transforms']
     self.device = device
     self.eps = self.max_eps
 
@@ -47,15 +49,15 @@ class DQN():
 
     self.zero_state = torch.zeros([1] + self.input_shape, dtype=torch.uint8)
 
-    self.policy = AtariNet(self.input_shape, self.state_size,
-                           self.action_size, self.lr,
-                           self.device).to(self.device)
+    self.transform = self.state_transformer()
+
+    self.policy = model(self.input_shape, self.state_size,
+                        self.action_size, self.device).to(self.device)
 
     self.policy.apply(self.policy.init_weights)
 
-    self.target = AtariNet(self.input_shape, self.state_size,
-                           self.action_size, self.lr,
-                           self.device).to(self.device)
+    self.target = model(self.input_shape, self.state_size,
+                        self.action_size, self.device).to(self.device)
 
     self.target.load_state_dict(self.policy.state_dict())
     self.target.eval()
@@ -65,14 +67,24 @@ class DQN():
     self.replay = ReplayBuffer(self.replay_size,
                                [self.state_size] + self.input_shape,
                                self.device)
-
     if model_file:
       self.load_model(model_file)
+
+  def state_transformer(self):
+
+    transforms = [ToPILImage()]
+
+    if 'crop' in self.input_transforms:
+      transforms.append(CenterCrop(self.crop_shape))
+    if 'resize' in self.input_transforms:
+      transforms.append(Resize(self.input_shape))
+
+    return Compose(transforms)
 
   def flush_episode(self):
 
     self.losses = []
-    self.scores = []
+    self.rewards = []
 
   def reset(self):
 
@@ -93,7 +105,8 @@ class DQN():
 
     if random.random() > self.eps:
       with torch.no_grad():
-        a = self.policy(state).max(1)[1].cpu().view(1, 1)
+        q, _ = self.policy(state)
+        a = q.max(1)[1].cpu().view(1, 1)
     else:
       a = torch.tensor([[random.randrange(self.action_size)]],
                        device='cpu', dtype=torch.long)
@@ -107,10 +120,19 @@ class DQN():
 
   def append_state(self, state):
 
-    state = torch.from_numpy(state).view(1, self.input_shape[0],
-                                         self.input_shape[1])
+    state = self.zero_state if state is None else state
+
+    if self.transform:
+      state = np.array(self.transform(state), dtype=np.uint8)
+      state = np.expand_dims(state, 0)
+
+    state = torch.from_numpy(state)
 
     self.history.append(state)
+
+  def append_reward(self, r):
+
+    self.rewards.append(r)
 
   def get_state(self, complete=False):
 
@@ -121,9 +143,9 @@ class DQN():
 
     self.replay.push(states, action, reward, done)
 
-  def update_scores(self, score):
+  def get_episode_rewards(self):
 
-    self.scores.append(score)
+    return np.sum(self.rewards)
 
   def optimize(self, batch_size=32):
 
@@ -137,8 +159,10 @@ class DQN():
     state_batch = states[:, :self.state_size]
     next_state_batch = states[:, 1:]
 
-    q_values = self.policy(state_batch).gather(1, action)
-    q_values_next = self.target(next_state_batch).max(1)[0].detach()
+    q_values, _ = self.policy(state_batch)
+    q_values = q_values.gather(1, action)
+    q_values_next, _ = self.target(next_state_batch)
+    q_values_next = q_values_next.max(1)[0].detach()
 
     # Compute the expected Q values (target)
     q_values_target = (q_values_next * self.gamma) * (1. - done[:, 0]) + reward[:, 0]
@@ -149,8 +173,7 @@ class DQN():
     # Optimize the model
     self.optimizer.zero_grad()
     loss.backward()
-    for param in self.policy.parameters():
-      param.grad.data.clamp_(-1, 1)
+    nn.utils.clip_grad_value_(self.policy.parameters(), 1)
     self.optimizer.step()
 
   def update_target(self, step):
@@ -167,3 +190,67 @@ class DQN():
                                                len(self.replay)))
 
     self.top_scr = total_score if self.top_scr < total_score else self.top_scr
+
+  def train(self, env, train_cfgs, gitsha, model_dest):
+
+    batch_size = train_cfgs['batch_size']
+    update_target = train_cfgs['update_target']
+    save_model = train_cfgs['save_model']
+    train_eps = train_cfgs['n_train_episodes']
+    max_steps = train_cfgs['max_steps']
+    policy_update = train_cfgs['policy_update']
+
+    train_ep = tqdm.tqdm(range(train_eps), ascii=True,
+                         unit='episode', leave=False)
+
+    global_step = 0
+
+    for ep in train_ep:
+
+      self.reset()
+      frame = env.reset()
+
+      self.append_state(frame)
+
+      train_step = tqdm.tqdm(range(max_steps), ascii=True,
+                             unit='stp', leave=False)
+
+      for step in train_step:
+
+        global_step = ep * max_steps + step
+        self.set_eps(global_step)
+
+        state = self.get_state()
+        action = self.get_action(state)
+        next_state, reward, done, info = env.step(action)
+        self.append_reward(reward)
+        self.append_state(next_state)
+
+        states = self.get_state(complete=True)
+        self.push_to_memory(states, action, reward, done)
+
+        if done:
+          total_score = self.get_episode_rewards()
+
+          self.reset()
+          next_frame = env.reset()
+
+          self.append_state(next_frame)
+
+          train_step.set_description('{0}/{1}, Reward : {2:.3f}, '
+                                     'Eps : {3:.4f}'.format(ep, step,
+                                                            total_score,
+                                                            self.eps))
+
+        if global_step % policy_update == 0:
+          self.optimize(batch_size=batch_size)
+
+        if global_step % update_target == 0:
+          self.update_target(global_step)
+
+        if global_step % save_model == 0:
+          tag = '{0:09d}-{1}'.format(global_step, gitsha)
+          write_model(self.policy, tag, model_dest)
+
+    tag = 'final-{0}'.format(gitsha)
+    write_model(self.policy, tag, model_dest)
