@@ -12,6 +12,8 @@ agent:
   model_type : 'convnet-medium'
   # Learning rate for the agent
   lr : 0.00025
+  # optimizer
+  opt_name: 'rmsprop'
   # Bellman equation reward discount
   gamma : 0.99
   # maximum exploration likelihood
@@ -41,7 +43,7 @@ train:
   # batch size
   batch_size: 64
   # model location
-  model_dest: /data/experiments/agent-of-doom/03-01-2019-320x240-basic-dqn
+  model_dest: /data/experiments/agent-of-doom/07-01-2019-320x240-basic-dqn
   # update target every update_target episodes
   update_target: 1000
   # save model every save_model episodes
@@ -55,4 +57,4 @@ test:
   # Max steps in each episode
   max_steps : 1000
   # path where to save played video
-  state_dest: /data/experiments/agent-of-doom/03-01-2019-320x240-basic-dqn/states
+  state_dest: /data/experiments/agent-of-doom/07-01-2019-320x240-basic-dqn/states

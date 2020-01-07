@@ -2,11 +2,17 @@ import sys
 import logging
 import argparse
 import shutil
+from collections import OrderedDict
 
 import git
 import yaml
 import torch
+import torch.optim as optim
 from baselines.common.atari_wrappers import EpisodicLifeEnv, FireResetEnv
+
+OPTS = OrderedDict({None: None,
+                    'adam': optim.Adam,
+                    'rmsprop': optim.RMSprop})
 
 CLI_LOGGING_FORMAT = '[%(filename)s][%(funcName)s:%(lineno)d]' + \
     '[%(levelname)s] %(message)s'

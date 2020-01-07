@@ -111,3 +111,7 @@ class DoomEnvironment():
     state = self.game.get_state()
 
     return state.screen_buffer if state is not None else None
+
+  def update_env(self, update_fn, **kwargs):
+
+    pass

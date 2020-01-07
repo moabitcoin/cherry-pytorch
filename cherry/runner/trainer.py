@@ -23,7 +23,6 @@ class Trainer:
 
     parser.add_argument('-c', '--config_file', type=Path,
                         help='Path to Config file', required=True)
-
     parser.add_argument('-d', dest='device', choices=['gpu', 'cpu'],
                         help='Device to run the train/test', default='gpu')
     parser.set_defaults(main=self._run)
