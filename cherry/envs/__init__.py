@@ -10,7 +10,7 @@ ENVS = {'atari': AtariEnvironment,
         'classic_control': ClassicControlEnvironment}
 
 
-def setup_env(cfgs):
+def build_env(cfgs):
 
   try:
 

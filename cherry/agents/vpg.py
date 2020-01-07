@@ -4,6 +4,7 @@ import sys
 import math
 from collections import deque, namedtuple
 
+import tqdm
 import torch
 import random
 import numpy as np
@@ -14,16 +15,14 @@ from torch.distributions import Categorical
 from torchvision.transforms import Compose, CenterCrop, \
     Grayscale, Resize, ToPILImage, ToTensor
 
-
-from utils.helpers import get_logger
+from utils.helpers import get_logger, write_model
 
 logger = get_logger(__file__)
 
 
 class VPG():
 
-  def __init__(self, cfgs, action_size=None, model=None,
-               device=None, model_file=None):
+  def __init__(self, cfgs, model=None, model_file=None, device=None):
 
     self.history = None
     self.states = None
@@ -39,15 +38,15 @@ class VPG():
     self.policy_lr = cfgs['policy_lr']
     self.value_lr = cfgs['value_lr']
     self.state_size = cfgs['state_size']
+    self.action_size = cfgs['action_size']
     self.crop_shape = cfgs.get('crop_shape')
     self.input_shape = cfgs.get('input_shape')
     self.input_transforms = cfgs.get('input_transforms')
-    self.action_size = action_size
     self.device = device
 
-    assert self.input_shape is not None, 'Input shape has to be not None'
-    assert self.action_size is not None, 'Action size has to non None'
-    assert self.device is not None, 'Device has to be CPU/GPU'
+    assert self.input_shape, 'Input shape has to be not None'
+    assert self.action_size, 'Action size has to non None'
+    assert self.device, 'Device has to be CPU/GPU'
 
     self.zero_state = torch.zeros([1] + self.input_shape, dtype=torch.uint8)
 
@@ -68,6 +67,8 @@ class VPG():
 
     if model_file:
       self.load_model(model_file)
+
+    logger.info('Done setting up {} Agent'.format(__class__.__name__))
 
   def state_transformer(self):
 
@@ -217,3 +218,63 @@ class VPG():
     loss = policy_loss + value_loss
 
     return loss.detach().cpu().numpy()
+
+  def train(self, env, train_cfgs, gitsha, model_dest):
+
+    save_model = train_cfgs['save_model']
+    train_eps = train_cfgs['n_train_episodes']
+    max_steps = train_cfgs['max_steps']
+    env_solved = train_cfgs['env_solution']
+
+    train_ep = tqdm.tqdm(range(train_eps), ascii=True, unit='ep', leave=True)
+
+    running_reward = 10
+
+    for ep in train_ep:
+
+      self.reset()
+      state = env.reset()
+
+      self.append_state(state)
+
+      train_step = tqdm.tqdm(range(max_steps), ascii=True,
+                             unit='stp', leave=False)
+
+      for step in train_step:
+
+        state = self.get_state()
+        action = self.get_action(state)
+        next_state, reward, done, info = env.step(action)
+        self.append_reward(reward)
+        self.append_state(next_state)
+
+        if done:
+
+          running_reward = 0.05 * self.get_episode_rewards() + \
+              (1 - 0.05) * running_reward
+
+          self.append_episode_reward(running_reward)
+
+          self.discount_episode()
+          self.flash_episode()
+          state = env.reset()
+          self.append_state(state)
+
+      loss = self.optimize()
+
+      mean_rewards = np.mean(self.ep_rewards)
+      train_ep.set_description('Average reward: {:.3f}'.format(mean_rewards))
+
+      if ep % save_model == 0:
+        tag = '{0:09d}-{1}'.format(ep * max_steps, gitsha)
+        write_model(self.policy, tag, model_dest)
+
+      best_reward = np.max(self.ep_rewards)
+      if best_reward >= env_solved:
+        logger.info('Solved! At epside {}'
+                    ' reward {:.3f} > {:.3f}'.format(ep, best_reward,
+                                                     env_solved))
+        break
+
+    tag = 'final-{0}'.format(gitsha)
+    write_model(self.policy, tag, model_dest)

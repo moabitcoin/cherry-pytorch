@@ -9,7 +9,7 @@ env:
 # Agent config
 agent:
   # type of agent
-  algo_type: 'vpg'
+  agent_type: 'vpg'
   # model type
   model_type: 'mlp'
   # Learning rate for the policy network
@@ -24,8 +24,10 @@ agent:
   lambda: 0.97
   # input shape
   input_shape : [4]
-  # state size
+  # state size := [state_size] + [input_shape]
   state_size: 1
+  # action_size
+  action_size: 2
   # transform the input
   input_transforms:
 

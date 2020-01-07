@@ -31,14 +31,14 @@ def get_model(model_type):
   return model
 
 
-def get_algo(algo_type):
+def build_agent(cfgs, **kwargs):
 
-  algo = None
+  agent = None
 
   try:
-    algo = ALGOS.get(algo_type)
+    agent = ALGOS.get(cfgs['agent_type'])(cfgs, **kwargs)
 
   except Exception as err:
-    logger.error('Error setting up algo {}, {}'.format(algo_type, err))
+    logger.error('Setting up algo {}, {}'.format(cfgs['agent_type'], err))
 
-  return algo
+  return agent
