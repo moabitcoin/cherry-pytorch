@@ -134,11 +134,9 @@ class VPG():
     state = self.zero_state if state is None else state
 
     if self.transform:
-      state = np.array(self.transform(state), dtype=np.uint8)
-      state = torch.from_numpy(state).unsqueeze(0)
-    else:
-      state = torch.from_numpy(state)
+      state = np.array(self.transform(state), dtype=np.uint8).expand_dims(0)
 
+    state = torch.from_numpy(state)
     self.history.append(state)
 
   def set_state(self, state):
