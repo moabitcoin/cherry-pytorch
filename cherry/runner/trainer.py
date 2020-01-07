@@ -1,7 +1,11 @@
 from pathlib import Path
 
+import tqdm
+import torch
+import numpy as np
+
 from cherry.envs import setup_env
-from cherry.agents import setup_model, setup_algo
+from cherry.agents import get_model, get_algo
 from utils.helpers import add_verbosity_parser, read_yaml, copy_yaml, \
     get_repo_hexsha, validate_config, get_logger, write_model
 
@@ -22,27 +26,32 @@ class Trainer:
 
     parser.add_argument('-d', dest='device', choices=['gpu', 'cpu'],
                         help='Device to run the train/test', default='gpu')
+    parser.set_defaults(main=self._run)
 
     parser = add_verbosity_parser(parser)
 
-  def run(self, config_file):
+  def _run(self, args):
+
+    config_file = args.config_file
+    device = args.device
 
     gitsha = get_repo_hexsha()
 
     cuda_available = torch.cuda.is_available()
     cuda_and_device = cuda_available and device == 'gpu'
 
+    device = torch.device('cuda' if cuda_and_device else 'cpu')
+
     if cuda_and_device:
       logger.info('Running CUDA benchmarks, GPU(s) device available')
     else:
       logger.info('Running on CPU(s)')
 
-    device = torch.device('cuda' if cuda_and_device else 'cpu')
-
     try:
       cfgs = read_yaml(config_file)
     except Exception as err:
       logger.error('Error reading config file {}, {}'.format(config_file, err))
+      return
 
     env_cfgs = cfgs['env']
     agent_cfgs = cfgs['agent']
@@ -57,12 +66,18 @@ class Trainer:
     model_dest = Path(model_dest)
 
     env = setup_env(env_cfgs)
-    agent = setup_agent(agent_cfgs)
+    model = get_model(agent_cfgs['model_type'])
+    algo = get_algo(agent_cfgs['algo_type'])
+
+    assert None not in [model, algo], "Model/Algo not setup"
+
+    agent = algo(agent_cfgs, model=model,
+                 action_size=env.action_size, device=device)
 
     model_dest.mkdir(parents=True, exist_ok=True)
     copy_yaml(config_file, model_dest, gitsha)
 
-    assert self.env.action_size == self.agent.action_size, \
+    assert env.action_size == agent.action_size, \
         "Environment's and Agent's state action size should match"
 
     train_ep = tqdm.tqdm(range(train_eps), ascii=True, unit='ep', leave=True)
@@ -105,7 +120,7 @@ class Trainer:
       train_ep.set_description('Average reward: {:.3f}'.format(mean_rewards))
 
       if ep % save_model == 0:
-        tag = '{0:09d}-{1}'.format(ep * max_steps, hexsha)
+        tag = '{0:09d}-{1}'.format(ep * max_steps, gitsha)
         write_model(agent.policy, tag, model_dest)
 
       best_reward = np.max(agent.ep_rewards)
@@ -115,5 +130,5 @@ class Trainer:
                                                      env_solved))
         break
 
-    tag = 'final-{0}'.format(hexsha)
+    tag = 'final-{0}'.format(gitsha)
     write_model(agent.policy, tag, model_dest)

@@ -44,6 +44,8 @@ def read_yaml(config_file):
 
     assert validate_config(d)
 
+    logger.info('Read config file {}'.format(config_file.as_posix()))
+
     return d
   except Exception as err:
     logger.error('Error reading {}, {}'.format(config_file, err))
@@ -100,13 +102,9 @@ def add_verbosity_parser(parser):
 
 def validate_config(cfgs):
 
-  assert cfgs.get('env') is not None, \
-      'Expected Environment info in config file'
-  assert cfgs.get('agent') is not None \
-      'Expected Agent info in config file'
-  assert cfgs.get('train') is not None \
-      'Expected Training info in config file'
-  assert cfgs.get('test') is not None \
-      'Expected Testing info in config file'
+  assert cfgs.get('env'), 'Expected Environment info in config file'
+  assert cfgs.get('agent'), 'Expected Agent info in config file'
+  assert cfgs.get('train'), 'Expected Training info in config file'
+  assert cfgs.get('test'), 'Expected Testing info in config file'
 
   return True

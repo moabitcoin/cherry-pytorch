@@ -22,7 +22,8 @@ logger = get_logger(__file__)
 
 class VPG():
 
-  def __init__(self, cfgs, action_size=None, device=None, model_file=None):
+  def __init__(self, cfgs, action_size=None, model=None,
+               device=None, model_file=None):
 
     self.history = None
     self.states = None
@@ -38,8 +39,9 @@ class VPG():
     self.policy_lr = cfgs['policy_lr']
     self.value_lr = cfgs['value_lr']
     self.state_size = cfgs['state_size']
-    self.crop_shape = cfgs['crop_shape']
-    self.input_shape = cfgs['input_shape']
+    self.crop_shape = cfgs.get('crop_shape')
+    self.input_shape = cfgs.get('input_shape')
+    self.input_transforms = cfgs.get('input_transforms')
     self.action_size = action_size
     self.device = device
 
@@ -49,18 +51,13 @@ class VPG():
 
     self.zero_state = torch.zeros([1] + self.input_shape, dtype=torch.uint8)
 
-    transforms = [ToPILImage()]
-    if self.crop_shape:
-      transforms.append(CenterCrop(self.crop_shape))
-    transforms.append(Resize(self.input_shape))
+    self.transform = self.state_transformer()
 
-    self.transform = Compose(transforms)
+    self.policy = model(self.input_shape, self.state_size,
+                        self.action_size, self.device).to(self.device)
 
-    self.policy = DoomNet(self.input_shape, self.state_size,
-                          self.action_size, self.device).to(self.device)
-
-    self.value = DoomNet(self.input_shape, self.state_size,
-                         self.action_size, self.device).to(self.device)
+    self.value = model(self.input_shape, self.state_size,
+                       self.action_size, self.device).to(self.device)
 
     # self.policy.apply(self.policy.init_weights)
 
@@ -71,6 +68,18 @@ class VPG():
 
     if model_file:
       self.load_model(model_file)
+
+  def state_transformer(self):
+
+    if not self.input_transforms:
+      return None
+
+    transforms = [ToPILImage()]
+    if self.crop_shape:
+      transforms.append(CenterCrop(self.crop_shape))
+    transforms.append(Resize(self.input_shape))
+
+    return Compose(transforms)
 
   def reset(self):
 
@@ -124,10 +133,11 @@ class VPG():
 
     state = self.zero_state if state is None else state
 
-    state = np.array(self.transform(state), dtype=np.uint8)
-
-    state = torch.from_numpy(state).view(1, self.input_shape[0],
-                                         self.input_shape[1])
+    if self.transform:
+      state = np.array(self.transform(state), dtype=np.uint8)
+      state = torch.from_numpy(state).unsqueeze(0)
+    else:
+      state = torch.from_numpy(state)
 
     self.history.append(state)
 

@@ -26,6 +26,8 @@ agent:
   input_shape : [4]
   # state size
   state_size: 1
+  # transform the input
+  input_transforms:
 
 train:
   # Number of training episodes

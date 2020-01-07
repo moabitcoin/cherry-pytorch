@@ -18,25 +18,27 @@ ALGOS = OrderedDict({None: None,
                      'vpg': VPG})
 
 
-def setup_model(cfgs, state_size, action_size, device):
+def get_model(model_type):
+
+  model = None
 
   try:
-
-    model = MODELS.get(cfgs['model_type'])
-    model(cfgs, state_size, action_size, device)
-    return model
+    model = MODELS.get(model_type)
 
   except Exception as err:
-    logger.error('Error setting up model {}'.format(cfgs['model_type']))
+    logger.error('Error setting up model {}, {}'.format(model_type, err))
+
+  return model
 
 
-def setup_algo(cfgs, action_size, device):
+def get_algo(algo_type):
+
+  algo = None
 
   try:
-
-    model = ALGOS.get(cfgs['algo_type'])
-    model(cfgs, state_size, action_size, device)
-    return model
+    algo = ALGOS.get(algo_type)
 
   except Exception as err:
-    logger.error('Error setting up model {}'.format(cfgs['model_type']))
+    logger.error('Error setting up algo {}, {}'.format(algo_type, err))
+
+  return algo

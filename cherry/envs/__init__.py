@@ -18,4 +18,4 @@ def setup_env(cfgs):
     return env(cfgs)
 
   except Exception as err:
-    logger.error('Error setting up environment {}'.format(cfgs['type']))
+    logger.error('Error setting up env {}, {}'.format(cfgs['type'], err))
