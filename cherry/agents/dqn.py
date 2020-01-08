@@ -170,7 +170,7 @@ class DQN():
     q_values_next, _ = self.target(next_state_batch)
     q_values_next = q_values_next.max(1)[0].detach()
 
-    # Compute the expected Q values (target)
+    # Bellman Equation : Computes the expected Q values (target)
     q_values_target = (q_values_next * self.gamma) * (1. - done[:, 0]) + reward[:, 0]
 
     # Compute Huber loss
@@ -236,7 +236,7 @@ class DQN():
         self.push_to_memory(states, action, reward, done)
 
         if done:
-          total_score = self.get_episode_rewards()
+          ep_reward = self.get_episode_rewards()
 
           self.reset()
           next_frame = env.reset()
@@ -245,7 +245,7 @@ class DQN():
 
           train_step.set_description('{0}/{1}, Reward : {2:.3f}, '
                                      'Eps : {3:.4f}'.format(ep, step,
-                                                            total_score,
+                                                            ep_reward,
                                                             self.eps))
 
         if global_step % policy_update == 0:
