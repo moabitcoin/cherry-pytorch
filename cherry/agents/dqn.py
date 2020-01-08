@@ -42,6 +42,7 @@ class DQN():
     self.state_size = cfgs['state_size']
     self.action_size = cfgs['action_size']
     self.input_transforms = cfgs['input_transforms']
+    self.grad_clip = cfgs['grad_clip']
     self.device = device
     self.eps = self.max_eps
 
@@ -178,7 +179,7 @@ class DQN():
     # Optimize the model
     self.optimizer.zero_grad()
     loss.backward()
-    nn.utils.clip_grad_value_(self.policy.parameters(), 1)
+    nn.utils.clip_grad_value_(self.policy.parameters(), self.grad_clip)
     self.optimizer.step()
 
   def update_target(self, step):

@@ -151,10 +151,10 @@ class ConvNetM(torch.nn.Module):
     x = F.relu(self.bn3(self.conv3(x)))
     x = x.view(x.size(0), -1)
 
-    a = self.action(x)
+    q = self.action(x)
     v = self.value(x)
 
-    return a, v
+    return q, v
 
 
 class ConvNetL(torch.nn.Module):

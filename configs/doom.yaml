@@ -9,11 +9,13 @@ agent:
   # type
   agent_type : 'dqn'
   # model type
-  model_type : 'convnet-small'
+  model_type : 'convnet-medium'
   # Learning rate for the agent
-  lr : 0.001
+  lr : 0.00025
   # optimizer
-  opt_name: 'adam'
+  opt_name: 'rmsprop'
+  # gradient clipping [-grad_clip, +grad_clip]
+  grad_clip: 10
   # Bellman equation reward discount
   gamma : 0.99
   # maximum exploration likelihood
