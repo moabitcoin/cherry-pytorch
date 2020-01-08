@@ -12,6 +12,7 @@ setup(name='cherry-rl',
       author_email='hs.sandhawalia@gmail.com',
       license='Moabitcoin Proprietry',
       packages=setuptools.find_packages(),
+      scripts=['bin/cherry'],
       test_suite='nose.collector',
       tests_require=['nose'],
       zip_safe=False)

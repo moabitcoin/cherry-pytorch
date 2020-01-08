@@ -1,0 +1,52 @@
+# Environment config
+env:
+  type: 'classic_control'
+  # Classic control env name
+  name : 'CartPole-v0'
+  # seed
+  seed: 543
+
+# Agent config
+agent:
+  # type of agent
+  agent_type: 'vpg'
+  # model type
+  model_type: 'mlp'
+  # Learning rate for the policy network
+  policy_lr : 0.01
+  # Learning rate for the agent network
+  value_lr : 0.001
+  # value network iterations
+  value_iter: 80
+  # Bellman equation reward discount
+  gamma : 0.99
+  # Estimated GAE with TD(lambda)
+  lambda: 0.97
+  # input shape
+  input_shape : [4]
+  # state size := [state_size] + [input_shape]
+  state_size: 1
+  # action_size
+  action_size: 2
+  # transform the input
+  input_transforms:
+
+train:
+  # Number of training episodes
+  n_train_episodes : 100
+  # Max steps in each episode
+  max_steps : 1000
+  # model location
+  model_dest: /data/experiments/agent-of-control/02-12-2020-CartPole-v0-vpg-gae
+  # save model every save_model steps
+  save_model: 20
+  # solution rewards
+  env_solution: 195.0
+
+test:
+  # Number of testing episodes
+  n_test_episodes : 5
+  # Max steps in each episode
+  max_steps : 1000
+  # path where to save played video
+  state_dest: /data/experiments/agent-of-control/02-12-2020-CartPole-v0-vpg-gae/states

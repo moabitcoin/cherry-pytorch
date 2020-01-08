@@ -1,12 +1,18 @@
 import sys
 import logging
-from pathlib import Path
+import argparse
 import shutil
+from collections import OrderedDict
 
 import git
 import yaml
 import torch
+import torch.optim as optim
 from baselines.common.atari_wrappers import EpisodicLifeEnv, FireResetEnv
+
+OPTS = OrderedDict({None: None,
+                    'adam': optim.Adam,
+                    'rmsprop': optim.RMSprop})
 
 CLI_LOGGING_FORMAT = '[%(filename)s][%(funcName)s:%(lineno)d]' + \
     '[%(levelname)s] %(message)s'
@@ -41,6 +47,10 @@ def read_yaml(config_file):
 
     with config_file.open('r') as pfile:
       d = yaml.load(pfile, yaml.FullLoader)
+
+    assert validate_config(d)
+
+    logger.info('Read config file {}'.format(config_file.as_posix()))
 
     return d
   except Exception as err:
@@ -82,3 +92,25 @@ def write_model(model, tag, dest):
   logger.debug("Saving Agent to {}".format(model_savefile))
 
   torch.save(model.state_dict(), model_savefile)
+
+
+def add_verbosity_parser(parser):
+
+  parser.add_argument('-v', '--verbose', action='store_true',
+                      default=True, help='Only warnings')
+  parser.add_argument('-vv', '--very-verbose', action='store_true',
+                      default=False, help='Warnings + Info')
+  parser.add_argument('-vvv', '--very-very-verbose', action='store_true',
+                      default=False, help='Warning + Info + Debug')
+
+  return parser
+
+
+def validate_config(cfgs):
+
+  assert cfgs.get('env'), 'Expected Environment info in config file'
+  assert cfgs.get('agent'), 'Expected Agent info in config file'
+  assert cfgs.get('train'), 'Expected Training info in config file'
+  assert cfgs.get('test'), 'Expected Testing info in config file'
+
+  return True
