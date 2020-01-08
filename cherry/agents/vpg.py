@@ -76,9 +76,10 @@ class VPG():
       return None
 
     transforms = [ToPILImage()]
-    if self.crop_shape:
+    if 'crop' in self.input_transforms:
       transforms.append(CenterCrop(self.crop_shape))
-    transforms.append(Resize(self.input_shape))
+    if 'resize' in self.input_transforms:
+      transforms.append(Resize(self.input_shape))
 
     return Compose(transforms)
 

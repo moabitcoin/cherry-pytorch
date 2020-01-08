@@ -1,0 +1,48 @@
+# Environment config
+env:
+  type: 'doom'
+  name : 'health_gathering'
+  seed: 543
+
+# Agent config
+agent:
+  # agent type
+  agent_type: 'vpg'
+  # model type
+  model_type: 'convnet-small'
+  # Learning rate for the policy net
+  policy_lr : 0.0001
+  # Learning rate for the value net
+  value_lr : 0.0001
+  # Bellman equation reward discount
+  gamma : 0.99
+  # crop shape leave empty for no center cropping
+  crop_shape: [224, 224]
+  # frame shape full resolution frame would be resized to this size
+  input_shape : [84, 84]
+  # state size input_shape + [state_size] tensor as enviroment representation
+  state_size : 4
+  # action size
+  action_size: 3
+  # apply transforms to input state
+  input_transforms: ['crop', 'resize']
+
+train:
+  # Number of training episodes
+  n_train_episodes : 5000
+  # Max steps in each episode
+  max_steps : 5000
+  # model location
+  model_dest: /data/experiments/agent-of-doom/08-01-2020-health_gathering-vpg
+  # save model every save_model episodes
+  save_model: 100
+  # scenario solved
+  env_solution: 2200
+
+test:
+  # Number of testing episodes
+  n_test_episodes : 1
+  # Max steps in each episode
+  max_steps : 1000
+  # path where to save played video
+  state_dest: /data/experiments/agent-of-doom/08-01-2020-health_gathering-vpg/states
