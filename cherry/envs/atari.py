@@ -22,9 +22,9 @@ class AtariEnvironment():
   def __init__(self, cfgs, play=False):
 
     self.env = None
-    self.env_name = cfgs.get('env_name')
+    self.env_name = cfgs.get('name')
 
-    assert self.env_name is not None, 'env_name not found in config'
+    assert self.env_name is not None, 'env:name not found in config'
 
     try:
 
@@ -51,7 +51,9 @@ class AtariEnvironment():
   def step(self, action):
 
     state, reward, done, info = self.env.step(action)
-    return state, reward, done, info
+    terminal = info['ale.lives'] == 0
+
+    return state, reward, terminal, info
 
   def close(self):
 

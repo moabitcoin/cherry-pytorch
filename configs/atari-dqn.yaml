@@ -34,7 +34,7 @@ agent:
   # state size input_shape + [state_size] tensor as enviroment representation
   state_size : 4
   # action space size
-  action_size: 3
+  action_size: 4
   # memory replay size
   replay_size : 1000000
   # input state transforms
