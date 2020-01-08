@@ -53,6 +53,9 @@ class AtariEnvironment():
     state, reward, done, info = self.env.step(action)
     terminal = info['ale.lives'] == 0
 
+    if done:
+      state = self.reset()
+
     return state, reward, terminal, info
 
   def close(self):
