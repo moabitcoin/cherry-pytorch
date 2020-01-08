@@ -33,7 +33,7 @@ agent:
   # action space size
   action_size: 3
   # memory replay size
-  replay_size : 10000
+  replay_size : 100000
   # input state transforms
   input_transforms: ['crop', 'resize']
 
@@ -49,7 +49,7 @@ train:
   # update target every update_target episodes
   update_target: 1000
   # save model every save_model episodes
-  save_model: 10000
+  save_model: 100000
   # policy update
   policy_update: 4
 

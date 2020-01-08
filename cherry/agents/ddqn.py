@@ -10,8 +10,10 @@ import torch
 import random
 import numpy as np
 from torch import nn
+from gym import wrappers
 import torch.optim as optim
 import torch.nn.functional as F
+from skvideo.io import FFmpegWriter as vid_writer
 from torchvision.transforms import Compose, CenterCrop, Resize, ToPILImage
 
 from cherry.agents import ReplayBuffer
@@ -72,6 +74,10 @@ class DDQN():
     if model_file:
       self.load_model(model_file)
 
+  def eval(self):
+
+    self.policy.eval()
+
   def state_transformer(self):
 
     transforms = [ToPILImage()]
@@ -99,9 +105,7 @@ class DDQN():
   def load_model(self, model_file):
 
     logger.info('Loading agent weights from {}'.format(model_file))
-
     self.policy.load_state_dict(torch.load(model_file))
-    self.policy.eval()
 
   def get_action(self, state):
 

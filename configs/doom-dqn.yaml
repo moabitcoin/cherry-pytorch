@@ -33,7 +33,7 @@ agent:
   # action space size
   action_size: 3
   # memory replay size
-  replay_size : 10000
+  replay_size : 100000
   # input state transforms
   input_transforms: ['crop', 'resize']
 
