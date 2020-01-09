@@ -2,17 +2,17 @@
 
 Reinforcement Learning &amp; other bedtime stories in PyTorch. This repository is [pytorch](https://pytorch.org) implementation of the [Intro RL course](https://github.com/simoninithomas/Deep_reinforcement_learning_Course) & [Advanced RL course](https://github.com/dennybritz/reinforcement-learning). The name cherry is derived from Yann Lecun's claim of RL being the cherry on the ML cake. Before training/playing the agent please install the external [dependencies](https://github.com/moabitcoin/cherry-pytorch#dependencies)
 
-## Installation
-### Conda
+## Installation :computer:
+### Conda :snake:
 ```
 conda create -n cherry python=3.6
 conda activate cherry
 pip install -r requirements.txt
 pip install -e .
 ```
-### Docker
+### Docker :whale:
 
-## Usage
+## Usage :tada:
 ```
 # Inside the virtual environment
 cherry --help
@@ -29,7 +29,7 @@ optional arguments:
   -l {info,debug}, --log {info,debug}
                         Set verbosity for the logger (default: info)
 ```
-### Example
+### Example :eyes:
 ```
 # Training
 cherry train -c configs/control.yaml -d cpu
@@ -38,7 +38,7 @@ cherry play -c configs/control.yaml -d cpu
 ```
 
 ## Dependencies
-### ViZDoom
+### ViZDoom :godmode:
 Install dependencies as outlined [here](https://github.com/mwydmuch/ViZDoom/blob/master/doc/Building.md#linux_deps)
 ```
 sudo apt-get install libcanberra-gtk-module
@@ -47,19 +47,19 @@ pip install vizdoom
 export DISPLAY=:0
 ```
 
-### Arcade Learning Environment (ALE)
+### Arcade Learning Environment :space_invader:
 ```
 https://github.com/openai/gym/blob/master/docs/environments.md#atari
 ```
 
-### OpenAI RL baselines
+### OpenAI RL baselines :chart_with_upwards_trend:
 Needed for Deepmind styled pre-processing wrappers. Needs TF>=1.14 :woman_facepalming:
 ```
 pip install tensorflow_gpu==1.14
 https://github.com/openai/baselines/tree/master#installation
 ```
 
-## Remote Render
+## Remote Render :tv:
 ```
 https://github.com/openai/gym/tree/0.15.4#rendering-on-a-server
 xvfb-run -s "-screen 0 1400x900x24" bash
