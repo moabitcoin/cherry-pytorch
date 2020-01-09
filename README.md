@@ -1,6 +1,6 @@
 <h1 align='center'>:cherries: Cherry in PyTorch</h1>
 
-Reinforcement Learning &amp; other bedtime stories in PyTorch. This repository is [pytorch](https://pytorch.org) implementation of the [Intro RL course](https://github.com/simoninithomas/Deep_reinforcement_learning_Course) & [Advanced RL course](https://github.com/dennybritz/reinforcement-learning). The name cherry is derived from Yann Lecun's claim of RL being the cherry on the ML cake. Before training/playing the agent please install the external [dependencies](https://github.com/moabitcoin/cherry-pytorch#dependencies)
+Reinforcement Learning &amp; other bedtime stories in PyTorch. This repository is [pytorch](https://pytorch.org) implementation of the [Intro RL course](https://github.com/simoninithomas/Deep_reinforcement_learning_Course) & [Advanced RL course](https://github.com/dennybritz/reinforcement-learning). Before training/playing the agent please install the external [dependencies.](https://github.com/moabitcoin/cherry-pytorch#dependencies) The name cherry is derived from Yann Lecun's [statement](https://www.quora.com/What-do-you-think-about-reinforcement-learning-Is-it-the-cherry-on-the-cake-as-Yann-LeCun-puts-it-1) regarding RL being the cherry on the ML [cake.](https://miro.medium.com/max/1200/1*bvMhd_xpVxfJYoKXYp5hug.png)
 
 ## :computer: Installation
 ### :snake: Conda
@@ -37,8 +37,8 @@ cherry train -c configs/control.yaml -d cpu
 cherry play -c configs/control.yaml -d cpu
 ```
 
-## Dependencies
-### :godmode: ViZDoom
+## :two_men_holding_hands: Dependencies
+### :hurtrealbad: ViZDoom
 Install dependencies as outlined [here](https://github.com/mwydmuch/ViZDoom/blob/master/doc/Building.md#linux_deps)
 ```
 sudo apt-get install libcanberra-gtk-module
