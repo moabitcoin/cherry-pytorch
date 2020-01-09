@@ -60,8 +60,8 @@ class Player:
     env = build_env(env_cfgs)
 
     model = get_model(agent_cfgs['model_type'])
-    agent = build_agent(agent_cfgs, model=model,
-                        model_file=model_file, device=device)
+    agent = build_agent(agent_cfgs, model=model, model_file=model_file,
+                        device=device, log_level=log_level)
 
     assert env.action_size == agent.action_size, "Env ≠ Agent {} ≠ {} action' \
         ' size should match".format(env.action_size, agent.action_size)
