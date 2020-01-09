@@ -7,8 +7,6 @@ from cherry.agents import get_model, build_agent
 from utils.helpers import add_verbosity_parser, read_yaml, copy_yaml, \
     get_repo_hexsha, validate_config, get_logger, write_model
 
-logger = get_logger(__file__)
-
 
 class Player:
 
@@ -30,9 +28,12 @@ class Player:
 
   def _run(self, args):
 
+    log_level = args.log
     device = args.device
     model_file = args.model_file
     config_file = args.config_file
+
+    logger = get_logger(__file__, log_level=log_level)
 
     gitsha = get_repo_hexsha()
 
@@ -59,8 +60,8 @@ class Player:
     env = build_env(env_cfgs)
 
     model = get_model(agent_cfgs['model_type'])
-    agent = build_agent(agent_cfgs, model=model,
-                        model_file=model_file, device=device)
+    agent = build_agent(agent_cfgs, model=model, model_file=model_file,
+                        device=device, log_level=log_level)
 
     assert env.action_size == agent.action_size, "Env ≠ Agent {} ≠ {} action' \
         ' size should match".format(env.action_size, agent.action_size)

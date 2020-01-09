@@ -16,11 +16,12 @@ OPTS = OrderedDict({None: None,
 
 CLI_LOGGING_FORMAT = '[%(filename)s][%(funcName)s:%(lineno)d]' + \
     '[%(levelname)s] %(message)s'
-CLI_LOGGING_LEVEL = logging.INFO
 CLI_LOGGING_STREAM = sys.stdout
 
 
-def get_logger(logger_name):
+def get_logger(logger_name, log_level='info'):
+
+  CLI_LOGGING_LEVEL = getattr(logging, log_level.upper(), None)
 
   logger = logging.getLogger(logger_name)
   logger.setLevel(CLI_LOGGING_LEVEL)
@@ -96,12 +97,8 @@ def write_model(model, tag, dest):
 
 def add_verbosity_parser(parser):
 
-  parser.add_argument('-v', '--verbose', action='store_true',
-                      default=True, help='Only warnings')
-  parser.add_argument('-vv', '--very-verbose', action='store_true',
-                      default=False, help='Warnings + Info')
-  parser.add_argument('-vvv', '--very-very-verbose', action='store_true',
-                      default=False, help='Warning + Info + Debug')
+  parser.add_argument('-l', '--log', dest='log', choices=['info', 'debug'],
+                      default='info', help='Set verbosity for the logger')
 
   return parser
 
