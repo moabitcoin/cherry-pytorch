@@ -1,13 +1,11 @@
 <h1 align='center'>Cherry in PyTorch</h1>
 Reinforcement Learning Tutorials &amp; other bedtime stories in PyTorch
 
-This repository is [pytorch](https://pytorch.org) implementation of the [Intro RL course](https://github.com/simoninithomas/Deep_reinforcement_learning_Course) & [Advanced RL course](https://github.com/dennybritz/reinforcement-learning). The name cherry is derived from Yann Lecun's claim of RL being the cherry on the ML cake. Before training/playing the agent please install the external [dependencies]()
+This repository is [pytorch](https://pytorch.org) implementation of the [Intro RL course](https://github.com/simoninithomas/Deep_reinforcement_learning_Course) & [Advanced RL course](https://github.com/dennybritz/reinforcement-learning). The name cherry is derived from Yann Lecun's claim of RL being the cherry on the ML cake. Before training/playing the agent please install the external [dependencies](https://github.com/moabitcoin/cherry-pytorch#dependencies)
 
-## Base Installation
-
+## Installation
 ```
-conda create -n cherry
-conda install pip
+conda create -n cherry python=3.6
 pip install -r requirements.txt
 pip install -e .
 ```
@@ -28,9 +26,12 @@ optional arguments:
   -l {info,debug}, --log {info,debug}
                         Set verbosity for the logger (default: info)
 ```
+### Example
 ```
-# example command
+# Training
 cherry train -c configs/control.yaml -d cpu
+# Playing
+cherry play -c configs/control.yaml -d cpu
 ```
 
 ## Dependencies
