@@ -1,4 +1,4 @@
-<h1 align='center'>Cherry in PyTorch</h1>
+<h1 align='center'>:cherries: Cherry in PyTorch</h1>
 
 Reinforcement Learning &amp; other bedtime stories in PyTorch. This repository is [pytorch](https://pytorch.org) implementation of the [Intro RL course](https://github.com/simoninithomas/Deep_reinforcement_learning_Course) & [Advanced RL course](https://github.com/dennybritz/reinforcement-learning). The name cherry is derived from Yann Lecun's claim of RL being the cherry on the ML cake. Before training/playing the agent please install the external [dependencies](https://github.com/moabitcoin/cherry-pytorch#dependencies)
 
