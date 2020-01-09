@@ -7,8 +7,6 @@ from cherry.agents import get_model, build_agent
 from utils.helpers import add_verbosity_parser, read_yaml, copy_yaml, \
     get_repo_hexsha, validate_config, get_logger, write_model
 
-logger = get_logger(__file__)
-
 
 class Player:
 
@@ -30,9 +28,12 @@ class Player:
 
   def _run(self, args):
 
+    log_level = args.log
     device = args.device
     model_file = args.model_file
     config_file = args.config_file
+
+    logger = get_logger(__file__, log_level=log_level)
 
     gitsha = get_repo_hexsha()
 

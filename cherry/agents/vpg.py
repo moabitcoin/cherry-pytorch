@@ -17,12 +17,11 @@ from torchvision.transforms import Compose, CenterCrop, \
 
 from utils.helpers import get_logger, write_model
 
-logger = get_logger(__file__)
-
 
 class VPG():
 
-  def __init__(self, cfgs, model=None, model_file=None, device=None):
+  def __init__(self, cfgs, model=None, model_file=None,
+               device=None, log_level='info'):
 
     self.history = None
     self.states = None
@@ -50,6 +49,8 @@ class VPG():
 
     self.zero_state = torch.zeros([1] + self.input_shape, dtype=torch.uint8)
 
+    self.logger = get_logger(__file__, log_level=log_level)
+
     self.transform = self.state_transformer()
 
     self.policy = model(self.input_shape, self.state_size,
@@ -68,7 +69,7 @@ class VPG():
     if model_file:
       self.load_model(model_file)
 
-    logger.info('Done setting up {} Agent'.format(__class__.__name__))
+    self.logger.info('Done setting up {} Agent'.format(__class__.__name__))
 
   def state_transformer(self):
 
@@ -105,7 +106,7 @@ class VPG():
 
   def load_model(self, model_file):
 
-    logger.info('Loading agent weights from {}'.format(model_file))
+    self.logger.info('Loading agent weights from {}'.format(model_file))
 
     self.policy.load_state_dict(torch.load(model_file))
 
@@ -269,13 +270,14 @@ class VPG():
 
       if ep % save_model == 0:
         tag = '{0:09d}-{1}'.format(ep * max_steps, gitsha)
+        self.logger.debug('Saving model {}'.format(tag))
         write_model(self.policy, tag, model_dest)
 
       best_reward = np.max(self.ep_rewards)
       if best_reward >= env_solved:
-        logger.info('Solved! At epside {}'
-                    ' reward {:.3f} > {:.3f}'.format(ep, best_reward,
-                                                     env_solved))
+        self.logger.info('Solved! At epside {}'
+                         ' reward {:.3f} > {:.3f}'.format(ep, best_reward,
+                                                          env_solved))
         break
 
     tag = 'final-{0}'.format(gitsha)

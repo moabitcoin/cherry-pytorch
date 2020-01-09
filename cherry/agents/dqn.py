@@ -19,12 +19,11 @@ from torchvision.transforms import Compose, CenterCrop, Resize, ToPILImage
 from cherry.agents import ReplayBuffer
 from utils.helpers import get_logger, write_model, OPTS
 
-logger = get_logger(__file__)
-
 
 class DQN():
 
-  def __init__(self, cfgs, model=None, model_file=None, device=None):
+  def __init__(self, cfgs, model=None, model_file=None,
+               device=None, log_level='info'):
 
     self.history = None
     self.losses = None
@@ -51,6 +50,8 @@ class DQN():
     assert self.device is not None, 'Device has to be CPU/GPU'
 
     self.zero_state = torch.zeros([1] + self.input_shape, dtype=torch.uint8)
+
+    self.logger = get_logger(__file__, log_level=log_level)
 
     self.transform = self.state_transformer()
 
@@ -100,7 +101,7 @@ class DQN():
 
   def load_model(self, model_file):
 
-    logger.info('Loading agent weights from {}'.format(model_file))
+    self.logger.info('Loading agent weights from {}'.format(model_file))
     self.policy.load_state_dict(torch.load(model_file))
 
   def eval(self):
@@ -184,7 +185,7 @@ class DQN():
 
   def update_target(self, step):
 
-    logger.debug('Updating agent at {}'.format(step))
+    self.logger.debug('Updating agent at {}'.format(step))
     self.target.load_state_dict(self.policy.state_dict())
 
   def show_score(self, pbar, step):

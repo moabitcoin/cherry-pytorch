@@ -10,9 +10,6 @@ from utils.helpers import add_verbosity_parser, read_yaml, copy_yaml, \
     get_repo_hexsha, validate_config, get_logger, write_model
 
 
-logger = get_logger(__file__)
-
-
 class Trainer:
 
   def __init__(self):
@@ -31,8 +28,11 @@ class Trainer:
 
   def _run(self, args):
 
-    config_file = args.config_file
+    log_level = args.log
     device = args.device
+    config_file = args.config_file
+
+    logger = get_logger(__file__, log_level=log_level)
 
     gitsha = get_repo_hexsha()
 
@@ -48,6 +48,7 @@ class Trainer:
 
     try:
       cfgs = read_yaml(config_file)
+      logger.debug('Done reading config yaml'.format(config_file.as_posix()))
     except Exception as err:
       logger.error('Error reading config file {}, {}'.format(config_file, err))
       return
@@ -62,10 +63,14 @@ class Trainer:
     env = build_env(env_cfgs)
 
     model = get_model(agent_cfgs['model_type'])
-    agent = build_agent(agent_cfgs, model=model, device=device)
+    agent = build_agent(agent_cfgs, model=model, device=device,
+                        log_level=log_level)
 
     model_dest.mkdir(parents=True, exist_ok=True)
+    logger.debug('Making exp dir {}'.format(model_dest.as_posix()))
     copy_yaml(config_file, model_dest, gitsha)
+    logger.debug('Copying {} to {}'.format(config_file.as_posix(),
+                                           model_dest.as_posix()))
 
     assert env.action_size == agent.action_size, "Env ≠ Agent {} ≠ {} action' \
         ' size should match".format(env.action_size, agent.action_size)
