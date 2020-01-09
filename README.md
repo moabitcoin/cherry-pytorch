@@ -1,7 +1,7 @@
 <h1 align='center'>Cherry in PyTorch</h1>
 Reinforcement Learning Tutorials &amp; other bedtime stories in PyTorch
 
-This repositories is pytorch implementation of the [Intro RL course](https://github.com/simoninithomas/Deep_reinforcement_learning_Course) & [Advanced RL course](https://github.com/dennybritz/reinforcement-learning)
+This repository is [pytorch](https://pytorch.org) implementation of the [Intro RL course](https://github.com/simoninithomas/Deep_reinforcement_learning_Course) & [Advanced RL course](https://github.com/dennybritz/reinforcement-learning). The name cherry is derived from Yann Lecun's claim of RL being the cherry on the ML cake. Before training/playing the agent please install the external [dependencies]()
 
 ## Base Installation
 
@@ -12,7 +12,29 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-## ViZDoom
+## Usage
+```
+cherry --help
+cherry train --help
+```
+```
+usage: cherry train [-h] -c CONFIG_FILE [-d {gpu,cpu}] [-l {info,debug}]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -c CONFIG_FILE, --config_file CONFIG_FILE
+                        Path to Config file (default: None)
+  -d {gpu,cpu}          Device to run the train/test (default: gpu)
+  -l {info,debug}, --log {info,debug}
+                        Set verbosity for the logger (default: info)
+```
+```
+# example command
+cherry train -c configs/control.yaml -d cpu
+```
+
+## Dependencies
+### ViZDoom
 Install dependencies as outlined [here](https://github.com/mwydmuch/ViZDoom/blob/master/doc/Building.md#linux_deps)
 ```
 sudo apt-get install libcanberra-gtk-module
@@ -21,12 +43,12 @@ pip install vizdoom
 export DISPLAY=:0
 ```
 
-## Arcade Learning Environment (ALE)
+### Arcade Learning Environment (ALE)
 ```
 https://github.com/openai/gym/blob/master/docs/environments.md#atari
 ```
 
-## OpenAI RL baselines
+### OpenAI RL baselines
 Needed for Deepmind styled pre-processing wrappers. Needs TF>=1.14 :woman_facepalming:
 ```
 pip install tensorflow_gpu==1.14
