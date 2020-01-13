@@ -105,3 +105,4 @@ venv.bak/
 # vizdoom
 _vizdoom/*
 _vizdoom.ini
+experiments/

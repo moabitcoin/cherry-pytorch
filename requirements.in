@@ -1,9 +1,7 @@
-gym
-tqdm
-pip-tools
-pyyaml
-argparse
-scikit-video
-ipython
-pyglet
 GitPython
+pyyaml
+scikit-image
+scikit-video
+tensorflow_gpu
+tqdm
+vizdoom
