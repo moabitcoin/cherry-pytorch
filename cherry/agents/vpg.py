@@ -3,14 +3,17 @@ import os
 import sys
 import math
 from collections import deque, namedtuple
+from pathlib import Path
 
 import tqdm
 import torch
 import random
 import numpy as np
 from torch import nn
+from gym import wrappers
 import torch.optim as optim
 import torch.nn.functional as F
+from skvideo.io import FFmpegWriter as vid_writer
 from torch.distributions import Categorical
 from torchvision.transforms import Compose, CenterCrop, \
     Grayscale, Resize, ToPILImage, ToTensor
@@ -282,3 +285,51 @@ class VPG():
 
     tag = 'final-{0}'.format(gitsha)
     write_model(self.policy, tag, model_dest)
+
+  def play(self, env, test_cfgs, gitsha):
+
+    self.eval()
+
+    state_dest = test_cfgs['state_dest']
+    test_episodes = test_cfgs['n_test_episodes']
+    max_steps = test_cfgs['max_steps']
+
+    vid_dst = Path(state_dest)
+    vid_dst.mkdir(parents=True, exist_ok=True)
+
+    env.update_env(wrappers.Monitor, directory=vid_dst.as_posix(), force=True)
+    test_ep = tqdm.tqdm(range(test_episodes), ascii=True, unit='episode')
+
+    for ep in test_ep:
+
+      vid_file = vid_dst.joinpath('episode-{1:03d}-{0}.mp4'.format(gitsha, ep))
+
+      writer = vid_writer(vid_file.as_posix(), outputdict={'-vcodec': 'h264',
+                                                           '-b': '300000000'})
+
+      self.reset()
+      state = env.reset()
+
+      self.append_state(state)
+      writer.writeFrame(state)
+
+      test_step = tqdm.tqdm(range(max_steps), ascii=True, unit='stp')
+
+      for step in test_step:
+
+        state = self.get_state()
+        action = self.get_action(state)
+        next_state, reward, done, info = env.step(action)
+        self.append_reward(reward)
+
+        if done:
+          next_state = env.reset()
+          reward = self.get_episode_rewards()
+
+          self.reset()
+          test_step.set_description('{0}/{1} Reward : {2:.3f}'.format(ep, step,
+                                                                      reward))
+        self.append_state(next_state)
+        writer.writeFrame(next_state)
+
+      writer.close()
