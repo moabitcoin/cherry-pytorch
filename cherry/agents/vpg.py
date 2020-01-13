@@ -44,6 +44,7 @@ class VPG():
     self.crop_shape = cfgs.get('crop_shape')
     self.input_shape = cfgs.get('input_shape')
     self.input_transforms = cfgs.get('input_transforms')
+    self.grad_clip = cfgs.get('grad_clip')
     self.device = device
 
     assert self.input_shape, 'Input shape has to be not None'
@@ -211,6 +212,8 @@ class VPG():
     ce = F.cross_entropy(mb_logits, mb_actions, reduction='none')
     policy_loss = ((mb_rewards - mb_values) * ce).mean()
     policy_loss.backward()
+    if self.grad_clip:
+      nn.utils.clip_grad_value_(self.policy.parameters(), self.grad_clip)
     self.policy_optimizer.step()
 
     # value optimisation
@@ -219,6 +222,8 @@ class VPG():
     mb_values = mb_values.squeeze(1)
     value_loss = F.smooth_l1_loss(mb_values, mb_rewards)
     value_loss.backward()
+    if self.grad_clip:
+      nn.utils.clip_grad_value_(self.value.parameters(), self.grad_clip)
     self.value_optimizer.step()
 
     loss = policy_loss + value_loss
