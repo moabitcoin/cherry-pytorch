@@ -18,7 +18,7 @@ from torch.distributions import Categorical
 from torchvision.transforms import Compose, CenterCrop, \
     Grayscale, Resize, ToPILImage, ToTensor
 
-from utils.helpers import get_logger, write_model
+from utils.helpers import get_logger, write_model, OPTS
 
 
 class VPG():
@@ -65,10 +65,12 @@ class VPG():
 
     # self.policy.apply(self.policy.init_weights)
 
-    self.policy_optimizer = optim.Adam(self.policy.parameters(),
-                                       lr=self.policy_lr)
-    self.value_optimizer = optim.Adam(self.value.parameters(),
-                                      lr=self.value_lr)
+    optimizer = OPTS.get(cfgs['opt_name'])
+
+    self.policy_optimizer = optimizer(self.policy.parameters(),
+                                      lr=self.policy_lr)
+    self.value_optimizer = optimizer(self.value.parameters(),
+                                     lr=self.value_lr)
 
     if model_file:
       self.load_model(model_file)
