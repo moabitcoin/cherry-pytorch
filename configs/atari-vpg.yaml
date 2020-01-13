@@ -17,7 +17,7 @@ agent:
   # type of the optimizer
   opt_name: 'adam'
   # gradient clipping [-grad_clip, +grad_clip], leave empty for no clipping
-  grad_clip:
+  grad_clip: 
   # Bellman equation reward discount
   gamma : 0.99
   # crop shape leave empty for no center cropping

@@ -241,8 +241,6 @@ class VPG():
 
     train_ep = tqdm.tqdm(range(train_eps), ascii=True, unit='ep', leave=True)
 
-    running_reward = 10
-
     for ep in train_ep:
 
       self.reset()
@@ -263,9 +261,7 @@ class VPG():
 
         if done:
 
-          running_reward = 0.05 * self.get_episode_rewards() + \
-              (1 - 0.05) * running_reward
-
+          running_reward = self.get_episode_rewards()
           self.append_episode_reward(running_reward)
 
           self.discount_episode()
