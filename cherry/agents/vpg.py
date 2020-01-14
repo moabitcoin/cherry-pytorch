@@ -47,6 +47,7 @@ class VPG():
     self.grad_clip = cfgs.get('grad_clip')
     self.init_weights = cfgs.get('init_weights')
     self.device = device
+    self.stable_eps = np.finfo(np.float32).eps.item()
 
     assert self.input_shape, 'Input shape has to be not None'
     assert self.action_size, 'Action size has to non None'
@@ -164,7 +165,7 @@ class VPG():
 
     return torch.cat(list(self.history)).unsqueeze(0)
 
-  def discount_episode(self):
+  def discount_episode(self, normalize=False):
 
     ep_length = len(self.rewards)
 
@@ -187,8 +188,9 @@ class VPG():
     rewards = torch.stack(rewards).to(self.device)
     values = torch.cat(self.values)
 
-    mean, std = rewards.mean(), rewards.std()
-    rewards = (rewards - mean)/(std + np.finfo(np.float32).eps.item())
+    if normalize:
+      mean, std = rewards.mean(), rewards.std()
+      rewards = (rewards - mean)/(std + self.stable_eps)
 
     self.mb_states.append(states)
     self.mb_actions.append(actions)
@@ -214,22 +216,21 @@ class VPG():
     self.policy_optimizer.zero_grad()
     mb_logits, _ = self.policy(mb_states)
     ce = F.cross_entropy(mb_logits, mb_actions, reduction='none')
-    mb_prob = F.softmax(logits=mb_logits, dim=1)
-    entropy = Categorical(mb_prob).entropy()
-    policy_loss = ((mb_rewards - mb_values) * ce).mean() - 0.01 * entropy.mean()
+    adv = mb_rewards - mb_values
+    policy_loss = (adv * ce).mean()
     policy_loss.backward()
     if self.grad_clip:
-      nn.utils.clip_grad_value_(self.policy.parameters(), self.grad_clip)
+      nn.utils.clip_grad_norm_(self.policy.parameters(), self.grad_clip)
     self.policy_optimizer.step()
 
     # value optimisation
     self.value_optimizer.zero_grad()
     _, mb_values = self.value(mb_states)
     mb_values = mb_values.squeeze(1)
-    value_loss = 0.5 * F.smooth_l1_loss(mb_values, mb_rewards)
+    value_loss = F.smooth_l1_loss(mb_values, mb_rewards)
     value_loss.backward()
     if self.grad_clip:
-      nn.utils.clip_grad_value_(self.value.parameters(), self.grad_clip)
+      nn.utils.clip_grad_norm_(self.value.parameters(), self.grad_clip)
     self.value_optimizer.step()
 
     loss = policy_loss + value_loss
@@ -254,6 +255,7 @@ class VPG():
 
       train_step = tqdm.tqdm(range(max_steps), ascii=True,
                              unit='stp', leave=False)
+      done = False
 
       for step in train_step:
 
@@ -272,6 +274,12 @@ class VPG():
           self.flash_episode()
           next_state = env.reset()
           self.set_state(next_state)
+
+      if not done:
+        running_reward = self.get_episode_rewards()
+        self.append_episode_reward(running_reward)
+
+        self.discount_episode()
 
       loss = self.optimize()
 

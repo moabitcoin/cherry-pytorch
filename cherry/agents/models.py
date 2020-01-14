@@ -79,11 +79,11 @@ class ConvNetS(torch.nn.Module):
 
   def init_weights(self, m):
     if type(m) == nn.Linear:
-      torch.nn.init.xavier_uniform_(m.weight)
+      torch.nn.init.kaiming_uniform_(m.weight)
       m.bias.data.fill_(0.0)
 
     if type(m) == nn.Conv2d:
-      torch.nn.init.xavier_uniform_(m.weight)
+      torch.nn.init.kaiming_uniform_(m.weight)
       m.bias.data.fill_(0.0)
 
   def forward(self, x):
