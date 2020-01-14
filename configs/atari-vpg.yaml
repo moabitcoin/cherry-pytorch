@@ -17,7 +17,7 @@ agent:
   # type of the optimizer
   opt_name: 'adam'
   # gradient clipping [-grad_clip, +grad_clip], leave empty for no clipping
-  grad_clip: 
+  grad_clip:
   # Bellman equation reward discount
   gamma : 0.99
   # crop shape leave empty for no center cropping
@@ -30,12 +30,14 @@ agent:
   action_size: 4
   # apply transforms to input state
   input_transforms: ['resize']
+  # initalize weights:
+  init_weights: true
 
 train:
   # Number of training episodes
   n_train_episodes : 5000
   # Max steps in each episode
-  max_steps : 10000
+  max_steps : 1000
   # model location
   model_dest: /data/experiments/agent-of-atari/13-01-2020-BreakoutNoFrames-vpg
   # save model every save_model episodes
@@ -47,6 +49,6 @@ test:
   # Number of testing episodes
   n_test_episodes : 1
   # Max steps in each episode
-  max_steps : 10000
+  max_steps : 1000
   # path where to save played video
   state_dest: /data/experiments/agent-of-atari/13-01-2020-BreakoutNoFrames-vpg/states

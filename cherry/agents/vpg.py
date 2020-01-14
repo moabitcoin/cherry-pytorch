@@ -45,6 +45,7 @@ class VPG():
     self.input_shape = cfgs.get('input_shape')
     self.input_transforms = cfgs.get('input_transforms')
     self.grad_clip = cfgs.get('grad_clip')
+    self.init_weights = cfgs.get('init_weights')
     self.device = device
 
     assert self.input_shape, 'Input shape has to be not None'
@@ -63,7 +64,8 @@ class VPG():
     self.value = model(self.input_shape, self.state_size,
                        self.action_size, self.device).to(self.device)
 
-    # self.policy.apply(self.policy.init_weights)
+    if self.init_weights:
+      self.policy.apply(self.policy.init_weights)
 
     optimizer = OPTS.get(cfgs['opt_name'])
 
@@ -126,10 +128,13 @@ class VPG():
       logits, _ = self.policy(state)
       _, value = self.value(state)
 
-    if deterministic:
-      return logits.max(1)[1]
+    aprobs = F.softmax(logits, dim=1)
+    aprobs = torch.clamp(aprobs, min=1e-6, max=1.0)
 
-    c = Categorical(logits=logits)
+    if deterministic:
+      return aprobs.max(1)[1]
+
+    c = Categorical(aprobs)
     a = c.sample()
 
     self.states.append(state)
@@ -211,7 +216,8 @@ class VPG():
     # policy optimisation
     self.policy_optimizer.zero_grad()
     mb_logits, _ = self.policy(mb_states)
-    ce = F.cross_entropy(mb_logits, mb_actions, reduction='none')
+    mb_logprobs = F.log_softmax(mb_logits, dim=1)
+    ce = F.cross_entropy(mb_logprobs, mb_actions, reduction='none')
     policy_loss = ((mb_rewards - mb_values) * ce).mean()
     policy_loss.backward()
     if self.grad_clip:
@@ -257,7 +263,6 @@ class VPG():
         action = self.get_action(state)
         next_state, reward, done, info = env.step(action)
         self.append_reward(reward)
-        self.append_state(next_state)
 
         if done:
 
@@ -266,8 +271,9 @@ class VPG():
 
           self.discount_episode()
           self.flash_episode()
-          state = env.reset()
-          self.append_state(state)
+          next_state = env.reset()
+
+        self.append_state(next_state)
 
       loss = self.optimize()
 

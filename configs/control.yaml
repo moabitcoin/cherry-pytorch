@@ -16,6 +16,8 @@ agent:
   policy_lr : 0.01
   # Learning rate for the agent network
   value_lr : 0.001
+  # optimizer name
+  opt_name: 'adam'
   # value network iterations
   value_iter: 80
   # Bellman equation reward discount
@@ -41,7 +43,7 @@ train:
   # save model every save_model steps
   save_model: 20
   # solution rewards
-  env_solution: 195.0
+  env_solution: 201
 
 test:
   # Number of testing episodes
