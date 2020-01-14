@@ -128,13 +128,10 @@ class VPG():
       logits, _ = self.policy(state)
       _, value = self.value(state)
 
-    aprobs = F.softmax(logits, dim=1)
-    aprobs = torch.clamp(aprobs, min=1e-6, max=1.0)
-
     if deterministic:
-      return aprobs.max(1)[1]
+      return logits.max(1)[1]
 
-    c = Categorical(aprobs)
+    c = Categorical(logits=logits)
     a = c.sample()
 
     self.states.append(state)
@@ -216,9 +213,10 @@ class VPG():
     # policy optimisation
     self.policy_optimizer.zero_grad()
     mb_logits, _ = self.policy(mb_states)
-    mb_logprobs = F.log_softmax(mb_logits, dim=1)
-    ce = F.cross_entropy(mb_logprobs, mb_actions, reduction='none')
-    policy_loss = ((mb_rewards - mb_values) * ce).mean()
+    ce = F.cross_entropy(mb_logits, mb_actions, reduction='none')
+    mb_prob = F.softmax(logits=mb_logits, dim=1)
+    entropy = Categorical(mb_prob).entropy()
+    policy_loss = ((mb_rewards - mb_values) * ce).mean() - 0.01 * entropy.mean()
     policy_loss.backward()
     if self.grad_clip:
       nn.utils.clip_grad_value_(self.policy.parameters(), self.grad_clip)
@@ -228,7 +226,7 @@ class VPG():
     self.value_optimizer.zero_grad()
     _, mb_values = self.value(mb_states)
     mb_values = mb_values.squeeze(1)
-    value_loss = F.smooth_l1_loss(mb_values, mb_rewards)
+    value_loss = 0.5 * F.smooth_l1_loss(mb_values, mb_rewards)
     value_loss.backward()
     if self.grad_clip:
       nn.utils.clip_grad_value_(self.value.parameters(), self.grad_clip)
@@ -252,7 +250,7 @@ class VPG():
       self.reset()
       state = env.reset()
 
-      self.append_state(state)
+      self.set_state(state)
 
       train_step = tqdm.tqdm(range(max_steps), ascii=True,
                              unit='stp', leave=False)
@@ -263,6 +261,7 @@ class VPG():
         action = self.get_action(state)
         next_state, reward, done, info = env.step(action)
         self.append_reward(reward)
+        self.append_state(next_state)
 
         if done:
 
@@ -272,8 +271,7 @@ class VPG():
           self.discount_episode()
           self.flash_episode()
           next_state = env.reset()
-
-        self.append_state(next_state)
+          self.set_state(next_state)
 
       loss = self.optimize()
 
