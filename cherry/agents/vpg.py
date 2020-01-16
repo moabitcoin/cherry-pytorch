@@ -341,16 +341,15 @@ class VPG():
         action = self.get_action(state)
         next_state, reward, done, info = env.step(action)
         self.append_reward(reward)
-        self.append_state(next_state)
 
         if done:
           reward = self.get_episode_rewards()
 
           self.flash_episode()
           next_state = env.reset()
-          self.set_state(next_state)
           test_step.set_description('{0}/{1} Reward : {2:.3f}'.format(ep, step,
                                                                       reward))
+        self.append_state(next_state)
         writer.writeFrame(next_state)
 
       writer.close()
