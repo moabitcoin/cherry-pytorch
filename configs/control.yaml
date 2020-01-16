@@ -5,6 +5,8 @@ env:
   name : 'CartPole-v0'
   # seed
   seed: 543
+  # solution rewards
+  env_solution: 195
 
 # Agent config
 agent:
@@ -18,12 +20,20 @@ agent:
   value_lr : 0.001
   # optimizer name
   opt_name: 'adam'
-  # value network iterations
-  value_iter: 80
+  # norm of gradient clipping, leave empty for no clipping
+  grad_clip:
   # Bellman equation reward discount
   gamma : 0.99
   # Estimated GAE with TD(lambda)
   lambda: 0.97
+  # vpg scaling:
+  vpg_scaling: 1.0
+  # value loss scaling
+  value_scaling: 1.0
+  # entropy loss scaling
+  entropy_scaling: 0.005
+  # normalize rewards:
+  reward_norm: true
   # input shape
   input_shape : [4]
   # state size := [state_size] + [input_shape]
@@ -42,8 +52,6 @@ train:
   model_dest: /data/experiments/agent-of-control/02-12-2020-CartPole-v0-vpg-gae
   # save model every save_model steps
   save_model: 20
-  # solution rewards
-  env_solution: 201
 
 test:
   # Number of testing episodes

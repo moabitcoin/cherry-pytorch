@@ -25,6 +25,7 @@ class ClassicControlEnvironment():
     self.game = None
     self.env_name = cfgs.get('name')
     self.seed = cfgs.get('seed')
+    self.env_solution = cfgs.get('env_solution')
 
     assert self.env_name is not None, 'env_name not found in config'
 

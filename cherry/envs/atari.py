@@ -30,6 +30,8 @@ class AtariEnvironment():
 
       env = make_atari(self.env_name)
       self.env = wrap_deepmind(env)
+      self.env.seed(self.seed)
+      torch.manual_seed(self.seed)
 
       self.action_size = self.env.action_space.n
       self.actions = range(self.action_size)
@@ -51,10 +53,6 @@ class AtariEnvironment():
   def step(self, action):
 
     state, reward, done, info = self.env.step(action)
-    terminal = info['ale.lives'] == 0
-
-    if terminal:
-      self.env.reset()
 
     return state, reward, done, info
 

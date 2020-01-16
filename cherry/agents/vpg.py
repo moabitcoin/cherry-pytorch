@@ -36,6 +36,7 @@ class VPG():
     self.mb_rewards = None
     self.mb_values = None
     self.ep_rewards = None
+    self.rr = 10
     self.gamma = cfgs['gamma']
     self.policy_lr = cfgs['policy_lr']
     self.value_lr = cfgs['value_lr']
@@ -46,6 +47,10 @@ class VPG():
     self.input_transforms = cfgs.get('input_transforms')
     self.grad_clip = cfgs.get('grad_clip')
     self.init_weights = cfgs.get('init_weights')
+    self.vpg_scaling = cfgs.get('vpg_scaling')
+    self.value_scaling = cfgs.get('value_scaling')
+    self.entropy_scaling = cfgs.get('entropy_scaling')
+    self.reward_norm = cfgs.get('reward_norm')
     self.device = device
     self.stable_eps = np.finfo(np.float32).eps.item()
 
@@ -101,6 +106,9 @@ class VPG():
     self.mb_values = []
     self.ep_rewards = []
 
+    no_history = [self.zero_state for _ in range(self.state_size)]
+    self.history = deque(no_history, maxlen=self.state_size)
+
     self.flash_episode()
 
   def flash_episode(self):
@@ -109,9 +117,6 @@ class VPG():
     self.actions = []
     self.rewards = []
     self.values = []
-
-    no_history = [self.zero_state for _ in range(self.state_size)]
-    self.history = deque(no_history, maxlen=self.state_size)
 
   def load_model(self, model_file):
 
@@ -165,7 +170,7 @@ class VPG():
 
     return torch.cat(list(self.history)).unsqueeze(0)
 
-  def discount_episode(self, normalize=False):
+  def discount_episode(self):
 
     ep_length = len(self.rewards)
 
@@ -188,7 +193,7 @@ class VPG():
     rewards = torch.stack(rewards).to(self.device)
     values = torch.cat(self.values)
 
-    if normalize:
+    if self.reward_norm:
       mean, std = rewards.mean(), rewards.std()
       rewards = (rewards - mean)/(std + self.stable_eps)
 
@@ -199,7 +204,9 @@ class VPG():
 
   def append_episode_reward(self, reward):
 
-    self.ep_rewards.append(reward)
+    self.rr = 0.05 * reward + (1 - 0.05) * self.rr
+
+    self.ep_rewards.append(self.rr)
 
   def get_episode_rewards(self):
 
@@ -216,9 +223,12 @@ class VPG():
     self.policy_optimizer.zero_grad()
     mb_logits, _ = self.policy(mb_states)
     ce = F.cross_entropy(mb_logits, mb_actions, reduction='none')
+    m = Categorical(logits=mb_logits)
     adv = mb_rewards - mb_values
-    policy_loss = (adv * ce).mean()
-    policy_loss.backward()
+    policy_loss = self.vpg_scaling * (adv * ce).mean()
+    entropy_loss = (-self.entropy_scaling * m.entropy()).mean()
+    vpg_loss = policy_loss + entropy_loss
+    vpg_loss.backward()
     if self.grad_clip:
       nn.utils.clip_grad_norm_(self.policy.parameters(), self.grad_clip)
     self.policy_optimizer.step()
@@ -227,13 +237,13 @@ class VPG():
     self.value_optimizer.zero_grad()
     _, mb_values = self.value(mb_states)
     mb_values = mb_values.squeeze(1)
-    value_loss = F.smooth_l1_loss(mb_values, mb_rewards)
+    value_loss = self.value_scaling * F.smooth_l1_loss(mb_values, mb_rewards)
     value_loss.backward()
     if self.grad_clip:
       nn.utils.clip_grad_norm_(self.value.parameters(), self.grad_clip)
     self.value_optimizer.step()
 
-    loss = policy_loss + value_loss
+    loss = policy_loss + vpg_loss
 
     return loss.detach().cpu().numpy()
 
@@ -242,7 +252,6 @@ class VPG():
     save_model = train_cfgs['save_model']
     train_eps = train_cfgs['n_train_episodes']
     max_steps = train_cfgs['max_steps']
-    env_solved = train_cfgs['env_solution']
 
     train_ep = tqdm.tqdm(range(train_eps), ascii=True, unit='ep', leave=True)
 
@@ -263,17 +272,17 @@ class VPG():
         action = self.get_action(state)
         next_state, reward, done, info = env.step(action)
         self.append_reward(reward)
-        self.append_state(next_state)
 
         if done:
 
-          running_reward = self.get_episode_rewards()
-          self.append_episode_reward(running_reward)
+          ep_reward = self.get_episode_rewards()
+          self.append_episode_reward(ep_reward)
 
           self.discount_episode()
           self.flash_episode()
           next_state = env.reset()
-          self.set_state(next_state)
+
+        self.append_state(next_state)
 
       if not done:
         running_reward = self.get_episode_rewards()
@@ -283,8 +292,8 @@ class VPG():
 
       loss = self.optimize()
 
-      mean_rewards = np.mean(self.ep_rewards)
-      train_ep.set_description('Average reward: {:.3f}'.format(mean_rewards))
+      mean_reward = np.mean(self.ep_rewards)
+      train_ep.set_description('Average reward: {:.3f}'.format(mean_reward))
 
       if ep % save_model == 0:
         tag = '{0:09d}-{1}'.format(ep * max_steps, gitsha)
@@ -292,10 +301,10 @@ class VPG():
         write_model(self.policy, tag, model_dest)
 
       best_reward = np.max(self.ep_rewards)
-      if best_reward >= env_solved:
+      if best_reward >= env.env_solution:
         self.logger.info('Solved! At epside {}'
                          ' reward {:.3f} > {:.3f}'.format(ep, best_reward,
-                                                          env_solved))
+                                                          env.env_solution))
         break
 
     tag = 'final-{0}'.format(gitsha)
@@ -325,7 +334,7 @@ class VPG():
       self.reset()
       state = env.reset()
 
-      self.append_state(state)
+      self.set_state(state)
       writer.writeFrame(state)
 
       test_step = tqdm.tqdm(range(max_steps), ascii=True, unit='stp')
@@ -336,15 +345,16 @@ class VPG():
         action = self.get_action(state)
         next_state, reward, done, info = env.step(action)
         self.append_reward(reward)
+        self.append_state(next_state)
 
         if done:
-          next_state = env.reset()
           reward = self.get_episode_rewards()
 
-          self.reset()
+          self.flash_episode()
+          next_state = env.reset()
+          self.set_state(next_state)
           test_step.set_description('{0}/{1} Reward : {2:.3f}'.format(ep, step,
                                                                       reward))
-        self.append_state(next_state)
         writer.writeFrame(next_state)
 
       writer.close()

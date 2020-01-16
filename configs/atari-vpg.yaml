@@ -43,7 +43,7 @@ train:
   # save model every save_model episodes
   save_model: 100
   # scenario solved
-  env_solution: 2200
+  env_solution: 100
 
 test:
   # Number of testing episodes
