@@ -1,8 +1,13 @@
 # Environment config
 env:
+  # environment type
   type: 'atari'
+  # env name
   name : 'BreakoutNoFrameskip-v4'
+  # torch seed
   seed: 543
+  # solution rewards
+  env_solution: 100
 
 # Agent config
 agent:
@@ -11,15 +16,23 @@ agent:
   # model type
   model_type: 'convnet-small'
   # Learning rate for the policy net
-  policy_lr : 0.0001
+  policy_lr : 0.001
   # Learning rate for the value net
-  value_lr : 0.00001
+  value_lr : 0.0001
   # type of the optimizer
   opt_name: 'adam'
   # norm of gradient clipping, leave empty for no clipping
   grad_clip: 3.0
   # Bellman equation reward discount
   gamma : 0.99
+  # cross entropy on policy and advantage
+  vpg_scaling: 1.0
+  # value loss scaling
+  value_scaling: 0.5
+  # entropy loss scaling
+  entropy_scaling: 0.01
+  # normalize rewards:
+  reward_norm: true
   # crop shape leave empty for no center cropping
   crop_shape:
   # frame shape full resolution frame would be resized to this size

@@ -172,6 +172,9 @@ class VPG():
 
   def discount_episode(self):
 
+    ep_reward = self.get_episode_rewards()
+    self.append_episode_reward(ep_reward)
+
     ep_length = len(self.rewards)
 
     if ep_length == 1:
@@ -274,10 +277,6 @@ class VPG():
         self.append_reward(reward)
 
         if done:
-
-          ep_reward = self.get_episode_rewards()
-          self.append_episode_reward(ep_reward)
-
           self.discount_episode()
           self.flash_episode()
           next_state = env.reset()
@@ -285,9 +284,6 @@ class VPG():
         self.append_state(next_state)
 
       if not done:
-        running_reward = self.get_episode_rewards()
-        self.append_episode_reward(running_reward)
-
         self.discount_episode()
 
       loss = self.optimize()
