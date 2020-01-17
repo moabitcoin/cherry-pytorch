@@ -69,7 +69,7 @@ We support 4 [feedforward](https://github.com/moabitcoin/cherry-pytorch/blob/doc
 We support [3 Agents](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/agents/README.md#agents) within `cherry`. We plan to expand the list of agents to include TRPO/DDPG/PPO/A3C. Please feel free to make an agent request by open [an issue](https://github.com/moabitcoin/cherry-pytorch/issues) with useful links to publication(s)/existing implementation.
 
 ## Environments
-We support [3 environments](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/envs/README.md) within `cherry`. This list would be expanded to include [Robotics](https://gym.openai.com/envs/#robotics) and other [3rd party](https://github.com/openai/gym/blob/master/docs/environments.md#third-party-environments) environments.
+We support [3 environments](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/envs/README.md) within `cherry`. This list is planned to be expanded to include [Robotics](https://gym.openai.com/envs/#robotics) and other [3rd party](https://github.com/openai/gym/blob/master/docs/environments.md#third-party-environments) environments.
 
 ## :two_men_holding_hands: Dependencies
 ### :godmode: ViZDoom
