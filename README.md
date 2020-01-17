@@ -9,6 +9,8 @@ Reinforcement Learning &amp; other bedtime stories in PyTorch. This repository i
   - [Cartpole-v0](#eyes-example)
 * [Dependencies (Conda only)](#two_men_holding_hands-dependencies)
   - [Vizdoom](#godmode-vizdoom), [ALE](#space_invader-arcade-learning-environment), [Baselines](#chart_with_upwards_trend-openai-rl-baselines)
+* [Agents](#agents)
+* [Environments](#environments)
 
 ## :computer: Installation
 ```
@@ -58,6 +60,12 @@ cherry play -c <model_dest>/control-<commit-gitsha>.yaml -d cpu -m <model_dest>/
 # Visualising the agent performance from the videos saved under state_dest in configs/control.yaml
 vlc <state_dest>
 ```
+
+## Architectures
+
+## Agents
+
+## Environments
 
 ## :two_men_holding_hands: Dependencies
 ### :godmode: ViZDoom
