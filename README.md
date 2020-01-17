@@ -63,13 +63,13 @@ vlc <state_dest>
 ```
 
 ## Architectures
-We support 4 [feedforward](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/agents/README.md#architectures) architectures within `cherry`. We plan to expand the list of architectures to include Recurrent/Transformer/Memory architectures.
+We support 4 [feedforward](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/agents/README.md#architectures) architectures within `cherry`. We plan to expand the list of architectures to include Recurrent/Transformer/Memory architectures. If your personal flavour of model is missing please open [an issue](https://github.com/moabitcoin/cherry-pytorch/issues) with links to architecture details. 
 
 ## Agents
-We support [3 Agents](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/agents/README.md#agents) within `cherry`. We plan to expand the list of agents to include TRPO/DDPG/PPO/A3C.
+We support [3 Agents](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/agents/README.md#agents) within `cherry`. We plan to expand the list of agents to include TRPO/DDPG/PPO/A3C. If you'd like a new agent to included in the repo please open [an issue](https://github.com/moabitcoin/cherry-pytorch/issues) and provide useful links to papers/codes.
 
 ## Environments
-We support [3 environments](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/envs/README.md) within cherry. This list would be expanded to include [Robotics](https://gym.openai.com/envs/#robotics) and other [3rd party](https://github.com/openai/gym/blob/master/docs/environments.md#third-party-environments) environments.
+We support [3 environments](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/envs/README.md) within `cherry`. This list would be expanded to include [Robotics](https://gym.openai.com/envs/#robotics) and other [3rd party](https://github.com/openai/gym/blob/master/docs/environments.md#third-party-environments) environments.
 
 ## :two_men_holding_hands: Dependencies
 ### :godmode: ViZDoom
