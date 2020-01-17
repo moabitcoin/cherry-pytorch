@@ -22,7 +22,7 @@ agent:
   # type of the optimizer
   opt_name: 'adam'
   # norm of gradient clipping, leave empty for no clipping
-  grad_clip: 3.0
+  grad_clip:
   # Bellman equation reward discount
   gamma : 0.99
   # cross entropy on policy and advantage
@@ -48,11 +48,11 @@ agent:
 
 train:
   # Number of training episodes
-  n_train_episodes : 5000
+  n_train_episodes : 10000
   # Max steps in each episode
-  max_steps : 1000
+  max_steps : 10000
   # model location
-  model_dest: /data/experiments/agent-of-atari/13-01-2020-BreakoutNoFrames-vpg
+  model_dest: /data/experiments/agent-of-atari/17-01-2020-BreakoutNoFrames-vpg-no-grad-clip
   # save model every save_model episodes
   save_model: 100
   # scenario solved
@@ -64,4 +64,4 @@ test:
   # Max steps in each episode
   max_steps : 1000
   # path where to save played video
-  state_dest: /data/experiments/agent-of-atari/13-01-2020-BreakoutNoFrames-vpg/states
+  state_dest: /data/experiments/agent-of-atari/17-01-2020-BreakoutNoFrames-vpg-no-grad-clip/states
