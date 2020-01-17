@@ -9,6 +9,7 @@ Reinforcement Learning &amp; other bedtime stories in PyTorch. This repository i
   - [Cartpole-v0](#eyes-example)
 * [Dependencies (Conda only)](#two_men_holding_hands-dependencies)
   - [Vizdoom](#godmode-vizdoom), [ALE](#space_invader-arcade-learning-environment), [Baselines](#chart_with_upwards_trend-openai-rl-baselines)
+* [Architectures](#architectures)
 * [Agents](#agents)
 * [Environments](#environments)
 
@@ -62,10 +63,13 @@ vlc <state_dest>
 ```
 
 ## Architectures
+We support 4 [feedforward](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/envs/README.md#architectures) architectures within `cherry`. We plan to expand the list of architectures to include Recurrent/Transformer/Memory architectures.
 
 ## Agents
+We support [3 Agents](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/agents/README.md#agents) within `cherry`. We plan to expand the list of agents to include TRPO/DDPG/PPO/A3C.
 
 ## Environments
+We support [3 environments](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/envs/README.md) within cherry. This list would be expanded to include [Robotics](https://gym.openai.com/envs/#robotics) and other [3rd party](https://github.com/openai/gym/blob/master/docs/environments.md#third-party-environments) environments.
 
 ## :two_men_holding_hands: Dependencies
 ### :godmode: ViZDoom
