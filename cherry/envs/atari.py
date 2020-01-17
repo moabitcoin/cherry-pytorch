@@ -5,6 +5,7 @@ from pathlib import Path
 from collections import namedtuple
 
 import gym
+import torch
 import numpy as np
 import torch.nn.functional as F
 from baselines.common.atari_wrappers import make_atari, wrap_deepmind
@@ -22,7 +23,9 @@ class AtariEnvironment():
   def __init__(self, cfgs, play=False):
 
     self.env = None
+    self.seed = cfgs.get('seed')
     self.env_name = cfgs.get('name')
+    self.env_solution = cfgs.get('env_solution')
 
     assert self.env_name is not None, 'env:name not found in config'
 
@@ -30,6 +33,8 @@ class AtariEnvironment():
 
       env = make_atari(self.env_name)
       self.env = wrap_deepmind(env)
+      self.env.seed(self.seed)
+      torch.manual_seed(self.seed)
 
       self.action_size = self.env.action_space.n
       self.actions = range(self.action_size)
@@ -51,12 +56,8 @@ class AtariEnvironment():
   def step(self, action):
 
     state, reward, done, info = self.env.step(action)
-    terminal = info['ale.lives'] == 0
 
-    if done:
-      state = self.reset()
-
-    return state, reward, terminal, info
+    return state, reward, done, info
 
   def close(self):
 
