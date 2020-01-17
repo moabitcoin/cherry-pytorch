@@ -63,7 +63,7 @@ vlc <state_dest>
 ```
 
 ## Architectures
-We support 4 [feedforward](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/agents/README.md#architectures) architectures within `cherry`. We plan to expand the list of architectures to include Recurrent/Transformer/Memory architectures. If your personal model flavour is missing, please open [an issue](https://github.com/moabitcoin/cherry-pytorch/issues) with links to architecture details.
+We support [4 feedforward](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/agents/README.md#architectures) architectures within `cherry`. We plan to expand the list of architectures to include Recurrent/Transformer/Memory architectures. If your personal model flavour is missing, please open [an issue](https://github.com/moabitcoin/cherry-pytorch/issues) with links to architecture details.
 
 ## Agents
 We support [3 Agents](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/agents/README.md#agents) within `cherry`. We plan to expand the list of agents to include TRPO/DDPG/PPO/A3C. Please feel free to make an agent request by open [an issue](https://github.com/moabitcoin/cherry-pytorch/issues) with useful links to publication(s)/existing implementation.
