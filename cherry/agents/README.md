@@ -8,8 +8,16 @@ Key ingredients for DQN are
 - Policy [update](https://github.com/moabitcoin/cherry-pytorch/blob/master/cherry/agents/dqn.py#L252) & Target [update](https://github.com/moabitcoin/cherry-pytorch/blob/master/cherry/agents/dqn.py#L255)
 
 ## DDQN
+[Double DQN](https://arxiv.org/abs/1509.06461) aimed at improving one of the shortcomings of DQN. Specifically the over-estimation of action value function. [This](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/agents/ddqn.py#L169) improves training stability and in some of the Atari 2600 games improves model performance. DDQN uses same ingredients as DQN above.
 
 ## VPG
+Vanilla Policy Gradient is an on-policy method for training an agent. Unlike DQN/DDQN which are off policy methods. OpenAI's [Spinning Up](https://spinningup.openai.com/en/latest/algorithms/vpg.html) has a great tutorial explaining it in easy to digest form.
+
+Key ingredients for VPG are
+- [Policy rollout(s)](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/agents/vpg.py#L289) : Batch consisting of multiple trajectories
+- [Discounting rewards](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/agents/vpg.py#L173) to go
+- De-couple [Action Value](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/agents/vpg.py#L225) & [Value function](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/agents/vpg.py#L239)
+- Negative Log-likelihood of [`Q(s, a)`](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/agents/vpg.py#L231)
 
 ## A2C
 
