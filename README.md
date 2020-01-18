@@ -1,6 +1,6 @@
 <h1 align='center'>:cherries: Cherry in PyTorch</h1>
 
-Reinforcement Learning &amp; other bedtime stories in PyTorch. This repository is [pytorch](https://pytorch.org) implementation of the [Intro RL course](https://github.com/simoninithomas/Deep_reinforcement_learning_Course) & [Advanced RL course](https://github.com/dennybritz/reinforcement-learning). The name `cherry` is derived from Yann Lecun's [statement](https://www.quora.com/What-do-you-think-about-reinforcement-learning-Is-it-the-cherry-on-the-cake-as-Yann-LeCun-puts-it-1) regarding RL being the cherry on the ML [cake.](https://miro.medium.com/max/1200/1*bvMhd_xpVxfJYoKXYp5hug.png) For training/playing the agent within [conda](#snake-conda) env, please install the [external dependencies](https://github.com/moabitcoin/cherry-pytorch#dependencies). 
+Reinforcement Learning &amp; other bedtime stories in PyTorch. This repository is [pytorch](https://pytorch.org) implementation of the [Intro RL course](https://github.com/simoninithomas/Deep_reinforcement_learning_Course) & [Advanced RL course](https://github.com/dennybritz/reinforcement-learning). The name `cherry` is derived from Yann Lecun's [statement](https://www.quora.com/What-do-you-think-about-reinforcement-learning-Is-it-the-cherry-on-the-cake-as-Yann-LeCun-puts-it-1) regarding RL being the cherry on the ML [cake.](https://miro.medium.com/max/1200/1*bvMhd_xpVxfJYoKXYp5hug.png) For training/playing the agent within [conda](#snake-conda) env, please install the [external dependencies](https://github.com/moabitcoin/cherry-pytorch#dependencies).
 
 # Table of Contents
 * [Installation](#Installation)
@@ -9,9 +9,9 @@ Reinforcement Learning &amp; other bedtime stories in PyTorch. This repository i
   - [Cartpole-v0](#eyes-example)
 * [Dependencies (Conda only)](#two_men_holding_hands-dependencies)
   - [Vizdoom](#godmode-vizdoom), [ALE](#space_invader-arcade-learning-environment), [Baselines](#chart_with_upwards_trend-openai-rl-baselines)
-* [Architectures](#architectures)
-* [Agents](#agents)
+* [Architectures](#architectures) & [Agents](#agents)
 * [Environments](#environments)
+* [Design principles](https://github.com/moabitcoin/cherry-pytorch/blob/master/cherry/README.md)
 
 ## :computer: Installation
 ```
