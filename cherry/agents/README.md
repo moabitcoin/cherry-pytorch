@@ -19,8 +19,6 @@ Key ingredients for VPG are
 - De-couple [Action Value](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/agents/vpg.py#L225) & [Value function](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/agents/vpg.py#L239)
 - Negative Log-likelihood of [`Q(s, a)`](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/agents/vpg.py#L231)
 
-## A2C
-
 # Architectures
 ## [MLP](https://github.com/moabitcoin/cherry-pytorch/blob/master/cherry/agents/models.py#L208)
 - 1 Linear layer
