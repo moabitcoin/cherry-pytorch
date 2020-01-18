@@ -1,5 +1,5 @@
 # Classic Control
 
-# Arcade Learning Environment
+# Arcade Learning Environment (ALE)
 
 # VizDoom
