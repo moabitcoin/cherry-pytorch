@@ -60,3 +60,45 @@ class AgentName():
   def optimize(self):
 
 ```
+
+The Architecture API is structures as follows
+
+```
+class ModelName(torch.nn.Module):
+
+  def __init__(self, input_shape, state_size, action_size, device):
+
+    super(ModelName, self).__init__()
+
+    self.device = device
+    self.state_size = state_size
+    self.action_size = action_size
+    self.input_shape = input_shape
+
+  def init_weights(self, m):
+
+  def forward(self, x):
+
+```
+
+The Environment API is structures as follows
+
+```
+class EnvironmenName():
+
+  def __init__(self, cfgs, play=False):
+
+    self.env = None
+    self.seed = cfgs.get('seed')
+    self.env_name = cfgs.get('name')
+    self.env_solution = cfgs.get('env_solution')
+
+  def reset(self):
+
+  def step(self, action):
+
+  def close(self):
+
+  def update_env(self, update_fn, **kwargs):
+
+```
