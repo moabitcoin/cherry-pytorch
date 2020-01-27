@@ -75,7 +75,7 @@ class DQN():
     buffer_shape = list(self.get_state(complete=True).shape)[1:]
 
     self.replay = ReplayBuffer(self.replay_size, buffer_shape,
-                               self.action_size, device=self.device)
+                               1, device=self.device)
     if model_file:
       self.load_model(model_file)
 
@@ -233,6 +233,7 @@ class DQN():
 
         state = self.get_state()
         action = self.get_action(state)
+
         next_state, reward, done, info = env.step(action)
         self.append_reward(reward)
         self.append_state(next_state)

@@ -61,7 +61,7 @@ class ConvNetS(torch.nn.Module):
     self.device = device
     self.action_size = action_size
 
-    (w, h) = self.input_shape
+    (w, h) = state_size[1:]
 
     self.conv1 = nn.Conv2d(state_size[0], 16, kernel_size=8, stride=4)
     self.conv2 = nn.Conv2d(16, 32, kernel_size=8, stride=4)
@@ -114,7 +114,7 @@ class ConvNetM(torch.nn.Module):
     self.device = device
     self.action_size = action_size
 
-    (w, h) = self.input_shape
+    (w, h) = state_size[1:]
 
     self.conv1 = nn.Conv2d(state_size[0], 16, kernel_size=5, stride=2)
     self.bn1 = nn.BatchNorm2d(16)

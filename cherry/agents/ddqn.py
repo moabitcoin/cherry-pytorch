@@ -74,7 +74,7 @@ class DDQN():
     buffer_shape = list(self.get_state(complete=True).shape)[1:]
 
     self.replay = ReplayBuffer(self.replay_size, buffer_shape,
-                               self.action_size, device=self.device)
+                               1, device=self.device)
     if model_file:
       self.load_model(model_file)
 
