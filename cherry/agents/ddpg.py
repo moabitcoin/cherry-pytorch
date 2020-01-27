@@ -1,4 +1,4 @@
-# https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html#dqn-algorithm
+# https://spinningup.openai.com/en/latest/algorithms/ddpg.html#pseudocode
 import os
 import sys
 import math
@@ -20,7 +20,7 @@ from cherry.agents import ReplayBuffer
 from utils.helpers import get_logger, write_model, OPTS
 
 
-class DDQN():
+class DDPG():
 
   def __init__(self, cfgs, model=None, model_file=None,
                device=None, log_level='info'):
@@ -29,60 +29,74 @@ class DDQN():
     self.losses = None
     self.rewards = None
     self.zero_state = None
-    self.top_scr = 0.0
-    self.crop_shape = cfgs['crop_shape']
-    self.input_shape = cfgs['input_shape']
-    self.lr = cfgs['lr']
+    self.ep_rewards = None
+    self.rr = 10.0
+    self.actor_lr = cfgs['actor_lr']
+    self.critic_lr = cfgs['critic_lr']
     self.gamma = cfgs['gamma']
-    self.max_eps = cfgs['max_eps']
-    self.min_eps = cfgs['min_eps']
-    self.eps_decay = cfgs['eps_decay']
+    self.tau = cfgs['tau']
     self.replay_size = cfgs['replay_size']
     self.state_len = cfgs['state_len']
+    self.input_shape = cfgs['input_shape']
+    self.crop_shape = cfgs.get('crop_shape')
     self.action_size = cfgs['action_size']
     self.input_transforms = cfgs['input_transforms']
+    self.grad_clip = cfgs['grad_clip']
+    self.init_weights = cfgs.get('init_weights')
+    self.continous = cfgs.get('continous')
+    self.grad_clip = cfgs.get('grad_clip')
     self.device = device
-    self.eps = self.max_eps
     self.state_size = [self.state_len] + self.input_shape
 
     assert self.input_shape is not None, 'Input shape has to be not None'
     assert self.action_size is not None, 'Action size has to non None'
     assert self.device is not None, 'Device has to be CPU/GPU'
 
-    self.zero_state = torch.zeros([1] + self.input_shape, dtype=torch.uint8)
+    self.zero_state = torch.zeros(self.state_size, dtype=torch.uint8)
 
     self.logger = get_logger(__file__, log_level=log_level)
 
     self.transform = self.state_transformer()
 
-    self.policy = model(self.state_size, self.action_size,
-                        self.device).to(self.device)
+    self.actor = model(self.state_size, self.action_size,
+                       self.device).to(self.device)
 
-    self.policy.apply(self.policy.init_weights)
+    self.critic = model(self.state_size, self.action_size,
+                        self.device, continous=self.continous).to(self.device)
 
-    self.target = model(self.state_size, self.action_size,
-                        self.device).to(self.device)
+    if self.init_weights:
+      self.actor.apply(self.actor.init_weights)
+      self.critic.apply(self.critic.init_weights)
 
-    self.target.load_state_dict(self.policy.state_dict())
-    self.target.eval()
+    self.actor_target = model(self.state_size, self.action_size,
+                              self.device).to(self.device)
+
+    self.critic_target = model(self.state_size, self.action_size,
+                               self.device, continous=self.continous).to(self.device)
+
+    if model_file:
+      self.load_model(model_file)
+
+    self.update_target(0)
 
     optimizer = OPTS.get(cfgs['opt_name'])
 
-    self.optimizer = optimizer(self.policy.parameters(),
-                               lr=self.lr, eps=1.5e-4)
+    self.actor_optimizer = optimizer(self.actor.parameters(),
+                                     lr=self.actor_lr)
+    self.critic_optimizer = optimizer(self.critic.parameters(),
+                                      lr=self.critic_lr)
+
     self.reset()
     buffer_shape = list(self.get_state(complete=True).shape)[1:]
 
     self.replay = ReplayBuffer(self.replay_size, buffer_shape,
-                               self.action_size, device=self.device)
-    if model_file:
-      self.load_model(model_file)
-
-  def eval(self):
-
-    self.policy.eval()
+                               self.action_size, state_type=torch.float32,
+                               action_type=torch.float32, device=self.device)
 
   def state_transformer(self):
+
+    if not self.input_transforms:
+      return None
 
     transforms = [ToPILImage()]
 
@@ -93,40 +107,39 @@ class DDQN():
 
     return Compose(transforms)
 
-  def flush_episode(self):
+  def flash_episode(self):
 
-    self.losses = []
     self.rewards = []
 
   def reset(self):
 
-    self.top_scr = 0.0
-    self.flush_episode()
+    self.ep_rewards = []
 
     no_history = [self.zero_state for _ in range(self.state_len + 1)]
     self.history = deque(no_history, maxlen=self.state_len + 1)
+
+    self.flash_episode()
 
   def load_model(self, model_file):
 
     self.logger.info('Loading agent weights from {}'.format(model_file))
     self.policy.load_state_dict(torch.load(model_file))
 
+  def eval(self):
+
+    self.policy.eval()
+
+  def scale_action(self, q):
+
+    # return 0.5 * (self.env_hi + self.env_lo) * (F.tanh(q) + 1) - self.env_lo
+    return self.env_hi * torch.tanh(q)
+
   def get_action(self, state):
 
-    if random.random() > self.eps:
-      with torch.no_grad():
-        q, _ = self.policy(state)
-        a = q.max(1)[1].cpu().view(1, 1)
-    else:
-      a = torch.tensor([[random.randrange(self.action_size)]],
-                       device='cpu', dtype=torch.long)
+    with torch.no_grad():
+      q, _ = self.actor(state)
 
-    return a.numpy()[0, 0].item()
-
-  def set_eps(self, step):
-
-    self.eps -= (self.max_eps - self.min_eps) / self.eps_decay
-    self.eps = max(self.eps, self.min_eps)
+    return self.scale_action(q)[0].detach().cpu().numpy()
 
   def append_state(self, state):
 
@@ -134,8 +147,8 @@ class DDQN():
 
     if self.transform:
       state = np.array(self.transform(state), dtype=np.uint8)
-      state = np.expand_dims(state, 0)
 
+    state = np.expand_dims(state, 0)
     state = torch.from_numpy(state)
 
     self.history.append(state)
@@ -151,11 +164,19 @@ class DDQN():
 
   def push_to_memory(self, states, action, reward, done):
 
+    action = torch.Tensor(action)
+
     self.replay.push(states, action, reward, done)
 
   def get_episode_rewards(self):
 
     return np.sum(self.rewards)
+
+  def append_episode_reward(self, reward):
+
+    self.rr = 0.05 * reward + (1 - 0.05) * self.rr
+
+    self.ep_rewards.append(self.rr)
 
   def optimize(self, batch_size=32):
 
@@ -169,43 +190,52 @@ class DDQN():
     state_batch = states[:, :self.state_len]
     next_state_batch = states[:, 1:]
 
-    # DDQN
-    q_values, _ = self.policy(state_batch)
-    q_values = q_values.gather(1, action)
+    # Optimize the critic model
+    next_action_batch = self.scale_action(self.actor_target(next_state_batch)[0])
+    _, q_values_next = self.critic_target(next_state_batch, next_action_batch)
 
-    with torch.no_grad():
-      next_values, _ = self.policy(next_state_batch)
-      next_action = next_values.max(1)[1].view(-1, 1)
+    # Bellman Equation : Computes the expected Q values (target)
+    q_values_target = (q_values_next * self.gamma) * (1. - done) + reward
 
-    q_values_next, _ = self.target(next_state_batch)
-    q_values_next = q_values_next.gather(1, next_action).view(-1)
+    _, q_values = self.critic(state_batch, action)
 
-    # Compute the expected Q values (target)
-    q_values_target = (q_values_next * self.gamma) * (1. - done[:, 0]) + reward[:, 0]
+    # critic loss
+    critic_loss = F.smooth_l1_loss(q_values, q_values_target)
 
-    # Compute Huber loss
-    loss = F.smooth_l1_loss(q_values, q_values_target.unsqueeze(1))
+    self.critic_optimizer.zero_grad()
+    critic_loss.backward()
+    if self.grad_clip:
+      nn.utils.clip_grad_value_(self.critic.parameters(), self.grad_clip)
+    self.critic_optimizer.step()
 
-    # Optimize the model
-    self.optimizer.zero_grad()
-    loss.backward()
-    nn.utils.clip_grad_value_(self.policy.parameters(), 1)
-    self.optimizer.step()
+    # Optimize actor network
+    action = self.scale_action(self.actor(state_batch)[0])
+    _, q_values = self.critic(state_batch, action)
+
+    actor_loss = -q_values.mean()
+    self.actor_optimizer.zero_grad()
+    actor_loss.backward()
+    if self.grad_clip:
+      nn.utils.clip_grad_value_(self.actor.parameters(), self.grad_clip)
+    self.actor_optimizer.step()
 
   def update_target(self, step):
 
+    # Update the frozen target models
+    self.copy_model(self.critic, self.critic_target, self.tau)
+    self.copy_model(self.actor, self.actor_target, self.tau)
+
     self.logger.debug('Updating agent at {}'.format(step))
-    self.target.load_state_dict(self.policy.state_dict())
 
-  def show_score(self, pbar, step):
+  def copy_model(self, src, dest, w):
 
-    total_score = np.sum(self.scores, initial=0.0)
+    for src_param, dest_param in zip(src.parameters(), dest.parameters()):
+      dest_param.data.copy_(w * src_param.data + (1 - w) * dest_param.data)
 
-    pbar.set_description('Reward : {0:.3f}, Eps : {1:.4f}, '
-                         'Buffer : {2}'.format(total_score, self.eps,
-                                               len(self.replay)))
+  def set_action_limits(self, limits):
 
-    self.top_scr = total_score if self.top_scr < total_score else self.top_scr
+    self.env_lo = torch.Tensor(limits[0]).to(self.device)
+    self.env_hi = torch.Tensor(limits[1]).to(self.device)
 
   def train(self, env, train_cfgs, gitsha, model_dest):
 
@@ -215,9 +245,12 @@ class DDQN():
     train_eps = train_cfgs['n_train_episodes']
     max_steps = train_cfgs['max_steps']
     policy_update = train_cfgs['policy_update']
+    n_exploration_steps = train_cfgs['n_exploration_steps']
 
     train_ep = tqdm.tqdm(range(train_eps), ascii=True,
                          unit='episode', leave=False)
+
+    self.set_action_limits(env.action_limits())
 
     global_step = 0
 
@@ -231,32 +264,29 @@ class DDQN():
       train_step = tqdm.tqdm(range(max_steps), ascii=True,
                              unit='stp', leave=False)
 
+      done = False
+
       for step in train_step:
 
         global_step = ep * max_steps + step
-        self.set_eps(global_step)
 
         state = self.get_state()
-        action = self.get_action(state)
+        action = self.get_action(state) if global_step > n_exploration_steps \
+            else env.sample()
         next_state, reward, done, info = env.step(action)
         self.append_reward(reward)
+
+        if done:
+          ep_reward = self.get_episode_rewards()
+          self.append_episode_reward(ep_reward)
+
+          self.flash_episode()
+          next_state = env.reset()
+
         self.append_state(next_state)
 
         states = self.get_state(complete=True)
         self.push_to_memory(states, action, reward, done)
-
-        if done:
-          total_score = self.get_episode_rewards()
-
-          self.reset()
-          next_frame = env.reset()
-
-          self.append_state(next_frame)
-
-          train_step.set_description('{0}/{1}, Reward : {2:.3f}, '
-                                     'Eps : {3:.4f}'.format(ep, step,
-                                                            total_score,
-                                                            self.eps))
 
         if global_step % policy_update == 0:
           self.optimize(batch_size=batch_size)
@@ -266,10 +296,24 @@ class DDQN():
 
         if global_step % save_model == 0:
           tag = '{0:09d}-{1}'.format(global_step, gitsha)
-          write_model(self.policy, tag, model_dest)
+          write_model(self.actor, tag, model_dest)
+
+      if not done:
+        ep_reward = self.get_episode_rewards()
+        self.append_episode_reward(ep_reward)
+
+      mean_reward = np.mean(self.ep_rewards)
+      train_ep.set_description('Average reward: {:.3f}'.format(mean_reward))
+
+      best_reward = np.max(self.ep_rewards)
+      if best_reward >= env.env_solution:
+        self.logger.info('Solved! At epside {}'
+                         ' reward {:.3f} > {:.3f}'.format(ep, best_reward,
+                                                          env.env_solution))
+        break
 
     tag = 'final-{0}'.format(gitsha)
-    write_model(self.policy, tag, model_dest)
+    write_model(self.actor, tag, model_dest)
 
   def play(self, env, test_cfgs, gitsha):
 

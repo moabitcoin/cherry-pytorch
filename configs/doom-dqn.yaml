@@ -28,8 +28,8 @@ agent:
   crop_shape: [224, 224]
   # frame shape full resolution frame would be resized to this size, leave empty for no cropping
   input_shape : [84, 84]
-  # state size input_shape + [state_size] tensor as enviroment representation
-  state_size : 4
+  # state size [state_len] + input_shape tensor as enviroment representation
+  state_len : 4
   # action space size
   action_size: 3
   # memory replay size

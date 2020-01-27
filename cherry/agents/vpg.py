@@ -40,7 +40,7 @@ class VPG():
     self.gamma = cfgs['gamma']
     self.policy_lr = cfgs['policy_lr']
     self.value_lr = cfgs['value_lr']
-    self.state_size = cfgs['state_size']
+    self.state_len = cfgs['state_len']
     self.action_size = cfgs['action_size']
     self.crop_shape = cfgs.get('crop_shape')
     self.input_shape = cfgs.get('input_shape')
@@ -53,6 +53,7 @@ class VPG():
     self.reward_norm = cfgs.get('reward_norm')
     self.device = device
     self.stable_eps = np.finfo(np.float32).eps.item()
+    self.state_size = [self.state_len] + self.input_shape
 
     assert self.input_shape, 'Input shape has to be not None'
     assert self.action_size, 'Action size has to non None'
@@ -64,11 +65,11 @@ class VPG():
 
     self.transform = self.state_transformer()
 
-    self.policy = model(self.input_shape, self.state_size,
-                        self.action_size, self.device).to(self.device)
+    self.policy = model(self.state_size, self.action_size,
+                        self.device).to(self.device)
 
-    self.value = model(self.input_shape, self.state_size,
-                       self.action_size, self.device).to(self.device)
+    self.value = model(self.state_size, self.action_size,
+                       self.device).to(self.device)
 
     if self.init_weights:
       self.policy.apply(self.policy.init_weights)
@@ -106,8 +107,8 @@ class VPG():
     self.mb_values = []
     self.ep_rewards = []
 
-    no_history = [self.zero_state for _ in range(self.state_size)]
-    self.history = deque(no_history, maxlen=self.state_size)
+    no_history = [self.zero_state for _ in range(self.state_len)]
+    self.history = deque(no_history, maxlen=self.state_len)
 
     self.flash_episode()
 
@@ -159,7 +160,7 @@ class VPG():
 
   def set_state(self, state):
 
-    for _ in range(self.state_size):
+    for _ in range(self.state_len):
       self.append_state(state)
 
   def append_reward(self, r):
