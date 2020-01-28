@@ -28,6 +28,14 @@ pip install -e .
 ### :whale: Docker
 ```
 # CPU
+docker run moabitcoin/cherry-pytorch-cpu
+# GPU
+docker run moabitcoin/cherry-pytorch-gpu
+```
+
+### :whale: Docker (build from scratch)
+```
+# CPU
 make install dockerfile=Dockerfile.cpu dockerimage=moabitcoin/cherry-pytorch-cpu
 make run dockerimage=moabitcoin/cherry-pytorch-cpu
 # GPU
