@@ -31,7 +31,7 @@ pip install -e .
 make install dockerfile=Dockerfile.cpu dockerimage=moabitcoin/cherry-pytorch-cpu
 make run dockerimage=moabitcoin/cherry-pytorch-cpu
 # GPU
-make install dockerfile=Dockerfile.gpu
+make install dockerfile=Dockerfile.gpu dockerimage=moabitcoin/cherry-pytorch-gpu
 make gpu dockerimage=moabitcoin/cherry-pytorch-gpu
 ```
 
@@ -54,11 +54,11 @@ optional arguments:
 ```
 ### :eyes: Example
 ```
-# Training the agent to balance the Cartpole
+# Training (Cartpole)
 cherry train -c configs/control.yaml -d cpu
-# Playing with the trained agent saved at <model_dest> in configs/control.yaml
+# Playing model at <model_dest> in configs/control.yaml
 cherry play -c <model_dest>/control-<commit-gitsha>.yaml -d cpu -m <model_dest>/agent-final-<commit-gitsha>.pth
-# Visualising the agent performance from the videos saved under state_dest in configs/control.yaml
+# Visualising <state_dest> in configs/control.yaml
 vlc <state_dest>
 ```
 
