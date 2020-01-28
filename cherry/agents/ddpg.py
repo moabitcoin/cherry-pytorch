@@ -139,7 +139,9 @@ class DDPG():
     with torch.no_grad():
       q, _ = self.actor(state)
 
-    return self.scale_action(q)[0].detach().cpu().numpy()
+    q = self.scale_action(q) if self.continous else q.max(1)[1]
+
+    return q[0].detach().cpu().numpy()
 
   def append_state(self, state):
 

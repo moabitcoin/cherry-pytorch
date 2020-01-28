@@ -78,13 +78,13 @@ vlc <state_dest>
 ```
 
 ## Architectures
-We support [4 feedforward](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/agents/README.md#architectures) architectures within `cherry`. We plan to expand the list of architectures to include Recurrent/Transformer/Memory architectures. If your personal model flavour is missing, please open [an issue](https://github.com/moabitcoin/cherry-pytorch/issues) with links to architecture details.
+We support [4 feedforward](https://github.com/moabitcoin/cherry-pytorch/blob/master/cherry/agents/README.md#architectures) architectures within `cherry`. We plan to expand the list of architectures to include Recurrent/Transformer/Memory architectures. If your personal model flavour is missing, please open [an issue](https://github.com/moabitcoin/cherry-pytorch/issues) with links to architecture details.
 
 ## Agents
-We support [4 Agents](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/agents/README.md) within `cherry`. We plan to expand the list of agents to include TRPO/PPO. Please feel free to make an agent request by opening [an issue](https://github.com/moabitcoin/cherry-pytorch/issues) with useful links to publication(s)/existing implementation.
+We support [4 Agents](https://github.com/moabitcoin/cherry-pytorch/blob/master/cherry/agents/README.md) within `cherry`. We plan to expand the list of agents to include TRPO/PPO. Please feel free to make an agent request by opening [an issue](https://github.com/moabitcoin/cherry-pytorch/issues) with useful links to publication(s)/existing implementation.
 
 ## Environments
-We support [4 environments](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/envs/README.md) within `cherry`. This list is planned to be expanded to include [Robotics](https://gym.openai.com/envs/#robotics) and other [3rd party](https://github.com/openai/gym/blob/master/docs/environments.md#third-party-environments) environments.
+We support [4 environments](https://github.com/moabitcoin/cherry-pytorch/blob/master/cherry/envs/README.md) within `cherry`. This list is planned to be expanded to include [Robotics](https://gym.openai.com/envs/#robotics) and other [3rd party](https://github.com/openai/gym/blob/master/master/environments.md#third-party-environments) environments.
 
 ## :two_men_holding_hands: Dependencies
 ### :godmode: ViZDoom
