@@ -191,7 +191,8 @@ class DDPG():
     next_state_batch = states[:, 1:]
 
     # Optimize the critic model
-    next_action_batch = self.scale_action(self.actor_target(next_state_batch)[0])
+    next_action_batch, _ = self.actor_target(next_state_batch)
+    next_action_batch = self.scale_action(next_action_batch)
     _, q_values_next = self.critic_target(next_state_batch, next_action_batch)
 
     # Bellman Equation : Computes the expected Q values (target)
@@ -209,7 +210,8 @@ class DDPG():
     self.critic_optimizer.step()
 
     # Optimize actor network
-    action = self.scale_action(self.actor(state_batch)[0])
+    action, _ = self.actor(state_batch)
+    action = self.scale_action(action)
     _, q_values = self.critic(state_batch, action)
 
     actor_loss = -q_values.mean()
