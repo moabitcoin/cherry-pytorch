@@ -52,17 +52,19 @@ optional arguments:
   -l {info,debug}, --log {info,debug}
                         Set verbosity for the logger (default: info)
 ```
-### :eyes: Example
+### :eyes: Example (Cartpole)
+#### Train
 ```
-# Train (Cartpole)
 cherry train -c configs/control.yaml -d cpu
 ```
+#### Play
 ```
-# Play from <model_dest> in configs/control.yaml
+# <model_dest> in configs/control.yaml
 cherry play -c <model_dest>/control-<commit-gitsha>.yaml -d cpu -m <model_dest>/agent-final-<commit-gitsha>.pth
 ```
-```Â
-# Visualise from <state_dest> in configs/control.yaml
+#### Visualise
+```
+# <state_dest> in configs/control.yaml
 vlc <state_dest>
 ```
 
