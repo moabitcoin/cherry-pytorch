@@ -6,6 +6,7 @@ The core principle of `cherry` is to organise an RL framework around disjoint po
 <img src="https://spinningup.openai.com/en/latest/_images/rl_diagram_transparent_bg.png">
 </p>
 
+### Agent
 The Agent API is structured as follows
 
 ```
@@ -60,7 +61,7 @@ class AgentName():
   def optimize(self):
 
 ```
-
+### Architecture
 The Architecture API is structures as follows
 
 ```
@@ -80,7 +81,7 @@ class ModelName(torch.nn.Module):
   def forward(self, x):
 
 ```
-
+### Environment
 The Environment API is structures as follows
 
 ```
