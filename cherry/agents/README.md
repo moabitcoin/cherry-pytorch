@@ -11,13 +11,15 @@ Key ingredients for DQN are
 [Double DQN](https://arxiv.org/abs/1509.06461) aimed at improving one of the shortcomings of DQN. Specifically the over-estimation of action value function. [This](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/agents/ddqn.py#L169) improves training stability and in some of the Atari 2600 games improves model performance. DDQN uses same ingredients as DQN above.
 
 ## VPG
-Vanilla Policy Gradient is an on-policy method for training an agent. Unlike DQN/DDQN which are off policy methods. OpenAI's [Spinning Up](https://spinningup.openai.com/en/latest/algorithms/vpg.html) has a great tutorial explaining it in easy to digest form. We implement OpenAI's [pseudo-code](https://spinningup.openai.com/en/latest/algorithms/vpg.html#pseudocode) which leverages [Advantage Actor Critic.](https://www.freecodecamp.org/news/an-intro-to-advantage-actor-critic-methods-lets-play-sonic-the-hedgehog-86d6240171d/) 
-
+Vanilla Policy Gradient is an on-policy method for training an agent. Unlike DQN/DDQN which are off policy methods. OpenAI's [Spinning Up](https://spinningup.openai.com/en/latest/algorithms/vpg.html) has a great tutorial explaining it in easy to digest form. We implement OpenAI's [pseudo-code](https://spinningup.openai.com/en/latest/algorithms/vpg.html#pseudocode) which leverages [Advantage Actor Critic.](https://www.freecodecamp.org/news/an-intro-to-advantage-actor-critic-methods-lets-play-sonic-the-hedgehog-86d6240171d/)
 Key ingredients for VPG are
 - [Policy rollout(s)](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/agents/vpg.py#L289) : Batch consisting of multiple trajectories
 - [Discounting rewards](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/agents/vpg.py#L173) to go
 - De-couple [Action Value](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/agents/vpg.py#L225) & [Value function](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/agents/vpg.py#L239)
 - Negative Log-likelihood of [`Q(s, a)`](https://github.com/moabitcoin/cherry-pytorch/blob/docs/cherry/agents/vpg.py#L231)
+
+## DDPG
+Deep Deterministic Policy Gradients is an off-policy method which bridges ideas from DQN and VPG. OpenAI's [spinning up](https://spinningup.openai.com/en/latest/algorithms/ddpg.html#) has a great overview. DDPG is largely utilised when action space is continuous (f.ex robotics/self driving applications). Its leverages actor/critic idea from VPG and replay buffer from DQN. Original idea from [Silver et al.](http://proceedings.mlr.press/v32/silver14.pdf) and furthered for continuous problems by [Deepmind.](https://arxiv.org/pdf/1509.02971.pdf)
 
 # Architectures
 ## [MLP](https://github.com/moabitcoin/cherry-pytorch/blob/master/cherry/agents/models.py#L208)
