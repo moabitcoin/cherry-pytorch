@@ -11,7 +11,8 @@ Reinforcement Learning &amp; other bedtime stories in PyTorch. This repository i
   - [Vizdoom](#godmode-vizdoom), [ALE](#space_invader-arcade-learning-environment), [Baselines](#chart_with_upwards_trend-openai-rl-baselines)
 * [Architectures](#architectures) & [Agents](#agents)
 * [Environments](#environments)
-* [Design principles](https://github.com/moabitcoin/cherry-pytorch/blob/master/cherry/README.md)
+* [Design principle](https://github.com/moabitcoin/cherry-pytorch/blob/master/cherry/README.md)
+* [Reproducibility](https://github.com/moabitcoin/cherry-pytorch/tree/master/cherry#reproducibility)
 
 ## :computer: Installation
 ```

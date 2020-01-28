@@ -103,5 +103,5 @@ class EnvironmenName():
 
 ```
 
-## Experiment configuration
+## Reproducibility
 Training/testing is setup through `yaml` config files. Sample files located [here](https://github.com/moabitcoin/cherry-pytorch/blob/master/configs/control.yaml). During training config file & model weights are saved at `model_dest` and appended with [`commit-gitsha`](https://gist.github.com/masak/2415865) of the repo for traceability & reproducibility.
