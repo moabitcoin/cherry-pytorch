@@ -123,11 +123,11 @@ class DDPG():
   def load_model(self, model_file):
 
     self.logger.info('Loading agent weights from {}'.format(model_file))
-    self.policy.load_state_dict(torch.load(model_file))
+    self.actor.load_state_dict(torch.load(model_file))
 
   def eval(self):
 
-    self.policy.eval()
+    self.actor.eval()
 
   def scale_action(self, q):
 
@@ -329,25 +329,22 @@ class DDPG():
     vid_dst.mkdir(parents=True, exist_ok=True)
 
     env.update_env(wrappers.Monitor, directory=vid_dst.as_posix(), force=True)
-    test_ep = tqdm.tqdm(range(test_episodes), ascii=True, unit='episode')
+    test_ep = tqdm.tqdm(range(test_episodes), ascii=True,
+                        unit='episode', leave=False)
+
+    self.set_action_limits(env.action_limits())
 
     for ep in test_ep:
 
       vid_file = vid_dst.joinpath('episode-{1:03d}-{0}.mp4'.format(gitsha, ep))
 
-      writer = vid_writer(vid_file.as_posix(), outputdict={'-vcodec': 'h264',
-                                                           '-b': '300000000'})
-
       self.reset()
-      # no exploration
-      self.eps = 0.0
-
       state = env.reset()
 
       self.append_state(state)
-      writer.writeFrame(state)
 
-      test_step = tqdm.tqdm(range(max_steps), ascii=True, unit='stp')
+      test_step = tqdm.tqdm(range(max_steps), ascii=True,
+                            unit='stp', leave=False)
 
       for step in test_step:
 
@@ -357,13 +354,12 @@ class DDPG():
         self.append_reward(reward)
 
         if done:
-          next_state = env.reset()
-          reward = self.get_episode_rewards()
+          ep_reward = self.get_episode_rewards()
+          test_ep.set_description('{0} Reward : {1:.3f}'.format(ep, ep_reward))
 
           self.reset()
-          test_step.set_description('{0}/{1} Reward : {2:.3f}'.format(ep, step,
-                                                                      reward))
-        self.append_state(next_state)
-        writer.writeFrame(next_state)
+          next_state = env.reset()
 
-      writer.close()
+        self.append_state(next_state)
+
+    env.close()
