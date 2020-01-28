@@ -6,7 +6,7 @@ Reinforcement Learning &amp; other bedtime stories in PyTorch. This repository i
 * [Installation](#Installation)
   - [Conda](#snake-conda) or [Docker](#whale-docker)
 * [Sample usage](#tada-usage)
-  - [Cartpole-v0](#eyes-example)
+  - [Cartpole-v0](#eyes-example-cartpole)
 * [Dependencies (Conda only)](#two_men_holding_hands-dependencies)
   - [Vizdoom](#godmode-vizdoom), [ALE](#space_invader-arcade-learning-environment), [Baselines](#chart_with_upwards_trend-openai-rl-baselines)
 * [Architectures](#architectures) & [Agents](#agents)
