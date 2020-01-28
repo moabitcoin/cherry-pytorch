@@ -230,7 +230,7 @@ numpy==1.18.1 \
     --hash=sha256:e422c3152921cece8b6a2fb6b0b4d73b6579bd20ae075e7d15143e711f3ca2ca \
     --hash=sha256:e840f552a509e3380b0f0ec977e8124d0dc34dc0e68289ca28f4d7c1d0d79474 \
     --hash=sha256:f3d0a94ad151870978fb93538e95411c83899c9dc63e6fb65542f769568ecfa5 \
-    # via h5py, imageio, keras-applications, keras-preprocessing, matplotlib, opt-einsum, pywavelets, scikit-video, scipy, tensorboard, tensorflow-gpu, vizdoom
+    # via h5py, imageio, keras-applications, keras-preprocessing, matplotlib, opt-einsum, pybullet, pywavelets, scikit-video, scipy, tensorboard, tensorflow-gpu, vizdoom
 oauthlib==3.1.0 \
     --hash=sha256:bee41cc35fcca6e988463cacc3bcb8a96224f470ca547e697b604cc697b2f889 \
     --hash=sha256:df884cd6cbe20e32633f1db1072e9356f53638e4361bef4e8b03c9127c9328ea \
@@ -290,6 +290,15 @@ pyasn1==0.4.8 \
     --hash=sha256:39c7e2ec30515947ff4e87fb6f456dfc6e84857d34be479c9d4a4ba4bf46aa5d \
     --hash=sha256:aef77c9fb94a3ac588e87841208bdec464471d9871bd5050a287cc9a475cd0ba \
     # via pyasn1-modules, rsa
+pybullet==2.6.4 \
+    --hash=sha256:00a1179a2e80831e6a55c1085351a47bf39c08c246498441a63374dbfe0b6073 \
+    --hash=sha256:26b0361be51c348b6cb77c9ffae1a10d09e1632fe7a083b8609b8b077a2114d5 \
+    --hash=sha256:49cc8d244981ec85239cbd5d6acdc5fe745d40fbfb531a4b222a217f4ad393d0 \
+    --hash=sha256:5a0336b9b2a0f18291f4a905b02cdba528253b44b148749a2ee2d36b4de18634 \
+    --hash=sha256:5fa328b2ab2c3d0916785100d5452260ab2f61f4afd8f15c2986c61a0c36ab80 \
+    --hash=sha256:a1369ea9754f952dac55fe8287b25e416396f28187c28c67b1f8d76a3ecdc597 \
+    --hash=sha256:ac7379de1a38db556d3b0c985db1ca7f473fa84f72dca8d4cef0d8492a4883ff \
+    --hash=sha256:e61b04845665789e721342f464b759c9711b761866ebd94b6ad212e4061b4ed2
 pyparsing==2.4.6 \
     --hash=sha256:4c830582a84fb022400b85429791bc551f1f4871c33f23e44f353119e92f969f \
     --hash=sha256:c342dccb5250c08d45fd6f8b4a559613ca603b57498511740e65cd11a2e7dcec \
