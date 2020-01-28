@@ -104,12 +104,12 @@ class EnvironmenName():
 ```
 
 ## Reproducibility
-Training/testing is setup through `yaml` config files. Sample files located [here](https://github.com/moabitcoin/cherry-pytorch/blob/master/configs/control.yaml). During training config file & model weights are saved at `model_dest` and appended with [`commit-gitsha`](https://gist.github.com/masak/2415865) of the repo for traceability & reproducibility. F.ex
+Training/testing is setup through `yaml` config files. Sample files located [here](https://github.com/moabitcoin/cherry-pytorch/blob/master/configs/control.yaml). During training, the config file & model weights are saved at `model_dest` and appended with [`commit-gitsha`](https://gist.github.com/masak/2415865) of the repo for traceability & reproducibility. F.ex
 
 ```
 # <model_dest> from configs/control-ddpg.yaml
 ls <model_dest>
--rw-rw-r-- 1 harsimrat 71425 Jan 27 16:14 agent-000030000-10f1087d.pth
--rw-rw-r-- 1 harsimrat 71425 Jan 27 16:15 agent-final-10f1087d.pth
--rw-rw-r-- 1 harsimrat  1674 Jan 27 16:12 control-ddpg-10f1087d.yaml
+-rw-rw-r-- 1 moabit 71425 Jan 27 16:14 agent-000030000-10f1087d.pth
+-rw-rw-r-- 1 moabit 71425 Jan 27 16:15 agent-final-10f1087d.pth
+-rw-rw-r-- 1 moabit  1674 Jan 27 16:12 control-ddpg-10f1087d.yaml
 ```
