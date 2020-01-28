@@ -54,11 +54,15 @@ optional arguments:
 ```
 ### :eyes: Example
 ```
-# Training (Cartpole)
+# Train (Cartpole)
 cherry train -c configs/control.yaml -d cpu
-# Playing model at <model_dest> in configs/control.yaml
+```
+```
+# Play from <model_dest> in configs/control.yaml
 cherry play -c <model_dest>/control-<commit-gitsha>.yaml -d cpu -m <model_dest>/agent-final-<commit-gitsha>.pth
-# Visualising <state_dest> in configs/control.yaml
+```
+```Â
+# Visualise from <state_dest> in configs/control.yaml
 vlc <state_dest>
 ```
 
