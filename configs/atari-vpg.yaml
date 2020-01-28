@@ -38,7 +38,7 @@ agent:
   # frame shape full resolution frame would be resized to this size
   input_shape : [84, 84]
   # state size input_shape + [state_size] tensor as enviroment representation
-  state_size : 4
+  state_len : 4
   # action size
   action_size: 4
   # apply transforms to input state

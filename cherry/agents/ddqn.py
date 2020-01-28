@@ -38,11 +38,12 @@ class DDQN():
     self.min_eps = cfgs['min_eps']
     self.eps_decay = cfgs['eps_decay']
     self.replay_size = cfgs['replay_size']
-    self.state_size = cfgs['state_size']
+    self.state_len = cfgs['state_len']
     self.action_size = cfgs['action_size']
     self.input_transforms = cfgs['input_transforms']
     self.device = device
     self.eps = self.max_eps
+    self.state_size = [self.state_len] + self.input_shape
 
     assert self.input_shape is not None, 'Input shape has to be not None'
     assert self.action_size is not None, 'Action size has to non None'
@@ -54,13 +55,13 @@ class DDQN():
 
     self.transform = self.state_transformer()
 
-    self.policy = model(self.input_shape, self.state_size,
-                        self.action_size, self.device).to(self.device)
+    self.policy = model(self.state_size, self.action_size,
+                        self.device).to(self.device)
 
     self.policy.apply(self.policy.init_weights)
 
-    self.target = model(self.input_shape, self.state_size,
-                        self.action_size, self.device).to(self.device)
+    self.target = model(self.state_size, self.action_size,
+                        self.device).to(self.device)
 
     self.target.load_state_dict(self.policy.state_dict())
     self.target.eval()
@@ -69,9 +70,11 @@ class DDQN():
 
     self.optimizer = optimizer(self.policy.parameters(),
                                lr=self.lr, eps=1.5e-4)
-    self.replay = ReplayBuffer(self.replay_size,
-                               [self.state_size] + self.input_shape,
-                               self.device)
+    self.reset()
+    buffer_shape = list(self.get_state(complete=True).shape)[1:]
+
+    self.replay = ReplayBuffer(self.replay_size, buffer_shape,
+                               1, device=self.device)
     if model_file:
       self.load_model(model_file)
 
@@ -100,8 +103,8 @@ class DDQN():
     self.top_scr = 0.0
     self.flush_episode()
 
-    no_history = [self.zero_state for _ in range(self.state_size + 1)]
-    self.history = deque(no_history, maxlen=self.state_size + 1)
+    no_history = [self.zero_state for _ in range(self.state_len + 1)]
+    self.history = deque(no_history, maxlen=self.state_len + 1)
 
   def load_model(self, model_file):
 
@@ -163,7 +166,7 @@ class DDQN():
 
     states, action, reward, done = batch
 
-    state_batch = states[:, :self.state_size]
+    state_batch = states[:, :self.state_len]
     next_state_batch = states[:, 1:]
 
     # DDQN

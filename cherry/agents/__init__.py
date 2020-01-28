@@ -1,7 +1,7 @@
 from collections import OrderedDict
 
 from cherry.agents.models import ConvNetS, ConvNetM, ConvNetL, MLP, ReplayBuffer
-from cherry.agents.algorithms import DQN, DDQN, VPG
+from cherry.agents.algorithms import DQN, DDQN, VPG, DDPG
 from utils.helpers import get_logger
 
 logger = get_logger(__file__)
@@ -15,7 +15,8 @@ MODELS = OrderedDict({None: None,
 ALGOS = OrderedDict({None: None,
                      'dqn': DQN,
                      'ddqn': DDQN,
-                     'vpg': VPG})
+                     'vpg': VPG,
+                     'ddpg': DDPG})
 
 
 def get_model(model_type):
