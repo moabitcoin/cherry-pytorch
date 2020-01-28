@@ -28,9 +28,9 @@ pip install -e .
 ### :whale: Docker
 ```
 # CPU
-docker run moabitcoin/cherry-pytorch-cpu
+docker run moabitcoin/cherry-pytorch-cpu cherry --help
 # GPU
-docker run moabitcoin/cherry-pytorch-gpu
+docker run moabitcoin/cherry-pytorch-gpu cherry --help
 ```
 
 ### :whale: Docker (build from scratch)
@@ -45,7 +45,7 @@ make gpu dockerimage=moabitcoin/cherry-pytorch-gpu
 
 ## :tada: Usage
 ```
-# Inside the virtual environment or Docker
+# Inside the virtual environment / Docker
 cherry --help
 cherry train --help
 ```
