@@ -37,7 +37,7 @@ agent:
   # input shape
   input_shape : [4]
   # state size := [state_size] + [input_shape]
-  state_size: 1
+  state_len: 1
   # action_size
   action_size: 2
   # transform the input
