@@ -29,8 +29,10 @@ pip install -e .
 ### :whale: Docker
 ```
 # CPU
+docker pull moabitcoin/cherry-pytorch-cpu
 docker run moabitcoin/cherry-pytorch-cpu cherry --help
 # GPU
+docker pull moabitcoin/cherry-pytorch-gpu
 docker run moabitcoin/cherry-pytorch-gpu cherry --help
 ```
 
