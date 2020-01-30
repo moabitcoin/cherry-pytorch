@@ -105,12 +105,31 @@ class EnvironmenName():
 ```
 
 ## Reproducibility
+### Pseudorandom number gen
+Taking a cue out of [PyTorch](https://pytorch.org/docs/stable/notes/randomness.html#reproducibility) and our sanity we set the [`random`](https://pytorch.org/docs/stable/notes/randomness.html#numpy) seeds from `yaml` config files as follows. 
+```
+  env = make_atari(self.env_name)
+  self.env = wrap_deepmind(env)
+  self.env.seed(self.seed)
+  torch.manual_seed(self.seed)
+```
+If you are using random number generator from within numpy in your codes. Please do set the same random seed following the PyTorch [convention](https://pytorch.org/docs/stable/notes/randomness.html#numpy). 
+### Tracking code & models
 Training/testing is setup through `yaml` config files. Sample files located [here](https://github.com/moabitcoin/cherry-pytorch/blob/master/configs/control.yaml). During training, the config file & model weights are saved at `model_dest` and appended with [`commit-gitsha`](https://gist.github.com/masak/2415865) of the repo for traceability & reproducibility. F.ex
 
 ```
+# commit gitsha
+git log -n 1
+commit 478743d796b4c678470c5ff011bf2f09d5f53aa2 (HEAD -> master, origin/master, origin/HEAD)
+Author: Freja <xxx@yyy.com>
+Date:   Wed Jan 29 11:53:07 2020 +0100
+
+    readme update
+```
+```
 # <model_dest> from configs/control-ddpg.yaml
 ls <model_dest>
--rw-rw-r-- 1 moabit 71425 Jan 27 16:14 agent-000030000-10f1087d.pth
--rw-rw-r-- 1 moabit 71425 Jan 27 16:15 agent-final-10f1087d.pth
--rw-rw-r-- 1 moabit  1674 Jan 27 16:12 control-ddpg-10f1087d.yaml
+-rw-rw-r-- 1 moabit 71425 Jan 27 16:14 agent-000030000-478743.pth
+-rw-rw-r-- 1 moabit 71425 Jan 27 16:15 agent-final-478743.pth
+-rw-rw-r-- 1 moabit  1674 Jan 27 16:12 control-ddpg-478743.yaml
 ```
