@@ -115,21 +115,21 @@ Taking a cue out of [PyTorch](https://pytorch.org/docs/stable/notes/randomness.h
 ```
 If you are using random number generator from within numpy in your codes. Please do set the same random seed following the PyTorch [convention](https://pytorch.org/docs/stable/notes/randomness.html#numpy). 
 ### Tracking code & models
-Training/testing is setup through `yaml` config files. Sample files located [here](https://github.com/moabitcoin/cherry-pytorch/blob/master/configs/control.yaml). During training, the config file & model weights are saved at `model_dest` and appended with [`commit-gitsha`](https://gist.github.com/masak/2415865) of the repo for traceability & reproducibility. F.ex
+Training/testing is setup through `yaml` config files. Sample files located [here](https://github.com/moabitcoin/cherry-pytorch/blob/master/configs/control.yaml). During training, the config file & model weights are saved at `model_dest` and appended with [`commit-gitsha`](https://gist.github.com/masak/2415865) of the repo for traceability & reproducibility. We follow the PyTorch Hub's convention of using [first 8 chars](https://github.com/pytorch/pytorch/blob/master/torch/hub.py#L459) of commit gitsha as for tagging files & models. F.ex
 
 ```
 # commit gitsha
 git log -n 1
-commit 478743d796b4c678470c5ff011bf2f09d5f53aa2 (HEAD -> master, origin/master, origin/HEAD)
+commit c099dff57dac5dbd4bccce7cfb5f8e98c145ee2d (tag: v1.0)
 Author: Freja <xxx@yyy.com>
-Date:   Wed Jan 29 11:53:07 2020 +0100
+Date:   Tue Jan 28 14:26:03 2020 +0100
 
     readme update
 ```
 ```
 # <model_dest> from configs/control-ddpg.yaml
 ls <model_dest>
--rw-rw-r-- 1 moabit 71425 Jan 27 16:14 agent-000030000-478743.pth
--rw-rw-r-- 1 moabit 71425 Jan 27 16:15 agent-final-478743.pth
--rw-rw-r-- 1 moabit  1674 Jan 27 16:12 control-ddpg-478743.yaml
+-rw-rw-r-- 1 moabit 71425 Jan 27 16:14 agent-000030000-c099df.pth
+-rw-rw-r-- 1 moabit 71425 Jan 27 16:15 agent-final-c099df.pth
+-rw-rw-r-- 1 moabit  1674 Jan 27 16:12 control-ddpg-c099df.yaml
 ```
