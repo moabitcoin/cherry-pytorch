@@ -1,5 +1,9 @@
 from cherry.envs.atari import AtariEnvironment
-from cherry.envs.doom import DoomEnvironment
+try:
+  from cherry.envs.doom import DoomEnvironment
+except ImportError:
+  print('DoomEnvironment not installed')
+  DoomEnvironment = None
 from cherry.envs.classic_control import ClassicControlEnvironment
 from cherry.envs.pybullet_robotics import PyBulletRoboticsEnvironment
 from utils.helpers import get_logger
