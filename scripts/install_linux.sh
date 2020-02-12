@@ -12,7 +12,7 @@ echo "Installing openAI baseliens"
 wget https://github.com/openai/baselines/archive/9ee399f5b20cd70ac0a871927a6cf043b478193f.zip -O baselines.zip && \
     unzip baselines.zip && \
     cd baselines*/ && \
-    python3 -m pip install . && \
+    python -m pip install . && \
     cd ../ && \
     rm -rf baselines*
 
