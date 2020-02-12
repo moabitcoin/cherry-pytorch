@@ -62,3 +62,7 @@ class ClassicControlEnvironment():
   def close(self):
 
     self.env.close()
+
+  def render(self):
+
+    self.env.render()

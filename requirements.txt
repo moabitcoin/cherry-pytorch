@@ -6,11 +6,11 @@
 #
 absl-py==0.9.0 \
     --hash=sha256:75e737d6ce7723d9ff9b7aa1ba3233c34be62ef18d5859e706b8fdc828989830 \
-    # via tensorboard, tensorflow-gpu
+    # via tensorboard, tensorflow
 astor==0.8.1 \
     --hash=sha256:070a54e890cefb5b3739d19f30f5a5ec840ffc9c50ffa7d23cc9fc1a38ebbfc5 \
     --hash=sha256:6a6effda93f4e1ce9f618779b2dd1d9d84f1e32812c23a29b3fff6fd7f63fa5e \
-    # via tensorflow-gpu
+    # via tensorflow
 cachetools==4.0.0 \
     --hash=sha256:9a52dd97a85f257f4e4127f15818e71a0c7899f121b34591fcc1173ea79a0198 \
     --hash=sha256:b304586d357c43221856be51d73387f93e2a961598a9b6b6670664746f3b6c6c \
@@ -33,7 +33,7 @@ decorator==4.4.1 \
     # via networkx
 gast==0.2.2 \
     --hash=sha256:fe939df4583692f0512161ec1c880e0a10e71e6a232da045ab8edd3756fbadf0 \
-    # via tensorflow-gpu
+    # via tensorflow
 gitdb2==2.0.6 \
     --hash=sha256:1b6df1433567a51a4a9c1a5a0de977aa351a405cc56d7d35f3388bad1f630350 \
     --hash=sha256:96bbb507d765a7f51eb802554a9cfe194a174582f772e0d89f4e87288c288b7b \
@@ -53,7 +53,7 @@ google-pasta==0.1.8 \
     --hash=sha256:41bbe63bab92408452585ff2e1673ec1e35b88e163371cbed2a18510be4e8bc5 \
     --hash=sha256:644dcf3784cf7147ab01de5dc22e60a638d219d4e4a3a7464eb98997ae2fe66f \
     --hash=sha256:713813a9f7d6589e5defdaf21e80e4392eb124662f8bd829acd51a4f8735c0cb \
-    # via tensorflow-gpu
+    # via tensorflow
 grpcio==1.26.0 \
     --hash=sha256:066630f6b62bffa291dacbee56994279a6a3682b8a11967e9ccaf3cc770fc11e \
     --hash=sha256:07e95762ca6b18afbeb3aa2793e827c841152d5e507089b1db0b18304edda105 \
@@ -98,7 +98,7 @@ grpcio==1.26.0 \
     --hash=sha256:f6580a8a4f5e701289b45fd62a8f6cb5ec41e4d77082424f8b676806dcd22564 \
     --hash=sha256:f7b83e4b2842d44fce3cdc0d54db7a7e0d169a598751bf393601efaa401c83e0 \
     --hash=sha256:ffec45b0db18a555fdfe0c6fa2d0a3fceb751b22b31e8fcd14ceed7bde05481e \
-    # via tensorboard, tensorflow-gpu
+    # via tensorboard, tensorflow
 h5py==2.10.0 \
     --hash=sha256:063947eaed5f271679ed4ffa36bb96f57bc14f44dd4336a827d9a02702e6ce6b \
     --hash=sha256:13c87efa24768a5e24e360a40e0bc4c49bcb7ce1bb13a3a7f9902cec302ccd36 \
@@ -141,11 +141,11 @@ imageio==2.6.1 \
 keras-applications==1.0.8 \
     --hash=sha256:5579f9a12bcde9748f4a12233925a59b93b73ae6947409ff34aa2ba258189fe5 \
     --hash=sha256:df4323692b8c1174af821bf906f1e442e63fa7589bf0f1230a0b6bdc5a810c95 \
-    # via tensorflow-gpu
+    # via tensorflow
 keras-preprocessing==1.1.0 \
     --hash=sha256:44aee5f2c4d80c3b29f208359fcb336df80f293a0bb6b1c738da43ca206656fb \
     --hash=sha256:5a8debe01d840de93d49e05ccf1c9b81ae30e210d34dacbcc47aeb3049b528e5 \
-    # via tensorflow-gpu
+    # via tensorflow
 kiwisolver==1.1.0 \
     --hash=sha256:05b5b061e09f60f56244adc885c4a7867da25ca387376b02c1efc29cc16bcd0f \
     --hash=sha256:210d8c39d01758d76c2b9a693567e1657ec661229bc32eac30761fa79b2474b0 \
@@ -230,14 +230,14 @@ numpy==1.18.1 \
     --hash=sha256:e422c3152921cece8b6a2fb6b0b4d73b6579bd20ae075e7d15143e711f3ca2ca \
     --hash=sha256:e840f552a509e3380b0f0ec977e8124d0dc34dc0e68289ca28f4d7c1d0d79474 \
     --hash=sha256:f3d0a94ad151870978fb93538e95411c83899c9dc63e6fb65542f769568ecfa5 \
-    # via h5py, imageio, keras-applications, keras-preprocessing, matplotlib, opt-einsum, pybullet, pywavelets, scikit-video, scipy, tensorboard, tensorflow-gpu, vizdoom
+    # via h5py, imageio, keras-applications, keras-preprocessing, matplotlib, opt-einsum, pybullet, pywavelets, scikit-video, scipy, tensorboard, tensorflow, vizdoom
 oauthlib==3.1.0 \
     --hash=sha256:bee41cc35fcca6e988463cacc3bcb8a96224f470ca547e697b604cc697b2f889 \
     --hash=sha256:df884cd6cbe20e32633f1db1072e9356f53638e4361bef4e8b03c9127c9328ea \
     # via requests-oauthlib
 opt-einsum==3.1.0 \
     --hash=sha256:edfada4b1d0b3b782ace8bc14e80618ff629abf53143e1e6bbf9bd00b11ece77 \
-    # via tensorflow-gpu
+    # via tensorflow
 pillow==7.0.0 \
     --hash=sha256:0a628977ac2e01ca96aaae247ec2bd38e729631ddf2221b4b715446fd45505be \
     --hash=sha256:4d9ed9a64095e031435af120d3c910148067087541131e82b3e8db302f4c8946 \
@@ -281,7 +281,7 @@ protobuf==3.11.2 \
     --hash=sha256:bc45641cbcdea068b67438244c926f9fd3e5cbdd824448a4a64370610df7c593 \
     --hash=sha256:d61b14a9090da77fe87e38ba4c6c43d3533dcbeb5d84f5474e7ac63c532dcc9c \
     --hash=sha256:d6faf5dbefb593e127463f58076b62fcfe0784187be8fe1aa9167388f24a22a1 \
-    # via tensorboard, tensorflow-gpu
+    # via tensorboard, tensorflow
 pyasn1-modules==0.2.8 \
     --hash=sha256:905f84c712230b2c592c19470d3ca8d552de726050d1d1716282a1f6146be65e \
     --hash=sha256:a50b808ffeb97cb3601dd25981f6b016cbb3d31fbf57a8b8a87428e6158d0c74 \
@@ -395,11 +395,11 @@ scipy==1.4.1 \
     --hash=sha256:dba8306f6da99e37ea08c08fef6e274b5bf8567bb094d1dbe86a20e532aca088 \
     --hash=sha256:dc60bb302f48acf6da8ca4444cfa17d52c63c5415302a9ee77b3b21618090521 \
     --hash=sha256:dee1bbf3a6c8f73b6b218cb28eed8dd13347ea2f87d572ce19b289d6fd3fbc59 \
-    # via scikit-image, scikit-video, tensorflow-gpu
+    # via scikit-image, scikit-video, tensorflow
 six==1.13.0 \
     --hash=sha256:1f1b7d42e254082a9db6279deae68afb421ceba6158efa6131de7b3003ee93fd \
     --hash=sha256:30f610279e8b2578cab6db20741130331735c781b56053c59c4076da27f06b66 \
-    # via absl-py, cycler, google-auth, google-pasta, grpcio, h5py, keras-preprocessing, protobuf, python-dateutil, tensorboard, tensorflow-gpu
+    # via absl-py, cycler, google-auth, google-pasta, grpcio, h5py, keras-preprocessing, protobuf, python-dateutil, tensorboard, tensorflow
 smmap2==2.0.5 \
     --hash=sha256:0555a7bf4df71d1ef4218e4807bbf9b201f910174e6e08af2e138d4e517b4dde \
     --hash=sha256:29a9ffa0497e7f2be94ca0ed1ca1aa3cd4cf25a1f6b4f5f87f74b46ed91d609a \
@@ -407,21 +407,25 @@ smmap2==2.0.5 \
 tensorboard==2.1.0 \
     --hash=sha256:1c80eb17c9d4f2609ed11b9446f8168973f5bb7789a97e56e766a89e062a00b9 \
     --hash=sha256:e6e64ec1e1500cc963b300895258f9605032c3a18bb40f95f2b3b12be16ff2f2 \
-    # via tensorflow-gpu
+    # via tensorflow
 tensorflow-estimator==2.1.0 \
     --hash=sha256:e5c5f648a636f18d1be4cf7ed46132b108a2f0f3fd9f1c850eba924263dc6972 \
-    # via tensorflow-gpu
-tensorflow-gpu==2.1.0 \
-    --hash=sha256:1e3e407b310e615bc63afc34b64157895a64181e1aebf9013f265f56fba04b79 \
-    --hash=sha256:5e7f1d9e419496bd8a75c53f011754f53a19dde77fe4f83875f536046c404027 \
-    --hash=sha256:70630aab93e9280d66b1fd6c48b7b1f1fcabfaadcf5a1373c0b5c6d1b50d0f91 \
-    --hash=sha256:abbaeb2f17b0774ff75704d5b2450f18b49b0b547ad87418329ae6b64f86969e \
-    --hash=sha256:d148aec22687e53f59e86e70563cbc7d62021db40a05332865f9262315b93e60 \
-    --hash=sha256:ec0381359f68d20cbd55be7f533d8f353aa0e93057ee12c2d8892e49010217b7 \
-    --hash=sha256:f87bf18b79d82d95e47100a7f951792578e1a359cd976c477077c0485489b72a
+    # via tensorflow
+tensorflow==2.1.0 \
+    --hash=sha256:1cf129ccda0aea616b122f34b0c4bc39da959d34c4a4d8c23ed944555c5e47ab \
+    --hash=sha256:2e8fc9764b7ea87687a4c80c2fbde69aeeb459a536eb5a591938d7931ab004c2 \
+    --hash=sha256:33e4b16e8f8905ee088bf8f413dcce2820b777fdf7f799009b3a47f354ebb23f \
+    --hash=sha256:513d48dd751e0076d1b1e5e498e3522891305bedd2840f3cb4b1c57ffcb7d97d \
+    --hash=sha256:5cfa729fc71f6f2dca0ea77ebe768ea293e723e22ecb086a0b3ab26cc1776e37 \
+    --hash=sha256:7bad8ea686a1f33d9dac13eb578c4597346789d4f826980c8bbcfbd08e7dc921 \
+    --hash=sha256:8c0fae0f9f772ed7e3370f1b286f88c27debbcf09468e5036670ea2c67e239ec \
+    --hash=sha256:92c4f1c939de438fbe484d011e5eebe059fc8e5244cfe32a81c6891b3357d109 \
+    --hash=sha256:c420e70d4127c2ac00054aece54cf04a1a43d5d4f25de90267f247873f1bd5a8 \
+    --hash=sha256:e631f55cf30054fee3230c89a7f998fd08748aa3045651a5a760cec2c5b9f9d6 \
+    --hash=sha256:e877fbf373d5be42fb118269df1670b8d3c0df9be223904a2584a8f8ed23b082
 termcolor==1.1.0 \
     --hash=sha256:1d6d69ce66211143803fbc56652b41d73b4a400a2891d7bf7a1cdf4c02de613b \
-    # via tensorflow-gpu
+    # via tensorflow
 tqdm==4.41.1 \
     --hash=sha256:4789ccbb6fc122b5a6a85d512e4e41fc5acad77216533a6f2b8ce51e0f265c23 \
     --hash=sha256:efab950cf7cc1e4d8ee50b2bb9c8e4a89f8307b49e0b2c9cfef3ec4ca26655eb
@@ -438,10 +442,10 @@ werkzeug==0.16.0 \
 wheel==0.33.6 \
     --hash=sha256:10c9da68765315ed98850f8e048347c3eb06dd81822dc2ab1d4fde9dc9702646 \
     --hash=sha256:f4da1763d3becf2e2cd92a14a7c920f0f00eca30fdde9ea992c836685b9faf28 \
-    # via tensorboard, tensorflow-gpu
+    # via tensorboard, tensorflow
 wrapt==1.11.2 \
     --hash=sha256:565a021fd19419476b9362b05eeaa094178de64f8361e44468f9e9d7843901e1 \
-    # via tensorflow-gpu
+    # via tensorflow
 
 # WARNING: The following packages were not pinned, but pip requires them to be
 # pinned when the requirements file includes hashes. Consider using the --allow-unsafe flag.

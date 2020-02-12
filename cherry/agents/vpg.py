@@ -272,6 +272,8 @@ class VPG():
 
       for step in train_step:
 
+        env.render()
+
         state = self.get_state()
         action = self.get_action(state)
         next_state, reward, done, info = env.step(action)

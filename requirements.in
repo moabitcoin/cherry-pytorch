@@ -3,6 +3,6 @@ pybullet
 pyyaml
 scikit-image
 scikit-video
-tensorflow_gpu
+tensorflow
 tqdm
 vizdoom
