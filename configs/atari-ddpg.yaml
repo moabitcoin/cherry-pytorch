@@ -1,0 +1,68 @@
+# Environment config (Do not use with Discrete action space )
+env:
+  type: 'atari'
+  #
+  name : 'BreakoutNoFrameskip-v4'
+  # seed
+  seed: 543
+  # solution rewards
+  env_solution: 100
+
+# Agent config
+agent:
+  # type of agent
+  agent_type: 'ddpg'
+  # model type
+  model_type: 'convnet-small'
+  # Learning rate for the actor network
+  actor_lr : 0.001
+  # Learning rate for the critic network
+  critic_lr : 0.0001
+  # optimizer name
+  opt_name: 'adam'
+  # Bellman equation reward discount
+  gamma : 0.99
+  # weighted averaging target :=  w * source + (1-tau) * target
+  tau: 0.001
+  # replay buffer size:
+  replay_size: 1000000
+  # stacked input state length
+  state_len : 4
+  # state_size :=  state_len + [input_shape]
+  input_shape: [84, 84]
+  # action_size
+  action_size: 4
+  # transform the input
+  input_transforms: ['resize']
+  # init_weights:
+  init_weights: true
+  # contious control
+  continous: false
+  # norm of gradient clipping, leave empty for no clipping
+  grad_clip:
+
+train:
+  # Number of training episodes
+  n_train_episodes : 10000
+  # Max steps in each episode
+  max_steps : 10000
+  # Exploration time steps
+  n_exploration_steps: 100000
+  # batch size for ddpg
+  batch_size: 64
+  # model location
+  model_dest: /data/experiments/agent-of-control/28-01-2020-breakout-ddpg
+  # save model every save_model steps
+  save_model: 10000
+  # update target every update_target episodes
+  update_target: 4
+  # policy update
+  policy_update: 4
+
+test:
+  # Number of testing episodes
+  n_test_episodes : 5
+  # Max steps in each episode
+  max_steps : 1000
+  # path where to save played video
+  state_dest: /data/experiments/agent-of-control/28-01-2020-breakout-ddpg/states
