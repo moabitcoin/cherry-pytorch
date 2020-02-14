@@ -18,6 +18,11 @@ def reset_env(env):
   return env.reset()
 
 
+def render_env(env):
+
+  return env.render()
+
+
 class FrozenLakeAgent():
 
   def __init__(self, n_state, n_action,
@@ -113,7 +118,7 @@ class FrozenLakeAgent():
 
 
 def solve_frozen_lake(n_train_episodes, max_steps, n_test_episodes=1,
-                      show=False, play=False):
+                      show=False, play=False, render=False):
 
   env = gym.make("FrozenLake-v0")
 
@@ -133,6 +138,9 @@ def solve_frozen_lake(n_train_episodes, max_steps, n_test_episodes=1,
     agent.set_state(state)
 
     for step in range(max_steps):
+
+      if render:
+        render_env(env)
 
       action = agent.get_action()
 
@@ -193,6 +201,8 @@ if __name__ == '__main__':
                       help='Play with the trained agent')
   parser.add_argument('-t', dest='n_test_episodes', type=int,
                       help='Number of test episodes', default=100)
+  parser.add_argument('-r', dest='render', action='store_true',
+                      help='Render visualisation', default=False)
   args = parser.parse_args()
 
   solve_frozen_lake(args.n_train_episodes, args.max_steps,

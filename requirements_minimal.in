@@ -1,4 +1,5 @@
 GitPython
+prettytable
 pybullet
 pyyaml
 scikit-image
