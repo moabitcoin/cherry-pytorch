@@ -3,6 +3,9 @@
 ```
 conda create -n cherry python=3.6
 conda activate cherry
-scripts/install.sh
+# Linux
+scripts/install_linux.sh
+# MacOS
+scripts/install_macos.sh
 pip install -e .
 ```

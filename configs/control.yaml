@@ -49,7 +49,7 @@ train:
   # Max steps in each episode
   max_steps : 1000
   # model location
-  model_dest: /data/experiments/agent-of-control/02-12-2020-CartPole-v0-vpg-gae
+  model_dest: ./02-12-2020-CartPole-v0-vpg
   # save model every save_model steps
   save_model: 20
 
@@ -59,4 +59,4 @@ test:
   # Max steps in each episode
   max_steps : 1000
   # path where to save played video
-  state_dest: /data/experiments/agent-of-control/02-12-2020-CartPole-v0-vpg-gae/states
+  state_dest: ./02-12-2020-CartPole-v0-vpg/states
