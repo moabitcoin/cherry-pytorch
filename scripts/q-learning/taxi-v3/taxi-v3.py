@@ -18,6 +18,11 @@ def reset_env(env):
   return env.reset()
 
 
+def render_env(env):
+
+  env.render(mode='human')
+
+
 class TaxiV3Agent():
 
   def __init__(self, n_state, n_action,
@@ -75,14 +80,12 @@ class TaxiV3Agent():
     if deterministic:
       return np.argmax(self.q_table[self.state, :])
 
-    if random.random() < self.eps:
-      return random.sample(range(self.n_action), 1)[0]
-    else:
+    if random.random() > self.eps:
       return np.argmax(self.q_table[self.state, :])
+    else:
+      return random.sample(range(self.n_action), 1)[0]
 
-  def update_qtable(self, action, next_state):
-
-    reward = self.rewards[-1]
+  def update_qtable(self, reward, action, next_state):
 
     target = reward + self.gamma * np.max(self.q_table[next_state, :])
     value = self.q_table[self.state, action]
@@ -112,7 +115,7 @@ class TaxiV3Agent():
 
 
 def solve_taxi(n_train_episodes, max_steps, n_test_episodes=1,
-               show=False, play=False):
+               show=False, play=False, render=False):
 
   env = gym.make("Taxi-v3")
 
@@ -120,7 +123,7 @@ def solve_taxi(n_train_episodes, max_steps, n_test_episodes=1,
   n_action = env.action_space.n
 
   agent = TaxiV3Agent(n_state, n_action, max_eps=1.0, min_eps=0.01,
-                      eps_decay=0.005, lr=0.7, gamma=0.65)
+                      eps_decay=0.001, lr=0.7, gamma=0.65)
 
   logger.info('Taxi-V3 Agent setup')
   logger.info('{}'.format(agent))
@@ -135,11 +138,8 @@ def solve_taxi(n_train_episodes, max_steps, n_test_episodes=1,
     for step in range(max_steps):
 
       action = agent.get_action()
-
       next_state, reward, done, info = env.step(action)
-
-      agent.update_reward(reward)
-      agent.update_qtable(action, next_state)
+      agent.update_qtable(reward, action, next_state)
 
       agent.set_state(next_state)
 
@@ -165,6 +165,9 @@ def solve_taxi(n_train_episodes, max_steps, n_test_episodes=1,
       state = env.reset()
       agent.set_state(state)
 
+      if render:
+        render_env(env)
+
       for step in range(max_steps):
 
         action = agent.get_action(deterministic=True)
@@ -173,6 +176,9 @@ def solve_taxi(n_train_episodes, max_steps, n_test_episodes=1,
 
         agent.update_reward(reward)
         agent.set_state(next_state)
+
+        if render:
+          render_env(env)
 
         if done:
           episode_rewards.append(np.sum(agent.rewards))
@@ -185,7 +191,7 @@ if __name__ == '__main__':
 
   parser = argparse.ArgumentParser('Taxi-V3 OpenAI GYM')
   parser.add_argument('-n', dest='n_train_episodes', type=int,
-                      help='Number of episodes', default=50000)
+                      help='Number of episodes', default=10000)
   parser.add_argument('-s', dest='max_steps', type=int,
                       help='Max steps per episode', default=99)
   parser.add_argument('-q', dest='show', action='store_true', default=False,
@@ -193,10 +199,12 @@ if __name__ == '__main__':
   parser.add_argument('-p', dest='play', action='store_true', default=False,
                       help='Play with the trained agent')
   parser.add_argument('-t', dest='n_test_episodes', type=int,
-                      help='Number of test episodes', default=100)
+                      help='Number of test episodes', default=1)
+  parser.add_argument('-r', dest='render', action='store_true',
+                      help='Render visualisation', default=False)
 
   args = parser.parse_args()
 
   solve_taxi(args.n_train_episodes, args.max_steps,
              n_test_episodes=args.n_test_episodes,
-             show=args.show, play=args.play)
+             show=args.show, play=args.play, render=args.render)
