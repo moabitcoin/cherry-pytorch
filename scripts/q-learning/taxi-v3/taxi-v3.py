@@ -199,7 +199,7 @@ if __name__ == '__main__':
   parser.add_argument('-p', dest='play', action='store_true', default=False,
                       help='Play with the trained agent')
   parser.add_argument('-t', dest='n_test_episodes', type=int,
-                      help='Number of test episodes', default=1)
+                      help='Number of test episodes', default=2)
   parser.add_argument('-r', dest='render', action='store_true',
                       help='Render visualisation', default=False)
 
