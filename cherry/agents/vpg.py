@@ -310,7 +310,7 @@ class VPG():
     tag = 'final-{0}'.format(gitsha)
     write_model(self.policy, tag, model_dest)
 
-  def play(self, env, test_cfgs, gitsha):
+  def play(self, env, test_cfgs, gitsha, render):
 
     self.eval()
 
@@ -326,16 +326,10 @@ class VPG():
 
     for ep in test_ep:
 
-      vid_file = vid_dst.joinpath('episode-{1:03d}-{0}.mp4'.format(gitsha, ep))
-
-      writer = vid_writer(vid_file.as_posix(), outputdict={'-vcodec': 'h264',
-                                                           '-b': '300000000'})
-
       self.reset()
       state = env.reset()
 
       self.set_state(state)
-      writer.writeFrame(state)
 
       test_step = tqdm.tqdm(range(max_steps), ascii=True, unit='stp')
 
@@ -357,6 +351,5 @@ class VPG():
           test_step.set_description('{0}/{1} Reward : {2:.3f}'.format(ep, step,
                                                                       reward))
         self.append_state(next_state)
-        writer.writeFrame(next_state)
 
       writer.close()
