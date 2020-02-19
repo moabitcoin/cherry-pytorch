@@ -241,7 +241,7 @@ class DDPG():
     self.env_lo = torch.Tensor(limits[0]).to(self.device)
     self.env_hi = torch.Tensor(limits[1]).to(self.device)
 
-  def train(self, env, train_cfgs, gitsha, model_dest):
+  def train(self, env, train_cfgs, gitsha, model_dest, render):
 
     batch_size = train_cfgs['batch_size']
     update_target = train_cfgs['update_target']
@@ -319,7 +319,7 @@ class DDPG():
     tag = 'final-{0}'.format(gitsha)
     write_model(self.actor, tag, model_dest)
 
-  def play(self, env, test_cfgs, gitsha):
+  def play(self, env, test_cfgs, gitsha, render):
 
     self.eval()
 

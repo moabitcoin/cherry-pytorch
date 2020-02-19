@@ -1,0 +1,62 @@
+# Environment config
+env:
+  type: 'classic_control'
+  # Classic control env name
+  name : 'MountainCar-v0'
+  # seed
+  seed: 543
+  # solution rewards
+  env_solution: 195
+
+# Agent config
+agent:
+  # type of agent
+  agent_type: 'vpg'
+  # model type
+  model_type: 'mlp'
+  # Learning rate for the policy network
+  policy_lr : 0.01
+  # Learning rate for the agent network
+  value_lr : 0.001
+  # optimizer name
+  opt_name: 'adam'
+  # norm of gradient clipping, leave empty for no clipping
+  grad_clip:
+  # Bellman equation reward discount
+  gamma : 0.99
+  # Estimated GAE with TD(lambda)
+  lambda: 0.97
+  # vpg scaling:
+  vpg_scaling: 1.0
+  # value loss scaling
+  value_scaling: 1.0
+  # entropy loss scaling
+  entropy_scaling: 0.005
+  # normalize rewards:
+  reward_norm: true
+  # input shape
+  input_shape : [2]
+  # state size := [state_size] + [input_shape]
+  state_len: 1
+  # action_size
+  action_size: 3
+  # transform the input
+  input_transforms:
+
+train:
+  # Number of training episodes
+  n_train_episodes : 100
+  # Max steps in each episode
+  max_steps : 1000
+  # model location
+  model_dest: ./02-19-2020-MountainCar-v0-vpg
+  # save model every save_model steps
+  save_model: 20
+
+test:
+  # Number of testing episodes
+  n_test_episodes : 5
+  # Max steps in each episode
+  max_steps : 1000
+  # path where to save played video
+  state_dest: ./02-19-2020-MountainCar-v0-vpg/states

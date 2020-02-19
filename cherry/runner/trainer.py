@@ -22,6 +22,8 @@ class Trainer:
                         help='Path to Config file', required=True)
     parser.add_argument('-d', dest='device', choices=['gpu', 'cpu'],
                         help='Device to run the train/test', default='gpu')
+    parser.add_argument('-r', dest='render', action='store_true',
+                        help='Render states and episodes', default=False)
     parser.set_defaults(main=self._run)
 
     parser = add_verbosity_parser(parser)
@@ -31,6 +33,7 @@ class Trainer:
     log_level = args.log
     device = args.device
     config_file = args.config_file
+    render = args.render
 
     logger = get_logger(__file__, log_level=log_level)
 
@@ -75,4 +78,4 @@ class Trainer:
     assert env.action_size == agent.action_size, "Env ≠ Agent {} ≠ {} action' \
         ' size should match".format(env.action_size, agent.action_size)
 
-    agent.train(env, train_cfgs, gitsha, model_dest)
+    agent.train(env, train_cfgs, gitsha, model_dest, render)

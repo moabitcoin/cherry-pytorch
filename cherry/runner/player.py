@@ -22,6 +22,8 @@ class Player:
                         help='Model to test with', required=True)
     parser.add_argument('-d', dest='device', choices=['gpu', 'cpu'],
                         help='Device to run the train/test', default='gpu')
+    parser.add_argument('-r', dest='render', action='store_true',
+                        help='Render states and episodes', default=False)
     parser.set_defaults(main=self._run)
 
     parser = add_verbosity_parser(parser)
@@ -32,6 +34,7 @@ class Player:
     device = args.device
     model_file = args.model_file
     config_file = args.config_file
+    render = args.reder
 
     logger = get_logger(__file__, log_level=log_level)
 
@@ -66,4 +69,4 @@ class Player:
     assert env.action_size == agent.action_size, "Env ≠ Agent {} ≠ {} action' \
         ' size should match".format(env.action_size, agent.action_size)
 
-    agent.play(env, test_cfgs, gitsha)
+    agent.play(env, test_cfgs, gitsha, render)

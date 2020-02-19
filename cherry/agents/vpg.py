@@ -251,7 +251,7 @@ class VPG():
 
     return loss.detach().cpu().numpy()
 
-  def train(self, env, train_cfgs, gitsha, model_dest):
+  def train(self, env, train_cfgs, gitsha, model_dest, render):
 
     save_model = train_cfgs['save_model']
     train_eps = train_cfgs['n_train_episodes']
@@ -272,7 +272,8 @@ class VPG():
 
       for step in train_step:
 
-        env.render()
+        if render:
+          env.render()
 
         state = self.get_state()
         action = self.get_action(state)
@@ -339,6 +340,9 @@ class VPG():
       test_step = tqdm.tqdm(range(max_steps), ascii=True, unit='stp')
 
       for step in test_step:
+
+        if render:
+          env.render()
 
         state = self.get_state()
         action = self.get_action(state)

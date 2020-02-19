@@ -207,7 +207,7 @@ class DDQN():
 
     self.top_scr = total_score if self.top_scr < total_score else self.top_scr
 
-  def train(self, env, train_cfgs, gitsha, model_dest):
+  def train(self, env, train_cfgs, gitsha, model_dest, render):
 
     batch_size = train_cfgs['batch_size']
     update_target = train_cfgs['update_target']
@@ -271,7 +271,7 @@ class DDQN():
     tag = 'final-{0}'.format(gitsha)
     write_model(self.policy, tag, model_dest)
 
-  def play(self, env, test_cfgs, gitsha):
+  def play(self, env, test_cfgs, gitsha, render):
 
     self.eval()
 
