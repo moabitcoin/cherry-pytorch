@@ -14,3 +14,4 @@ wget https://github.com/openai/baselines/archive/9ee399f5b20cd70ac0a871927a6cf04
 
 echo "Reinstalling Pillow"
 pip install Pillow==6.2.1
+pip install -e .

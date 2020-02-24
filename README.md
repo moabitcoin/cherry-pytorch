@@ -4,7 +4,7 @@ Reinforcement Learning &amp; other bedtime stories in PyTorch. This repository i
 
 # Table of Contents
 * [Installation](#computer-installation)
-  - [Conda](#snake-conda) or [Docker](#whale-docker)
+  - [Linux](#penguin-linux)/[macOS](#green_apple-macos) or [Docker](#whale-docker)
 * [Sample usage](#tada-usage)
   - [Cartpole-v0](#eyes-example-cartpole)
 * [Dependencies (Conda only)](#two_men_holding_hands-dependencies)
@@ -16,15 +16,17 @@ Reinforcement Learning &amp; other bedtime stories in PyTorch. This repository i
 
 ## :computer: Installation
 ```
-Tested with ubuntu:18.04 only
+Tested with ubuntu:18.04/macOS-Mojave:10.14.6
 ```
-### :snake: Conda
+
+### :penguin: Linux
 ```
-# After installed external dependencies
-conda create -n cherry python=3.6
-conda activate cherry
-pip install -r requirements_minimal.txt
-pip install -e .
+make linux
+```
+
+### :green_apple: MacOS
+```
+make mac
 ```
 
 ### :whale: Docker

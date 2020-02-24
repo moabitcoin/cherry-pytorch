@@ -47,5 +47,14 @@ publish:
 
 p: publish
 
+l: linux
 
-.PHONY: install i run r update u gpu g publish p
+linux:
+	bash scripts/install_linux.sh
+
+m: mac
+mac:
+	scripts/install_macos.sh
+
+
+.PHONY: install i run r update u gpu g publish p l linux m mac
