@@ -351,5 +351,3 @@ class VPG():
           test_step.set_description('{0}/{1} Reward : {2:.3f}'.format(ep, step,
                                                                       reward))
         self.append_state(next_state)
-
-      writer.close()

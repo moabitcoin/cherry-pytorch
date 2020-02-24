@@ -11,7 +11,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-ins
     libopenmpi-dev libosmesa6-dev libgl1-mesa-glx libglfw3 && \
     rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+COPY requirements_minimal.txt .
 
 RUN python3 -m venv /opt/venv && \
     python3 -m pip install pip==19.3.1 pip-tools==4.2.0 setuptools==44.0.0
@@ -21,7 +21,7 @@ RUN echo "https://download.pytorch.org/whl/cu100/torch-1.3.0%2Bcu100-cp36-cp36m-
           \n                                                                                            \
           https://download.pytorch.org/whl/cu100/torchvision-0.4.1%2Bcu100-cp36-cp36m-linux_x86_64.whl  \
           --hash=sha256:6a90d52d88dd2e4bc411b1d6b9bf89521b8727228318bf91832f3961c854622c                \
-          \n" >> requirements.txt
+          \n" >> requirements_minimal.txt
 
 RUN python3 -m piptools sync
 

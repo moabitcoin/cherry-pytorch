@@ -11,7 +11,7 @@ env:
 # Agent config
 agent:
   # type of agent
-  agent_type: 'vpg'
+  agent_type: 'dqn'
   # model type
   model_type: 'mlp'
   # Learning rate for the policy network
@@ -33,7 +33,7 @@ agent:
   # entropy loss scaling
   entropy_scaling: 0.005
   # normalize rewards:
-  reward_norm: true
+  reward_norm: false
   # input shape
   input_shape : [2]
   # state size := [state_size] + [input_shape]
@@ -45,7 +45,7 @@ agent:
 
 train:
   # Number of training episodes
-  n_train_episodes : 100
+  n_train_episodes : 60000
   # Max steps in each episode
   max_steps : 1000
   # model location

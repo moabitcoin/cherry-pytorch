@@ -23,7 +23,7 @@ Tested with ubuntu:18.04 only
 # After installed external dependencies
 conda create -n cherry python=3.6
 conda activate cherry
-pip install -r requirements.txt
+pip install -r requirements_minimal.txt
 pip install -e .
 ```
 ### :whale: Docker
