@@ -26,17 +26,8 @@ conda activate cherry
 pip install -r requirements_minimal.txt
 pip install -e .
 ```
-### :whale: Docker
-```
-# CPU
-docker pull moabitcoin/cherry-pytorch-cpu
-docker run moabitcoin/cherry-pytorch-cpu cherry --help
-# GPU
-docker pull moabitcoin/cherry-pytorch-gpu
-docker run moabitcoin/cherry-pytorch-gpu cherry --help
-```
 
-### :whale: Docker (build from scratch)
+### :whale: Docker
 ```
 # CPU
 make install dockerfile=Dockerfile.cpu dockerimage=moabitcoin/cherry-pytorch-cpu

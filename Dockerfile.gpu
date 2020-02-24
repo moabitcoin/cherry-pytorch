@@ -23,7 +23,7 @@ RUN echo "https://download.pytorch.org/whl/cu100/torch-1.3.0%2Bcu100-cp36-cp36m-
           --hash=sha256:6a90d52d88dd2e4bc411b1d6b9bf89521b8727228318bf91832f3961c854622c                \
           \n" >> requirements_minimal.txt
 
-RUN python3 -m piptools sync
+RUN python3 -m piptools sync requirements_minimal.txt
 
 RUN wget https://github.com/openai/baselines/archive/9ee399f5b20cd70ac0a871927a6cf043b478193f.zip -O baselines.zip && \
     unzip baselines.zip && \
