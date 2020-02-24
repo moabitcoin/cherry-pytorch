@@ -1,5 +1,8 @@
 echo "Creating conde environment"
+echo conda create -n cherry python=3.6
 conda create -n cherry python=3.6
+eval "$(conda shell.bash hook)"
+echo conda activate cherry
 conda activate cherry
 
 echo "Installing python packages"

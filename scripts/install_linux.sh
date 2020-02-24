@@ -1,5 +1,8 @@
 echo "Creating conde environment"
+echo conda create -n cherry python=3.6
 conda create -n cherry python=3.6
+eval "$(conda shell.bash hook)"
+echo conda activate cherry
 conda activate cherry
 
 echo "https://download.pytorch.org/whl/cpu/torch-1.3.0%2Bcpu-cp36-cp36m-linux_x86_64.whl        \

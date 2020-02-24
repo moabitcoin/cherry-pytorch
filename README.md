@@ -21,12 +21,12 @@ Tested with ubuntu:18.04/macOS-Mojave:10.14.6
 
 ### :penguin: Linux
 ```
-make linux
+source scripts/install_linux.sh
 ```
 
 ### :green_apple: MacOS
 ```
-make mac
+source scripts/install_macos.sh
 ```
 
 ### :whale: Docker

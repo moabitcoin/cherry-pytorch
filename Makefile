@@ -47,14 +47,14 @@ publish:
 
 p: publish
 
-l: linux
-
 linux:
 	bash scripts/install_linux.sh
 
-m: mac
-mac:
-	bash scripts/install_macos.sh
+l: linux
 
+mac:
+	bash sripts/install_macos.sh
+
+m: mac
 
 .PHONY: install i run r update u gpu g publish p l linux m mac
