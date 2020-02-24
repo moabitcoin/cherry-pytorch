@@ -1,3 +1,7 @@
+echo "Creating conde environment"
+conda create -n cherry python=3.6
+conda activate cherry
+
 echo "Installing python packages"
 pip install -r requirements_minimal.txt
 

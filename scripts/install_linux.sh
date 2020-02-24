@@ -1,3 +1,7 @@
+echo "Creating conde environment"
+conda create -n cherry python=3.6
+conda activate cherry
+
 echo "https://download.pytorch.org/whl/cpu/torch-1.3.0%2Bcpu-cp36-cp36m-linux_x86_64.whl        \
           --hash=sha256:ce648bb0c6b86dd99a8b5598ae6362a066cca8de69ad089cd206ace3bdec0a5f            \
           \n                                                                                        \
