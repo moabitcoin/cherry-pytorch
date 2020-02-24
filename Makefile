@@ -54,7 +54,7 @@ linux:
 
 m: mac
 mac:
-	scripts/install_macos.sh
+	bash scripts/install_macos.sh
 
 
 .PHONY: install i run r update u gpu g publish p l linux m mac
