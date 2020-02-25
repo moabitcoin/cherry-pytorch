@@ -6,7 +6,7 @@ echo conda activate cherry
 conda activate cherry
 
 echo "Installing python packages"
-pip install -r requirements_minimal.txt
+python -m pip install -r requirements_minimal.txt
 
 echo "Pytorch installation"
 conda install pytorch torchvision -c pytorch
@@ -20,5 +20,5 @@ wget https://github.com/openai/baselines/archive/9ee399f5b20cd70ac0a871927a6cf04
     rm -rf baselines*
 
 echo "Reinstalling Pillow"
-pip install Pillow==6.2.1
-pip install -e .
+python -m pip install Pillow==6.2.1
+python -m pip install -e .

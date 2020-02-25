@@ -13,7 +13,7 @@ echo "https://download.pytorch.org/whl/cpu/torch-1.3.0%2Bcpu-cp36-cp36m-linux_x8
           \n" >> requirements_minimal.txt
 
 echo "Installing python packages"
-pip install -r requirements_minimal.txt
+python -m pip install -r requirements_minimal.txt
 
 echo "Installing openAI baseliens"
 wget https://github.com/openai/baselines/archive/9ee399f5b20cd70ac0a871927a6cf043b478193f.zip -O baselines.zip && \
@@ -24,5 +24,5 @@ wget https://github.com/openai/baselines/archive/9ee399f5b20cd70ac0a871927a6cf04
     rm -rf baselines*
 
 echo "Reinstalling Pillow"
-pip install Pillow==6.2.1
-pip install -e .
+python -m pip install Pillow==6.2.1
+python -m pip install -e .
